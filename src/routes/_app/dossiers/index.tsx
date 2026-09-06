@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiersPage } from "@/lib/store";
+import { useDossiersPage, type DateRange } from "@/lib/store";
+import { DateRangeFilter } from "@/components/filters/date-range-filter";
 import { completion } from "@/lib/dossier-model";
 import { NiveauBadge, RdvBadge, DecisionBadge } from "@/components/dossier/badges";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ function DossiersList() {
   const [niveau, setNiveau] = useState<"tous" | "standard" | "attention" | "complexe">("tous");
   const [vue, setVue] = useState<"liste" | "kanban">("liste");
   const [page, setPage] = useState(1);
+  const [range, setRange] = useState<DateRange>({});
 
   // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête —
   // à l'échelle réelle (potentiellement des millions de lignes) une requête par lettre serait intenable.
@@ -44,11 +46,11 @@ function DossiersList() {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
   }, [q]);
-  useEffect(() => setPage(1), [debouncedQ, niveau]);
+  useEffect(() => setPage(1), [debouncedQ, niveau, range]);
 
   const params = useMemo(
-    () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau }),
-    [page, debouncedQ, niveau],
+    () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau, range }),
+    [page, debouncedQ, niveau, range],
   );
   const { dossiers, total, isLoading, setEtape } = useDossiersPage(params);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -95,6 +97,7 @@ function DossiersList() {
             <SelectItem value="complexe">Cas complexe</SelectItem>
           </SelectContent>
         </Select>
+        <DateRangeFilter value={range} onChange={setRange} />
         <div className="ml-auto flex items-center gap-1 rounded-full border border-border p-1">
           <button
             onClick={() => setVue("liste")}

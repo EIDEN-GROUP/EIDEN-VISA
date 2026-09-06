@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
@@ -23,6 +24,11 @@ import { Route as DossiersIdRecuRouteImport } from './routes/dossiers.$id.recu'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -78,6 +84,7 @@ const DossiersIdRecuRoute = DossiersIdRecuRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
   '/ops': typeof AppOpsRoute
   '/paiements': typeof AppPaiementsRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/dossiers/': typeof AppDossiersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
   '/ops': typeof AppOpsRoute
   '/paiements': typeof AppPaiementsRoute
@@ -103,6 +111,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
   '/_app/ops': typeof AppOpsRoute
   '/_app/paiements': typeof AppPaiementsRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/confidentialite'
     | '/login'
     | '/ops'
     | '/paiements'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/dossiers/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/confidentialite'
     | '/login'
     | '/ops'
     | '/paiements'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/confidentialite'
     | '/login'
     | '/_app/ops'
     | '/_app/paiements'
@@ -156,6 +168,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
   LoginRoute: typeof LoginRoute
   DossiersIdRecuRoute: typeof DossiersIdRecuRoute
 }
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -268,6 +288,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  ConfidentialiteRoute: ConfidentialiteRoute,
   LoginRoute: LoginRoute,
   DossiersIdRecuRoute: DossiersIdRecuRoute,
 }

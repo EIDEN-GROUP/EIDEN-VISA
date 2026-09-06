@@ -74,6 +74,11 @@ function LoginPage() {
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Connexion…" : "Se connecter"}
           </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            <a href="/confidentialite" className="hover:text-foreground hover:underline">
+              Conditions d'utilisation & confidentialité
+            </a>
+          </p>
         </form>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiersByRdvStatut, useCreneaux, type Creneau } from "@/lib/store";
+import { useDossiersByRdvStatut, useCreneaux, type Creneau, type DateRange } from "@/lib/store";
+import { DateRangeFilter } from "@/components/filters/date-range-filter";
 import { CENTRES } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,10 +34,11 @@ export const Route = createFileRoute("/_app/rendez-vous")({
 });
 
 function RendezVous() {
+  const [range, setRange] = useState<DateRange>({});
   // Chaque statut est chargé séparément et borné côté SQL — à l'échelle réelle on ne
   // charge jamais tous les dossiers pour en filtrer un sous-ensemble en JS.
-  const { dossiers: enAttente, confirmerRdv } = useDossiersByRdvStatut("recherche");
-  const { dossiers: confirmes } = useDossiersByRdvStatut("confirme");
+  const { dossiers: enAttente, confirmerRdv } = useDossiersByRdvStatut("recherche", range);
+  const { dossiers: confirmes } = useDossiersByRdvStatut("confirme", range);
   const { creneaux, ajouter, modifier, supprimer } = useCreneaux();
   const [target, setTarget] = useState<string | null>(null);
   const [date, setDate] = useState("");
@@ -75,12 +77,15 @@ function RendezVous() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <img src={stampRendezvous} alt="" className="h-12 w-12" />
-        <div>
-          <h1 className="page-title">Rendez-vous</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Veille des créneaux et suivi des rendez-vous TLS / BLS.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <img src={stampRendezvous} alt="" className="h-12 w-12" />
+          <div>
+            <h1 className="page-title">Rendez-vous</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Veille des créneaux et suivi des rendez-vous TLS / BLS.</p>
+          </div>
         </div>
+        <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
       <Card className="panel">

@@ -49,22 +49,31 @@ export type Role = "ceo" | "reception" | "preparation" | "back_office";
 
 const DOSSIERS_KEY = ["dossiers", "all"] as const;
 const dossierKey = (id: string) => ["dossiers", "detail", id] as const;
+/** Filtre de date partagé par tous les écrans — porte sur la date d'ouverture réelle du dossier. */
+export interface DateRange {
+  from?: string | undefined;
+  to?: string | undefined;
+}
+const emptyRange: DateRange = {};
+
 export interface DossiersPageParams {
   page: number;
   pageSize: number;
   search?: string | undefined;
   niveau?: "tous" | "standard" | "attention" | "complexe" | undefined;
   pays?: "tous" | "france" | "espagne" | undefined;
+  range?: DateRange | undefined;
 }
 const dossiersPageKey = (params: DossiersPageParams) => ["dossiers", "page", params] as const;
-const DASHBOARD_STATS_KEY = ["dossiers", "dashboard-stats"] as const;
-const PAIEMENTS_STATS_KEY = ["dossiers", "paiements-stats"] as const;
-const PACK_COUNTS_KEY = ["dossiers", "pack-counts"] as const;
+const dashboardStatsKey = (range: DateRange) => ["dossiers", "dashboard-stats", range] as const;
+const paiementsStatsKey = (range: DateRange) => ["dossiers", "paiements-stats", range] as const;
+const packCountsKey = (range: DateRange) => ["dossiers", "pack-counts", range] as const;
 const ALERTES_KEY = ["dossiers", "alertes"] as const;
 const RECENTS_KEY = ["dossiers", "recents"] as const;
-const IMPAYE_KEY = ["dossiers", "impaye"] as const;
-const ENCAISSEMENT_KEY = ["dossiers", "encaissement"] as const;
-const rdvStatutKey = (statut: "recherche" | "confirme" | "depose") => ["dossiers", "rdv-statut", statut] as const;
+const impayeKey = (range: DateRange) => ["dossiers", "impaye", range] as const;
+const encaissementKey = (range: DateRange) => ["dossiers", "encaissement", range] as const;
+const rdvStatutKey = (statut: "recherche" | "confirme" | "depose", range: DateRange) =>
+  ["dossiers", "rdv-statut", statut, range] as const;
 const documentsKey = (dossierId: string) => ["documents", dossierId] as const;
 const CRENEAUX_KEY = ["creneaux"] as const;
 const USERS_KEY = ["ops", "users"] as const;
@@ -183,9 +192,10 @@ function useDossierMutations() {
 
 /** Page filtrée/paginée côté SQL — écran Dossiers. Tient à l'échelle quel que soit le volume. */
 export function useDossiersPage(params: DossiersPageParams) {
+  const { range, ...rest } = params;
   const query = useQuery({
     queryKey: dossiersPageKey(params),
-    queryFn: () => listDossiersPage({ data: params }),
+    queryFn: () => listDossiersPage({ data: { ...rest, dateFrom: range?.from, dateTo: range?.to } }),
     placeholderData: (prev) => prev,
   });
   const mutations = useDossierMutations();
@@ -199,8 +209,11 @@ export function useDossiersPage(params: DossiersPageParams) {
 }
 
 /** Statistiques agrégées côté SQL pour le tableau de bord. */
-export function useDashboardStats() {
-  const query = useQuery({ queryKey: DASHBOARD_STATS_KEY, queryFn: () => getDashboardStats() });
+export function useDashboardStats(range: DateRange = emptyRange) {
+  const query = useQuery({
+    queryKey: dashboardStatsKey(range),
+    queryFn: () => getDashboardStats({ data: { dateFrom: range.from, dateTo: range.to } }),
+  });
   return { stats: query.data, isLoading: query.isLoading };
 }
 
@@ -215,30 +228,45 @@ export function useDossiersRecents() {
   return { dossiers: query.data ?? [], isLoading: query.isLoading };
 }
 
-export function useDossiersByRdvStatut(statut: "recherche" | "confirme" | "depose") {
-  const query = useQuery({ queryKey: rdvStatutKey(statut), queryFn: () => listDossiersByRdvStatut({ data: { statut } }) });
+export function useDossiersByRdvStatut(statut: "recherche" | "confirme" | "depose", range: DateRange = emptyRange) {
+  const query = useQuery({
+    queryKey: rdvStatutKey(statut, range),
+    queryFn: () => listDossiersByRdvStatut({ data: { statut, dateFrom: range.from, dateTo: range.to } }),
+  });
   const mutations = useDossierMutations();
   return { dossiers: query.data ?? [], isLoading: query.isLoading, ...mutations };
 }
 
-export function useDossiersAvecImpaye() {
-  const query = useQuery({ queryKey: IMPAYE_KEY, queryFn: () => listDossiersAvecImpaye() });
+export function useDossiersAvecImpaye(range: DateRange = emptyRange) {
+  const query = useQuery({
+    queryKey: impayeKey(range),
+    queryFn: () => listDossiersAvecImpaye({ data: { dateFrom: range.from, dateTo: range.to } }),
+  });
   const mutations = useDossierMutations();
   return { dossiers: query.data ?? [], isLoading: query.isLoading, ...mutations };
 }
 
-export function useDossiersAvecEncaissement() {
-  const query = useQuery({ queryKey: ENCAISSEMENT_KEY, queryFn: () => listDossiersAvecEncaissement() });
+export function useDossiersAvecEncaissement(range: DateRange = emptyRange) {
+  const query = useQuery({
+    queryKey: encaissementKey(range),
+    queryFn: () => listDossiersAvecEncaissement({ data: { dateFrom: range.from, dateTo: range.to } }),
+  });
   return { dossiers: query.data ?? [], isLoading: query.isLoading };
 }
 
-export function usePaiementsStats() {
-  const query = useQuery({ queryKey: PAIEMENTS_STATS_KEY, queryFn: () => getPaiementsStats() });
+export function usePaiementsStats(range: DateRange = emptyRange) {
+  const query = useQuery({
+    queryKey: paiementsStatsKey(range),
+    queryFn: () => getPaiementsStats({ data: { dateFrom: range.from, dateTo: range.to } }),
+  });
   return { stats: query.data, isLoading: query.isLoading };
 }
 
-export function usePackCounts() {
-  const query = useQuery({ queryKey: PACK_COUNTS_KEY, queryFn: () => getPackCounts() });
+export function usePackCounts(range: DateRange = emptyRange) {
+  const query = useQuery({
+    queryKey: packCountsKey(range),
+    queryFn: () => getPackCounts({ data: { dateFrom: range.from, dateTo: range.to } }),
+  });
   return { counts: query.data ?? [], isLoading: query.isLoading };
 }
 

@@ -110,6 +110,9 @@ export function Rail() {
           Déconnexion
         </button>
         <div className="ref mt-3 text-rail-muted">Agadir · Maroc</div>
+        <Link to="/confidentialite" className="ref mt-1 block text-rail-muted hover:text-rail-foreground">
+          Confidentialité
+        </Link>
       </div>
     </aside>
   );

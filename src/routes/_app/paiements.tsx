@@ -1,8 +1,16 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { usePaiementsStats, usePackCounts, useDossiersAvecImpaye, useDossiersAvecEncaissement } from "@/lib/store";
+import {
+  usePaiementsStats,
+  usePackCounts,
+  useDossiersAvecImpaye,
+  useDossiersAvecEncaissement,
+  type DateRange,
+} from "@/lib/store";
 import { PACKS, type PackKey } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DateRangeFilter } from "@/components/filters/date-range-filter";
 import stampEncaissement from "@/assets/decorations/stamp-encaissement.png";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
 import stampBoardingPass from "@/assets/decorations/stamp-boarding-pass.png";
@@ -19,12 +27,13 @@ export const Route = createFileRoute("/_app/paiements")({
 });
 
 function Paiements() {
-  const { stats } = usePaiementsStats();
-  const { counts } = usePackCounts();
+  const [range, setRange] = useState<DateRange>({});
+  const { stats } = usePaiementsStats(range);
+  const { counts } = usePackCounts(range);
   // Bornées côté serveur (300 / 100 dossiers les plus récents concernés) : à l'échelle
   // réelle on ne charge jamais tous les dossiers pour en dériver des paiements en JS.
-  const { dossiers: dossiersImpaye, encaisser } = useDossiersAvecImpaye();
-  const { dossiers: dossiersEncaisses } = useDossiersAvecEncaissement();
+  const { dossiers: dossiersImpaye, encaisser } = useDossiersAvecImpaye(range);
+  const { dossiers: dossiersEncaisses } = useDossiersAvecEncaissement(range);
 
   const enAttente = dossiersImpaye.flatMap((d) =>
     d.paiements.map((p, i) => ({ dossier: d, paiement: p, index: i })).filter((l) => !l.paiement.encaisse),
@@ -45,12 +54,15 @@ function Paiements() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <img src={stampEncaissement} alt="" className="h-12 w-12" />
-        <div>
-          <h1 className="page-title">Paiements</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Encaissements et soldes, tous dossiers confondus.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <img src={stampEncaissement} alt="" className="h-12 w-12" />
+          <div>
+            <h1 className="page-title">Paiements</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Encaissements et soldes, tous dossiers confondus.</p>
+          </div>
         </div>
+        <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
       <div className="grid grid-cols-1 divide-y divide-border rounded-xl border border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">

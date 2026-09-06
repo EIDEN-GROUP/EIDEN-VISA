@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDashboardStats, useAlertesDossiers, useDossiersRecents, useCreneaux } from "@/lib/store";
+import { useDashboardStats, useAlertesDossiers, useDossiersRecents, useCreneaux, type DateRange } from "@/lib/store";
 import { alertes, completion } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NiveauBadge, RdvBadge } from "@/components/dossier/badges";
+import { DateRangeFilter } from "@/components/filters/date-range-filter";
 import { AlertTriangle, ArrowRight, CalendarClock, Wallet2, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import stampAlerte from "@/assets/decorations/stamp-alerte.png";
@@ -12,10 +14,11 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Dashboard() {
-  const { stats } = useDashboardStats();
+  const [range, setRange] = useState<DateRange>({});
+  const { stats } = useDashboardStats(range);
   // Bornée aux dossiers actifs les plus récents : les alertes sont une logique métier
   // en JS, pas une agrégation SQL — à l'échelle réelle on la lit sur un lot récent,
-  // pas sur la table entière.
+  // pas sur la table entière. Le filtre de date ne s'applique pas à ce lot borné.
   const { dossiers: actifsRecents } = useAlertesDossiers();
   const { dossiers: recents } = useDossiersRecents();
   const { creneaux } = useCreneaux();
@@ -24,11 +27,14 @@ function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="page-title">Tableau de bord</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Vue d'ensemble des dossiers Eiden Visa, agence Agadir.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="page-title">Tableau de bord</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Vue d'ensemble des dossiers Eiden Visa, agence Agadir.
+          </p>
+        </div>
+        <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
       <div className="grid grid-cols-1 divide-y divide-border border border-border rounded-xl sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">

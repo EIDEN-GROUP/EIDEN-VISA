@@ -1,12 +1,30 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { eq, desc, and, or, ilike, sql, count as sqlCount } from "drizzle-orm";
+import { eq, desc, and, or, ilike, gte, lte, sql, count as sqlCount, type SQL } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { dossiers as dossiersTable } from "@/backend/db/schema";
 import { requireUserId } from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
 import { PACKS, type Dossier, type PackKey } from "@/lib/dossier-model";
 import type { Profile } from "@/lib/visa-rules";
+
+/** Filtre de date partagé : "dossiers ouverts entre le X et le Y", sur la vraie colonne
+ * `created_at` (timestamp) — pas sur `ouvert_le`, un texte français non fiable à trier/filtrer. */
+const dateRangeInput = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+});
+function dateRangeConditions(data: { dateFrom?: string | undefined; dateTo?: string | undefined }): SQL[] {
+  const conditions: SQL[] = [];
+  if (data.dateFrom) conditions.push(gte(dossiersTable.createdAt, new Date(data.dateFrom)));
+  if (data.dateTo) {
+    // Borne haute inclusive jusqu'à la fin du jour choisi.
+    const end = new Date(data.dateTo);
+    end.setHours(23, 59, 59, 999);
+    conditions.push(lte(dossiersTable.createdAt, end));
+  }
+  return conditions;
+}
 
 type DossierRow = typeof dossiersTable.$inferSelect;
 
@@ -60,30 +78,30 @@ export const listDossiersPage = createServerFn({ method: "GET" })
       search: z.string().optional(),
       niveau: z.enum(["tous", "standard", "attention", "complexe"]).default("tous"),
       pays: z.enum(["tous", "france", "espagne"]).default("tous"),
+      ...dateRangeInput.shape,
     }),
   )
   .handler(async ({ data }) => {
     await requireUserId();
     const term = data.search?.trim();
-    const conditions = [];
+    const conditions: SQL[] = [...dateRangeConditions(data)];
     if (term) {
       const like = `%${term}%`;
       const digits = term.replace(/\D/g, "");
-      conditions.push(
-        or(
-          ilike(dossiersTable.clientNom, like),
-          ilike(dossiersTable.clientVille, like),
-          ilike(dossiersTable.id, like),
-          digits.length > 0
-            ? sql`regexp_replace(${dossiersTable.clientTelephone}, '\\D', '', 'g') ilike ${`%${digits}%`}`
-            : ilike(dossiersTable.clientTelephone, like),
-        ),
+      const searchCondition = or(
+        ilike(dossiersTable.clientNom, like),
+        ilike(dossiersTable.clientVille, like),
+        ilike(dossiersTable.id, like),
+        digits.length > 0
+          ? sql`regexp_replace(${dossiersTable.clientTelephone}, '\\D', '', 'g') ilike ${`%${digits}%`}`
+          : ilike(dossiersTable.clientTelephone, like),
       );
+      if (searchCondition) conditions.push(searchCondition);
     }
     if (data.niveau !== "tous") conditions.push(eq(dossiersTable.niveau, data.niveau));
     if (data.pays === "espagne") conditions.push(ilike(dossiersTable.rdvCentre, "%BLS%"));
     if (data.pays === "france") conditions.push(sql`${dossiersTable.rdvCentre} not ilike '%BLS%'`);
-    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const where = conditions.length > 0 ? and(...conditions) : sql`true`;
 
     const [rows, totalRows] = await Promise.all([
       db
@@ -117,93 +135,111 @@ export const listDossiersRecents = createServerFn({ method: "GET" }).handler(asy
 });
 
 export const listDossiersByRdvStatut = createServerFn({ method: "GET" })
-  .validator(z.object({ statut: z.enum(["recherche", "confirme", "depose"]) }))
+  .validator(z.object({ statut: z.enum(["recherche", "confirme", "depose"]), ...dateRangeInput.shape }))
   .handler(async ({ data }) => {
     await requireUserId();
-    const rows = await db
-      .select()
-      .from(dossiersTable)
-      .where(eq(dossiersTable.rdvStatut, data.statut))
-      .orderBy(desc(dossiersTable.createdAt))
-      .limit(300);
+    const where = and(eq(dossiersTable.rdvStatut, data.statut), ...dateRangeConditions(data));
+    const rows = await db.select().from(dossiersTable).where(where).orderBy(desc(dossiersTable.createdAt)).limit(300);
     return rows.map(rowToDossier);
   });
 
 /** Dossiers ayant au moins un paiement en attente — pour l'écran Paiements, sans charger la table entière. */
-export const listDossiersAvecImpaye = createServerFn({ method: "GET" }).handler(async () => {
-  await requireUserId();
-  const rows = await db
-    .select()
-    .from(dossiersTable)
-    .where(
+export const listDossiersAvecImpaye = createServerFn({ method: "GET" })
+  .validator(dateRangeInput)
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const where = and(
       sql`exists (select 1 from jsonb_array_elements(${dossiersTable.paiements}) p where (p->>'encaisse')::boolean = false)`,
-    )
-    .orderBy(desc(dossiersTable.createdAt))
-    .limit(300);
-  return rows.map(rowToDossier);
-});
+      ...dateRangeConditions(data),
+    );
+    const rows = await db.select().from(dossiersTable).where(where).orderBy(desc(dossiersTable.createdAt)).limit(300);
+    return rows.map(rowToDossier);
+  });
 
 /** Historique des encaissements — borné aux dossiers les plus récents ayant un encaissement. */
-export const listDossiersAvecEncaissement = createServerFn({ method: "GET" }).handler(async () => {
-  await requireUserId();
-  const rows = await db
-    .select()
-    .from(dossiersTable)
-    .where(
+export const listDossiersAvecEncaissement = createServerFn({ method: "GET" })
+  .validator(dateRangeInput)
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const where = and(
       sql`exists (select 1 from jsonb_array_elements(${dossiersTable.paiements}) p where (p->>'encaisse')::boolean = true)`,
-    )
-    .orderBy(desc(dossiersTable.createdAt))
-    .limit(100);
-  return rows.map(rowToDossier);
-});
+      ...dateRangeConditions(data),
+    );
+    const rows = await db.select().from(dossiersTable).where(where).orderBy(desc(dossiersTable.createdAt)).limit(100);
+    return rows.map(rowToDossier);
+  });
 
 /** Statistiques agrégées côté SQL — jamais un reduce() en JS sur la table entière. */
-export const getDashboardStats = createServerFn({ method: "GET" }).handler(async () => {
-  await requireUserId();
-  const [[totalRow], [actifsRow], [creneauRow], encaisseResult] = await Promise.all([
-    db.select({ n: sqlCount() }).from(dossiersTable),
-    db.select({ n: sqlCount() }).from(dossiersTable).where(sql`${dossiersTable.etape} < 7`),
-    db.select({ n: sqlCount() }).from(dossiersTable).where(eq(dossiersTable.rdvStatut, "recherche")),
-    db.execute(sql`
-      select coalesce(sum((p->>'montant')::numeric), 0) as total
-      from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
-      where (p->>'encaisse')::boolean = true
-    `),
-  ]);
-  const totalEncaisse = Number((encaisseResult as unknown as { total: string }[])[0]?.total ?? 0);
-  return {
-    total: Number(totalRow?.n ?? 0),
-    actifs: Number(actifsRow?.n ?? 0),
-    enAttenteCreneau: Number(creneauRow?.n ?? 0),
-    totalEncaisse,
-  };
-});
+export const getDashboardStats = createServerFn({ method: "GET" })
+  .validator(dateRangeInput)
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const range = dateRangeConditions(data);
+    const rangeWhere = range.length > 0 ? and(...range) : undefined;
+    const [[totalRow], [actifsRow], [creneauRow], encaisseResult] = await Promise.all([
+      db.select({ n: sqlCount() }).from(dossiersTable).where(rangeWhere),
+      db
+        .select({ n: sqlCount() })
+        .from(dossiersTable)
+        .where(and(sql`${dossiersTable.etape} < 7`, ...range)),
+      db
+        .select({ n: sqlCount() })
+        .from(dossiersTable)
+        .where(and(eq(dossiersTable.rdvStatut, "recherche"), ...range)),
+      db.execute(sql`
+        select coalesce(sum((p->>'montant')::numeric), 0) as total
+        from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+        where (p->>'encaisse')::boolean = true
+        ${data.dateFrom ? sql`and d.created_at >= ${new Date(data.dateFrom)}` : sql``}
+        ${data.dateTo ? sql`and d.created_at <= ${(() => { const e = new Date(data.dateTo); e.setHours(23, 59, 59, 999); return e; })()}` : sql``}
+      `),
+    ]);
+    const totalEncaisse = Number((encaisseResult as unknown as { total: string }[])[0]?.total ?? 0);
+    return {
+      total: Number(totalRow?.n ?? 0),
+      actifs: Number(actifsRow?.n ?? 0),
+      enAttenteCreneau: Number(creneauRow?.n ?? 0),
+      totalEncaisse,
+    };
+  });
 
 /** Statistiques de paiements agrégées côté SQL, pour l'écran Paiements. */
-export const getPaiementsStats = createServerFn({ method: "GET" }).handler(async () => {
-  await requireUserId();
-  const result = await db.execute(sql`
-    select
-      coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean = true), 0) as encaisse,
-      coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean = false), 0) as attente,
-      count(*) filter (where (p->>'encaisse')::boolean = true) as n_encaisse,
-      count(*) filter (where (p->>'encaisse')::boolean = false) as n_attente
-    from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
-  `);
-  const row = (result as unknown as { encaisse: string; attente: string; n_encaisse: string; n_attente: string }[])[0];
-  return {
-    totalEncaisse: Number(row?.encaisse ?? 0),
-    totalAttente: Number(row?.attente ?? 0),
-    nEncaisse: Number(row?.n_encaisse ?? 0),
-    nAttente: Number(row?.n_attente ?? 0),
-  };
-});
+export const getPaiementsStats = createServerFn({ method: "GET" })
+  .validator(dateRangeInput)
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const result = await db.execute(sql`
+      select
+        coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean = true), 0) as encaisse,
+        coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean = false), 0) as attente,
+        count(*) filter (where (p->>'encaisse')::boolean = true) as n_encaisse,
+        count(*) filter (where (p->>'encaisse')::boolean = false) as n_attente
+      from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+      where true
+      ${data.dateFrom ? sql`and d.created_at >= ${new Date(data.dateFrom)}` : sql``}
+      ${data.dateTo ? sql`and d.created_at <= ${(() => { const e = new Date(data.dateTo); e.setHours(23, 59, 59, 999); return e; })()}` : sql``}
+    `);
+    const row = (result as unknown as { encaisse: string; attente: string; n_encaisse: string; n_attente: string }[])[0];
+    return {
+      totalEncaisse: Number(row?.encaisse ?? 0),
+      totalAttente: Number(row?.attente ?? 0),
+      nEncaisse: Number(row?.n_encaisse ?? 0),
+      nAttente: Number(row?.n_attente ?? 0),
+    };
+  });
 
-export const getPackCounts = createServerFn({ method: "GET" }).handler(async () => {
-  await requireUserId();
-  const rows = await db.select({ pack: dossiersTable.pack, n: sqlCount() }).from(dossiersTable).groupBy(dossiersTable.pack);
-  return rows as { pack: PackKey; n: number }[];
-});
+export const getPackCounts = createServerFn({ method: "GET" })
+  .validator(dateRangeInput)
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const range = dateRangeConditions(data);
+    const rows = await db
+      .select({ pack: dossiersTable.pack, n: sqlCount() })
+      .from(dossiersTable)
+      .where(range.length > 0 ? and(...range) : undefined)
+      .groupBy(dossiersTable.pack);
+    return rows as { pack: PackKey; n: number }[];
+  });
 
 export const getDossier = createServerFn({ method: "GET" })
   .validator(z.object({ id: z.string() }))
