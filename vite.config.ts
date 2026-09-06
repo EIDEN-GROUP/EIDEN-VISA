@@ -19,4 +19,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Cible Vercel plutôt que le défaut Cloudflare de Lovable — n'a d'effet que hors du
+  // sandbox Lovable (leur bouton Publish continue de forcer cloudflare-module dedans) ;
+  // un build lancé par Vercel ou en local prend bien ce preset.
+  nitro: {
+    preset: "vercel",
+  },
 });
