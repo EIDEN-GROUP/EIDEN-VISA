@@ -101,6 +101,8 @@ function Qualification() {
       // dû, sinon le dossier n'existe nulle part sur l'écran Paiements.
       paiements: [{ libelle: PACKS.base.label, montant: PACKS.base.prix, date: null, encaisse: false }],
       notes: result.c.notes,
+      decision: "en_attente",
+      decisionDate: null,
     };
     await ajouter(dossier);
     navigate({ to: "/dossiers/$id", params: { id } });

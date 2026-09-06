@@ -45,6 +45,10 @@ export const dossiers = pgTable("dossiers", {
   pieces: jsonb("pieces").$type<Piece[]>().notNull().default([]),
   paiements: jsonb("paiements").$type<Paiement[]>().notNull().default([]),
   notes: jsonb("notes").$type<string[]>().notNull().default([]),
+  // Ce qui se passe après l'étape 7 (dépôt) : la décision du consulat, hors du contrôle
+  // d'Eiden mais à suivre — c'est le vrai "après" du cycle, pas juste un dossier gelé.
+  decision: text("decision").$type<"en_attente" | "approuve" | "refuse">().notNull().default("en_attente"),
+  decisionDate: text("decision_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -7,12 +7,25 @@ import { NiveauBadge } from "@/components/dossier/badges";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
 import stampBoardingPass from "@/assets/decorations/stamp-boarding-pass.png";
 import stampSuitcase from "@/assets/decorations/stamp-date.png";
+import iconSante from "@/assets/decorations/perimetre-sante.png";
+import iconTourisme from "@/assets/decorations/perimetre-tourisme.png";
+import iconTravail from "@/assets/decorations/perimetre-travail.png";
+import iconEtudes from "@/assets/decorations/perimetre-etudes.png";
 
 const PACK_ICON: Record<PackKey, string> = {
   base: stampPassport,
   voyage: stampBoardingPass,
   global: stampSuitcase,
 };
+
+/** Une icône par motif du périmètre — pas de correspondance forcée pour "Famille", aucune icône ne lui correspond. */
+function scopeIcon(label: string): string | null {
+  if (label.includes("Tourisme")) return iconTourisme;
+  if (label.includes("Travail")) return iconTravail;
+  if (label.includes("Santé")) return iconSante;
+  if (label.includes("Études")) return iconEtudes;
+  return null;
+}
 
 export const Route = createFileRoute("/_app/referentiel")({
   component: Referentiel,
@@ -53,20 +66,34 @@ function Referentiel() {
               <CardDescription>Ce que le service prend en charge au lancement, et ce qui est orienté ailleurs.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {SCOPE.in.map((s) => (
-                <div key={s} className="rounded-xl border border-border p-4">
-                  <span className="dot bg-[var(--ok)]" />
-                  <div className="mt-2 ref text-[var(--ok)]">Pris en charge</div>
-                  <div className="mt-1 text-sm font-semibold text-foreground">{s}</div>
-                </div>
-              ))}
-              {SCOPE.out.map((s) => (
-                <div key={s} className="rounded-xl border border-border p-4">
-                  <span className="dot bg-[var(--stop)]" />
-                  <div className="mt-2 ref text-[var(--stop)]">Hors périmètre</div>
-                  <div className="mt-1 text-sm font-semibold text-foreground">{s}</div>
-                </div>
-              ))}
+              {SCOPE.in.map((s) => {
+                const icon = scopeIcon(s);
+                return (
+                  <div key={s} className="rounded-xl border border-border p-4">
+                    {icon ? (
+                      <img src={icon} alt="" className="mb-2 h-10 w-10" />
+                    ) : (
+                      <span className="dot bg-[var(--ok)]" />
+                    )}
+                    <div className="mt-2 ref text-[var(--ok)]">Pris en charge</div>
+                    <div className="mt-1 text-sm font-semibold text-foreground">{s}</div>
+                  </div>
+                );
+              })}
+              {SCOPE.out.map((s) => {
+                const icon = scopeIcon(s);
+                return (
+                  <div key={s} className="rounded-xl border border-border p-4">
+                    {icon ? (
+                      <img src={icon} alt="" className="mb-2 h-10 w-10" />
+                    ) : (
+                      <span className="dot bg-[var(--stop)]" />
+                    )}
+                    <div className="mt-2 ref text-[var(--stop)]">Hors périmètre</div>
+                    <div className="mt-1 text-sm font-semibold text-foreground">{s}</div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </TabsContent>

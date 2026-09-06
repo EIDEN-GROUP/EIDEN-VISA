@@ -12,7 +12,7 @@
 
 @theme inline {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-mono: "Space Mono", ui-monospace, monospace;
   --font-display: "Fraunces", "Iowan Old Style", ui-serif, Georgia, serif;
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -115,6 +115,19 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    scrollbar-color: var(--color-primary) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border: 2px solid var(--color-background);
+    border-radius: 0;
   }
   h1,
   h2,
@@ -180,4 +193,14 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+/* Reçu client : à l'impression, on ne garde que le papier, pas l'écran. */
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+  ::-webkit-scrollbar {
+    display: none;
+  }
 }

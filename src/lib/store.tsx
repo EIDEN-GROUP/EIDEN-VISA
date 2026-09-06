@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Dossier, PackKey, Centre } from "./dossier-model";
+import type { Dossier, PackKey, Centre, Decision } from "./dossier-model";
 import {
   listDossiers,
   getDossier as getDossierFn,
@@ -7,6 +7,7 @@ import {
   avancerEtape,
   setEtape as setEtapeFn,
   changerCentre as changerCentreFn,
+  setDecision as setDecisionFn,
   confirmerRdv as confirmerRdvFn,
   encaisser as encaisserFn,
   changerPack as changerPackFn,
@@ -88,6 +89,10 @@ function useDossierMutations() {
     mutationFn: (vars: { id: string; centre: Centre }) => changerCentreFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const setDecisionMutation = useMutation({
+    mutationFn: (vars: { id: string; decision: Decision }) => setDecisionFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
   const ajouterMutation = useMutation({
     mutationFn: (d: Dossier) => createDossier({ data: d }),
     onSuccess: invalidateAll,
@@ -125,6 +130,7 @@ function useDossierMutations() {
     encaisser: (id: string, index: number) => encaisserMutation.mutateAsync({ id, index }),
     changerPack: (id: string, pack: PackKey) => changerPackMutation.mutateAsync({ id, pack }),
     changerCentre: (id: string, centre: Centre) => changerCentreMutation.mutateAsync({ id, centre }),
+    setDecision: (id: string, decision: Decision) => setDecisionMutation.mutateAsync({ id, decision }),
     ajouter: (d: Dossier) => ajouterMutation.mutateAsync(d),
     updateClient: (id: string, client: Dossier["client"]) => updateClientMutation.mutateAsync({ id, client }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),

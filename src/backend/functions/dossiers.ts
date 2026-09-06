@@ -37,6 +37,8 @@ function rowToDossier(row: DossierRow): Dossier {
     pieces: row.pieces,
     paiements: row.paiements,
     notes: row.notes,
+    decision: row.decision,
+    decisionDate: row.decisionDate,
   };
 }
 
@@ -218,6 +220,21 @@ export const changerPack = createServerFn({ method: "POST" })
             i === 0 && !p.encaisse ? { ...p, libelle: packInfo.label, montant: packInfo.prix } : p,
           );
     await db.update(dossiersTable).set({ pack: data.pack, paiements }).where(eq(dossiersTable.id, data.id));
+  });
+
+export const setDecision = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), decision: z.enum(["en_attente", "approuve", "refuse"]) }))
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const decisionDate = data.decision === "en_attente" ? null : new Date().toLocaleDateString("fr-FR");
+    await db.update(dossiersTable).set({ decision: data.decision, decisionDate }).where(eq(dossiersTable.id, data.id));
+    if (data.decision !== "en_attente") {
+      await logActivity(
+        "dossier.decision",
+        data.decision === "approuve" ? "Visa approuvé par le consulat." : "Visa refusé par le consulat.",
+        data.id,
+      );
+    }
   });
 
 export const updateClient = createServerFn({ method: "POST" })

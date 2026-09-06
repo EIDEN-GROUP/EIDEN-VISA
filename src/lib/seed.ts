@@ -215,6 +215,8 @@ export function buildSeed(): Dossier[] {
       pieces,
       paiements: s.paiements,
       notes: [...(s.notes ?? []), ...c.notes],
+      decision: "en_attente",
+      decisionDate: null,
     } satisfies Dossier;
   });
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDossier } from "@/lib/store";
 import { alertes, completion, encaisse, ETAPES, PACKS, CENTRES, type PackKey, type Centre } from "@/lib/dossier-model";
-import { NiveauBadge, RdvBadge, ClotureBadge } from "@/components/dossier/badges";
+import { NiveauBadge, RdvBadge, ClotureBadge, DecisionBadge } from "@/components/dossier/badges";
 import { DocumentsPanel } from "@/components/dossier/documents-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Circle, FileText, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
 import stampTime from "@/assets/decorations/stamp-time.png";
@@ -54,6 +54,7 @@ function DossierDetail() {
     encaisser,
     changerPack,
     changerCentre,
+    setDecision,
     updateClient,
     supprimer,
   } = useDossier(id);
@@ -127,6 +128,11 @@ function DossierDetail() {
           <ArrowLeft className="h-3.5 w-3.5" /> Retour aux dossiers
         </Link>
         <div className="flex items-center gap-2">
+          <Link to="/dossiers/$id/recu" params={{ id: d.id }} target="_blank">
+            <Button variant="outline" size="sm">
+              <FileText className="h-3.5 w-3.5" /> Reçu client
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={openEdit}>
             <Pencil className="h-3.5 w-3.5" /> Modifier
           </Button>
@@ -233,6 +239,48 @@ function DossierDetail() {
           })()}
         </CardContent>
       </Card>
+
+      {cloture && (
+        <Card className="panel">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Décision du consulat</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ce qui se passe après le dépôt — hors du contrôle d'Eiden, mais à suivre.
+              </p>
+            </div>
+            <DecisionBadge decision={d.decision} />
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <Button
+              size="sm"
+              variant={d.decision === "approuve" ? "default" : "outline"}
+              className={d.decision === "approuve" ? "" : "border-[var(--ok)]/40 text-[var(--ok)] hover:bg-[var(--ok-soft)]"}
+              onClick={() => setDecision(d.id, "approuve")}
+            >
+              Visa approuvé
+            </Button>
+            <Button
+              size="sm"
+              variant={d.decision === "refuse" ? "default" : "outline"}
+              className={
+                d.decision === "refuse"
+                  ? "bg-[var(--stop)] hover:bg-[var(--stop)]/90"
+                  : "border-[var(--stop)]/40 text-[var(--stop)] hover:bg-[var(--stop-soft)]"
+              }
+              onClick={() => setDecision(d.id, "refuse")}
+            >
+              Visa refusé
+            </Button>
+            {d.decision !== "en_attente" && (
+              <Button size="sm" variant="ghost" onClick={() => setDecision(d.id, "en_attente")}>
+                Revenir à "en attente"
+              </Button>
+            )}
+            {d.decisionDate && <span className="ref ml-auto text-muted-foreground">Décision du {d.decisionDate}</span>}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Pieces checklist */}

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useDossiers } from "@/lib/store";
 import { completion } from "@/lib/dossier-model";
-import { NiveauBadge, RdvBadge } from "@/components/dossier/badges";
+import { NiveauBadge, RdvBadge, DecisionBadge } from "@/components/dossier/badges";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -149,7 +149,7 @@ function DossiersList() {
                   </TableCell>
                   <TableCell className="max-w-64 text-sm text-muted-foreground">{d.titre}</TableCell>
                   <TableCell className="text-sm text-foreground">
-                    Étape {d.etape}/7{d.etape === 7 && <span className="ml-1.5 text-[var(--ok)]">· Clôturé</span>}
+                    {d.etape === 7 ? <DecisionBadge decision={d.decision} /> : `Étape ${d.etape}/7`}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {c.ok}/{c.total}

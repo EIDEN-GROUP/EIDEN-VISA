@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { Level } from "@/lib/visa-rules";
 import { LEVEL_LABEL } from "@/lib/visa-rules";
-import { ETAPES } from "@/lib/dossier-model";
+import { ETAPES, DECISION_LABEL, type Decision } from "@/lib/dossier-model";
 
 export function NiveauBadge({ level }: { level: Level }) {
   const colors: Record<Level, string> = {
@@ -38,6 +38,26 @@ export function ClotureBadge() {
     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--ok)]">
       <span className="dot bg-[var(--ok)]" />
       Dossier clôturé
+    </span>
+  );
+}
+
+/** Le "après l'étape 7" : ce que le consulat a décidé, hors du contrôle d'Eiden. */
+export function DecisionBadge({ decision }: { decision: Decision }) {
+  const colors: Record<Decision, string> = {
+    en_attente: "bg-[var(--warn)]",
+    approuve: "bg-[var(--ok)]",
+    refuse: "bg-[var(--stop)]",
+  };
+  const text: Record<Decision, string> = {
+    en_attente: "text-[var(--warn)]",
+    approuve: "text-[var(--ok)]",
+    refuse: "text-[var(--stop)]",
+  };
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", text[decision])}>
+      <span className={cn("dot", colors[decision])} />
+      {DECISION_LABEL[decision]}
     </span>
   );
 }

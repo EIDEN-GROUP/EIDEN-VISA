@@ -124,6 +124,14 @@ export interface RendezVous {
   statut: "recherche" | "confirme" | "depose";
 }
 
+/** Ce qui se passe après l'étape 7 : la décision du consulat, hors du contrôle d'Eiden. */
+export type Decision = "en_attente" | "approuve" | "refuse";
+export const DECISION_LABEL: Record<Decision, string> = {
+  en_attente: "En attente de décision",
+  approuve: "Visa approuvé",
+  refuse: "Visa refusé",
+};
+
 export interface Dossier {
   id: string;
   client: { nom: string; telephone: string; ville: string; naissance: string };
@@ -140,6 +148,8 @@ export interface Dossier {
   pieces: Piece[];
   paiements: Paiement[];
   notes: string[];
+  decision: Decision;
+  decisionDate: string | null;
 }
 
 export function resolveCase(caseKey: string, profile: Profile): CaseResult {

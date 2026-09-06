@@ -19,6 +19,7 @@ import { Route as AppReferentielRouteImport } from './routes/_app/referentiel'
 import { Route as AppRendezVousRouteImport } from './routes/_app/rendez-vous'
 import { Route as AppDossiersIndexRouteImport } from './routes/_app/dossiers/index'
 import { Route as AppDossiersIdRouteImport } from './routes/_app/dossiers/$id'
+import { Route as DossiersIdRecuRouteImport } from './routes/dossiers.$id.recu'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -69,6 +70,11 @@ const AppDossiersIdRoute = AppDossiersIdRouteImport.update({
   path: '/dossiers/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const DossiersIdRecuRoute = DossiersIdRecuRouteImport.update({
+  id: '/dossiers/$id/recu',
+  path: '/dossiers/$id/recu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/referentiel': typeof AppReferentielRoute
   '/rendez-vous': typeof AppRendezVousRoute
   '/dossiers/$id': typeof AppDossiersIdRoute
+  '/dossiers/$id/recu': typeof DossiersIdRecuRoute
   '/dossiers/': typeof AppDossiersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/rendez-vous': typeof AppRendezVousRoute
   '/': typeof AppIndexRoute
   '/dossiers/$id': typeof AppDossiersIdRoute
+  '/dossiers/$id/recu': typeof DossiersIdRecuRoute
   '/dossiers': typeof AppDossiersIndexRoute
 }
 export interface FileRoutesById {
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/_app/rendez-vous': typeof AppRendezVousRoute
   '/_app/': typeof AppIndexRoute
   '/_app/dossiers/$id': typeof AppDossiersIdRoute
+  '/dossiers/$id/recu': typeof DossiersIdRecuRoute
   '/_app/dossiers/': typeof AppDossiersIndexRoute
 }
 export interface FileRouteTypes {
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/referentiel'
     | '/rendez-vous'
     | '/dossiers/$id'
+    | '/dossiers/$id/recu'
     | '/dossiers/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/rendez-vous'
     | '/'
     | '/dossiers/$id'
+    | '/dossiers/$id/recu'
     | '/dossiers'
   id:
     | '__root__'
@@ -139,12 +150,14 @@ export interface FileRouteTypes {
     | '/_app/rendez-vous'
     | '/_app/'
     | '/_app/dossiers/$id'
+    | '/dossiers/$id/recu'
     | '/_app/dossiers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  DossiersIdRecuRoute: typeof DossiersIdRecuRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDossiersIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/dossiers/$id/recu': {
+      id: '/dossiers/$id/recu'
+      path: '/dossiers/$id/recu'
+      fullPath: '/dossiers/$id/recu'
+      preLoaderRoute: typeof DossiersIdRecuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -249,6 +269,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  DossiersIdRecuRoute: DossiersIdRecuRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
