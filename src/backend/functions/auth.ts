@@ -16,7 +16,7 @@ export const login = createServerFn({ method: "POST" })
 
     const session = await getAuthSession();
     await session.update({ userId: user.id });
-    return { id: user.id, nom: user.nom, email: user.email };
+    return { id: user.id, nom: user.nom, email: user.email, role: user.role };
   });
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {

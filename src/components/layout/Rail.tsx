@@ -8,7 +8,6 @@ import {
   CalendarClock,
   Wallet,
   BookOpen,
-  ShieldCheck,
   LogOut,
 } from "lucide-react";
 import { logout } from "@/backend/functions/auth";
@@ -69,20 +68,6 @@ export function Rail() {
             </Link>
           );
         })}
-        {user?.role === "ceo" && (
-          <Link
-            to="/ops"
-            className={cn(
-              "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm",
-              pathname.startsWith("/ops")
-                ? "border-primary font-medium text-rail-foreground"
-                : "border-transparent text-rail-muted hover:text-rail-foreground",
-            )}
-          >
-            <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
-            Ops
-          </Link>
-        )}
       </nav>
       <div className="px-6 py-6">
         <button

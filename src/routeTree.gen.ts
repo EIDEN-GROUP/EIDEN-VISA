@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OpsRouteImport } from './routes/ops'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AppOpsRouteImport } from './routes/_app/ops'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
 import { Route as AppQualificationRouteImport } from './routes/_app/qualification'
 import { Route as AppReferentielRouteImport } from './routes/_app/referentiel'
@@ -36,14 +36,14 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OpsRoute = OpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOpsRoute = AppOpsRouteImport.update({
-  id: '/ops',
-  path: '/ops',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPaiementsRoute = AppPaiementsRouteImport.update({
@@ -86,7 +86,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
-  '/ops': typeof AppOpsRoute
+  '/ops': typeof OpsRoute
   '/paiements': typeof AppPaiementsRoute
   '/qualification': typeof AppQualificationRoute
   '/referentiel': typeof AppReferentielRoute
@@ -98,7 +98,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
-  '/ops': typeof AppOpsRoute
+  '/ops': typeof OpsRoute
   '/paiements': typeof AppPaiementsRoute
   '/qualification': typeof AppQualificationRoute
   '/referentiel': typeof AppReferentielRoute
@@ -113,7 +113,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
-  '/_app/ops': typeof AppOpsRoute
+  '/ops': typeof OpsRoute
   '/_app/paiements': typeof AppPaiementsRoute
   '/_app/qualification': typeof AppQualificationRoute
   '/_app/referentiel': typeof AppReferentielRoute
@@ -155,7 +155,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/confidentialite'
     | '/login'
-    | '/_app/ops'
+    | '/ops'
     | '/_app/paiements'
     | '/_app/qualification'
     | '/_app/referentiel'
@@ -170,6 +170,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   LoginRoute: typeof LoginRoute
+  OpsRoute: typeof OpsRoute
   DossiersIdRecuRoute: typeof DossiersIdRecuRoute
 }
 
@@ -196,18 +197,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ops': {
+      id: '/ops'
+      path: '/ops'
+      fullPath: '/ops'
+      preLoaderRoute: typeof OpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/': {
       id: '/_app/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/ops': {
-      id: '/_app/ops'
-      path: '/ops'
-      fullPath: '/ops'
-      preLoaderRoute: typeof AppOpsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/paiements': {
@@ -263,7 +264,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
-  AppOpsRoute: typeof AppOpsRoute
   AppPaiementsRoute: typeof AppPaiementsRoute
   AppQualificationRoute: typeof AppQualificationRoute
   AppReferentielRoute: typeof AppReferentielRoute
@@ -274,7 +274,6 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppOpsRoute: AppOpsRoute,
   AppPaiementsRoute: AppPaiementsRoute,
   AppQualificationRoute: AppQualificationRoute,
   AppReferentielRoute: AppReferentielRoute,
@@ -290,6 +289,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   ConfidentialiteRoute: ConfidentialiteRoute,
   LoginRoute: LoginRoute,
+  OpsRoute: OpsRoute,
   DossiersIdRecuRoute: DossiersIdRecuRoute,
 }
 export const routeTree = rootRouteImport
