@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useActingUser, useOpsUsers, useActivity, useDossiers, type Role } from "@/lib/store";
+import { useActingUser, useOpsUsers, useActivity, useDossiers, ROLE_LABEL, type Role } from "@/lib/store";
 import { alertes } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle, Plus, ShieldCheck, Trash2 } from "lucide-react";
 
-const ROLES: { value: Role; label: string }[] = [
-  { value: "ceo", label: "CEO" },
-  { value: "reception", label: "Réception" },
-  { value: "preparation", label: "Préparation" },
-  { value: "back_office", label: "Back office" },
-];
+const ROLES: { value: Role; label: string }[] = (Object.keys(ROLE_LABEL) as Role[]).map((value) => ({
+  value,
+  label: ROLE_LABEL[value],
+}));
 
 export const Route = createFileRoute("/_app/ops")({
   component: Ops,

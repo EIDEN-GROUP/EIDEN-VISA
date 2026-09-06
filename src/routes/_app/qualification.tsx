@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { TREE, getFixedCase, buildCourtSejour, type Profile, type CaseResult } from "@/lib/visa-rules";
 import { piecesFromCase, PACKS, CENTRES, type Dossier, type Centre } from "@/lib/dossier-model";
-import { useDossiers } from "@/lib/store";
+import { useDossiers, useActingUser, ROLE_LABEL } from "@/lib/store";
 import { NiveauBadge } from "@/components/dossier/badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ function familyRelated(caseKey: string, profile: Profile) {
 function Qualification() {
   const navigate = useNavigate();
   const { ajouter } = useDossiers();
+  const { actingUser } = useActingUser();
 
   const [nodeKey, setNodeKey] = useState("start");
   const [profile, setProfile] = useState<Profile>({});
@@ -82,11 +83,17 @@ function Qualification() {
   async function creerDossier() {
     if (!result || !nom) return;
     const pieces = piecesFromCase(result.c);
-    const id = `EV-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const year = new Date().getFullYear();
+    // Suffixe aléatoire large (base36, 6 caractères) : le risque de collision avec un ID
+    // à 4 chiffres devenait réel dès quelques milliers de dossiers.
+    const id = `EV-${year}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    // Attribué à la personne réellement connectée ("Connecté en tant que"), pas un texte
+    // figé — sinon le journal d'activité et le champ "agent" du dossier se contredisent.
+    const agent = actingUser ? `${ROLE_LABEL[actingUser.role]} · ${actingUser.nom}` : "Accueil";
     const dossier: Dossier = {
       id,
       client: { nom, telephone, ville, naissance },
-      agent: "Accueil",
+      agent,
       ouvertLe: new Date().toLocaleDateString("fr-FR"),
       caseKey: result.caseKey,
       profile,
@@ -239,11 +246,17 @@ function Qualification() {
             </CardContent>
           </Card>
 
-          {result.c.docs.length > 0 && (
+          {(
+            // Même un cas sans checklist officielle (orientation, référé à un tiers) doit
+            // pouvoir devenir un dossier — ne serait-ce que pour tracer une consultation
+            // d'orientation facturée. Bloquer la création ici laissait ces cas sans issue.
             <Card className="panel">
               <CardHeader className="flex flex-row items-center gap-3 space-y-0">
                 <img src={stampName} alt="" className="h-9 w-9" />
                 <CardTitle className="text-base">Créer le dossier</CardTitle>
+                {result.c.docs.length === 0 && (
+                  <span className="ref ml-auto text-muted-foreground">Sans checklist officielle</span>
+                )}
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">

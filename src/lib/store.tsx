@@ -46,6 +46,12 @@ import {
 } from "@/backend/functions/ops";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
+export const ROLE_LABEL: Record<Role, string> = {
+  ceo: "CEO",
+  reception: "Réception",
+  preparation: "Préparation",
+  back_office: "Back office",
+};
 
 const DOSSIERS_KEY = ["dossiers", "all"] as const;
 const dossierKey = (id: string) => ["dossiers", "detail", id] as const;
