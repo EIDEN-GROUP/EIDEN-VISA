@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiers, useCreneaux } from "@/lib/store";
-import { alertes, completion, encaisse } from "@/lib/dossier-model";
+import { useDashboardStats, useAlertesDossiers, useDossiersRecents, useCreneaux } from "@/lib/store";
+import { alertes, completion } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NiveauBadge, RdvBadge } from "@/components/dossier/badges";
 import { AlertTriangle, ArrowRight, CalendarClock, Wallet2, FolderOpen } from "lucide-react";
@@ -12,16 +12,15 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function Dashboard() {
-  const { dossiers } = useDossiers();
+  const { stats } = useDashboardStats();
+  // Bornée aux dossiers actifs les plus récents : les alertes sont une logique métier
+  // en JS, pas une agrégation SQL — à l'échelle réelle on la lit sur un lot récent,
+  // pas sur la table entière.
+  const { dossiers: actifsRecents } = useAlertesDossiers();
+  const { dossiers: recents } = useDossiersRecents();
   const { creneaux } = useCreneaux();
 
-  const actifs = dossiers.filter((d) => d.etape < 7);
-  const enAttenteCreneau = dossiers.filter((d) => d.rdv.statut === "recherche");
-  const alertesParDossier = dossiers
-    .map((d) => ({ d, a: alertes(d) }))
-    .filter((x) => x.a.length > 0);
-  const totalEncaisse = dossiers.reduce((s, d) => s + encaisse(d), 0);
-  const recents = [...dossiers].slice(0, 6);
+  const alertesParDossier = actifsRecents.map((d) => ({ d, a: alertes(d) })).filter((x) => x.a.length > 0);
 
   return (
     <div className="space-y-8">
@@ -33,21 +32,26 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 divide-y divide-border border border-border rounded-xl sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-        <Kpi icon={FolderOpen} label="Dossiers actifs" value={actifs.length} sub={`${dossiers.length} au total`} />
+        <Kpi icon={FolderOpen} label="Dossiers actifs" value={stats?.actifs ?? "—"} sub={`${stats?.total ?? "—"} au total`} />
         <Kpi
           icon={CalendarClock}
           label="En attente de créneau"
-          value={enAttenteCreneau.length}
+          value={stats?.enAttenteCreneau ?? "—"}
           sub="TLScontact / BLS"
         />
         <Kpi
           icon={AlertTriangle}
           label="Alertes actives"
           value={alertesParDossier.length}
-          sub="Dossiers à traiter"
+          sub="Dossiers actifs récents"
           tone={alertesParDossier.length ? "stop" : "ok"}
         />
-        <Kpi icon={Wallet2} label="Encaissé" value={`${totalEncaisse.toLocaleString("fr-FR")} MAD`} sub="Tous dossiers" />
+        <Kpi
+          icon={Wallet2}
+          label="Encaissé"
+          value={`${(stats?.totalEncaisse ?? 0).toLocaleString("fr-FR")} MAD`}
+          sub="Tous dossiers"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

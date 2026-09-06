@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiers } from "@/lib/store";
+import { usePaiementsStats, usePackCounts, useDossiersAvecImpaye, useDossiersAvecEncaissement } from "@/lib/store";
 import { PACKS, type PackKey } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,20 +19,28 @@ export const Route = createFileRoute("/_app/paiements")({
 });
 
 function Paiements() {
-  const { dossiers, encaisser } = useDossiers();
+  const { stats } = usePaiementsStats();
+  const { counts } = usePackCounts();
+  // Bornées côté serveur (300 / 100 dossiers les plus récents concernés) : à l'échelle
+  // réelle on ne charge jamais tous les dossiers pour en dériver des paiements en JS.
+  const { dossiers: dossiersImpaye, encaisser } = useDossiersAvecImpaye();
+  const { dossiers: dossiersEncaisses } = useDossiersAvecEncaissement();
 
-  const lignes = dossiers.flatMap((d) =>
-    d.paiements.map((p, i) => ({ dossier: d, paiement: p, index: i })),
+  const enAttente = dossiersImpaye.flatMap((d) =>
+    d.paiements.map((p, i) => ({ dossier: d, paiement: p, index: i })).filter((l) => !l.paiement.encaisse),
   );
-  const encaisses = lignes.filter((l) => l.paiement.encaisse);
-  const enAttente = lignes.filter((l) => !l.paiement.encaisse);
-  const totalEncaisse = encaisses.reduce((s, l) => s + l.paiement.montant, 0);
-  const totalAttente = enAttente.reduce((s, l) => s + l.paiement.montant, 0);
+  const encaisses = dossiersEncaisses.flatMap((d) =>
+    d.paiements.map((p, i) => ({ dossier: d, paiement: p, index: i })).filter((l) => l.paiement.encaisse),
+  );
+  const totalEncaisse = stats?.totalEncaisse ?? 0;
+  const totalAttente = stats?.totalAttente ?? 0;
+  const nbPaiements = (stats?.nEncaisse ?? 0) + (stats?.nAttente ?? 0);
 
+  const countByPack = new Map(counts.map((c) => [c.pack, c.n]));
   const parPack = (Object.keys(PACKS) as PackKey[]).map((k) => ({
     key: k,
     ...PACKS[k],
-    count: dossiers.filter((d) => d.pack === k).length,
+    count: countByPack.get(k) ?? 0,
   }));
 
   return (
@@ -60,7 +68,7 @@ function Paiements() {
         </div>
         <div className="p-5">
           <div className="text-xs font-medium text-muted-foreground">Paiements enregistrés</div>
-          <div className="num-display mt-1 text-3xl text-foreground">{lignes.length}</div>
+          <div className="num-display mt-1 text-3xl text-foreground">{nbPaiements}</div>
         </div>
       </div>
 
@@ -85,7 +93,7 @@ function Paiements() {
 
       <Card className="panel">
         <CardHeader>
-          <CardTitle className="text-base">Encaissements en attente ({enAttente.length})</CardTitle>
+          <CardTitle className="text-base">Encaissements en attente ({stats?.nAttente ?? enAttente.length})</CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-border p-0">
           {enAttente.length === 0 && <p className="p-5 text-sm text-muted-foreground">Rien en attente.</p>}
@@ -112,7 +120,10 @@ function Paiements() {
 
       <Card className="panel">
         <CardHeader>
-          <CardTitle className="text-base">Historique des encaissements ({encaisses.length})</CardTitle>
+          <CardTitle className="text-base">Historique des encaissements récents ({encaisses.length})</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Les {encaisses.length} encaissements les plus récents — {stats?.nEncaisse ?? 0} au total.
+          </p>
         </CardHeader>
         <CardContent className="divide-y divide-border p-0">
           {encaisses.map(({ dossier, paiement, index }) => (

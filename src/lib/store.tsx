@@ -52,9 +52,9 @@ const dossierKey = (id: string) => ["dossiers", "detail", id] as const;
 export interface DossiersPageParams {
   page: number;
   pageSize: number;
-  search?: string;
-  niveau?: "tous" | "standard" | "attention" | "complexe";
-  pays?: "tous" | "france" | "espagne";
+  search?: string | undefined;
+  niveau?: "tous" | "standard" | "attention" | "complexe" | undefined;
+  pays?: "tous" | "france" | "espagne" | undefined;
 }
 const dossiersPageKey = (params: DossiersPageParams) => ["dossiers", "page", params] as const;
 const DASHBOARD_STATS_KEY = ["dossiers", "dashboard-stats"] as const;

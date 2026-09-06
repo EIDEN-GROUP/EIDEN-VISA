@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiers } from "@/lib/store";
+import { useDossiersPage } from "@/lib/store";
 import { completion } from "@/lib/dossier-model";
 import { NiveauBadge, RdvBadge, DecisionBadge } from "@/components/dossier/badges";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, LayoutGrid, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
 import stampDossier from "@/assets/decorations/stamp-dossier.png";
 import { DossiersKanban } from "@/components/dossier/kanban";
 import { cn } from "@/lib/utils";
@@ -28,26 +29,29 @@ export const Route = createFileRoute("/_app/dossiers/")({
   component: DossiersList,
 });
 
-function DossiersList() {
-  const { dossiers, setEtape } = useDossiers();
-  const [q, setQ] = useState("");
-  const [niveau, setNiveau] = useState<string>("tous");
-  const [vue, setVue] = useState<"liste" | "kanban">("liste");
+const PAGE_SIZE = 50;
 
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const digits = term.replace(/\D/g, "");
-    return dossiers.filter((d) => {
-      const matchQ =
-        !term ||
-        d.client.nom.toLowerCase().includes(term) ||
-        d.id.toLowerCase().includes(term) ||
-        d.client.ville.toLowerCase().includes(term) ||
-        (digits.length > 0 && d.client.telephone.replace(/\D/g, "").includes(digits));
-      const matchNiveau = niveau === "tous" || d.niveau === niveau;
-      return matchQ && matchNiveau;
-    });
-  }, [dossiers, q, niveau]);
+function DossiersList() {
+  const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [niveau, setNiveau] = useState<"tous" | "standard" | "attention" | "complexe">("tous");
+  const [vue, setVue] = useState<"liste" | "kanban">("liste");
+  const [page, setPage] = useState(1);
+
+  // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête —
+  // à l'échelle réelle (potentiellement des millions de lignes) une requête par lettre serait intenable.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+  useEffect(() => setPage(1), [debouncedQ, niveau]);
+
+  const params = useMemo(
+    () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau }),
+    [page, debouncedQ, niveau],
+  );
+  const { dossiers, total, isLoading, setEtape } = useDossiersPage(params);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="space-y-6">
@@ -57,7 +61,8 @@ function DossiersList() {
           <div>
             <h1 className="page-title">Dossiers</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {dossiers.length} dossier(s) au total · {filtered.length} affiché(s)
+              {total} dossier(s) au total
+              {vue === "liste" && total > 0 && ` · page ${page}/${totalPages}`}
             </p>
           </div>
         </div>
@@ -79,7 +84,7 @@ function DossiersList() {
             className="pl-9"
           />
         </div>
-        <Select value={niveau} onValueChange={setNiveau}>
+        <Select value={niveau} onValueChange={(v) => setNiveau(v as typeof niveau)}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Niveau" />
           </SelectTrigger>
@@ -112,8 +117,15 @@ function DossiersList() {
         </div>
       </div>
 
+      {vue === "kanban" && (
+        <p className="text-xs text-muted-foreground">
+          Le kanban affiche la page courante ({dossiers.length} dossier(s)) — affinez la recherche pour retrouver un
+          dossier précis dans un grand volume.
+        </p>
+      )}
+
       {vue === "kanban" ? (
-        <DossiersKanban dossiers={filtered} onMove={(id, etape) => setEtape(id, etape)} />
+        <DossiersKanban dossiers={dossiers} onMove={(id, etape) => setEtape(id, etape)} />
       ) : (
       <div className="panel overflow-hidden">
         <Table>
@@ -130,7 +142,7 @@ function DossiersList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((d) => {
+            {dossiers.map((d) => {
               const c = completion(d);
               return (
                 <TableRow key={d.id} className="cursor-pointer">
@@ -166,15 +178,30 @@ function DossiersList() {
                 </TableRow>
               );
             })}
-            {filtered.length === 0 && (
+            {dossiers.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
-                  Aucun dossier ne correspond à cette recherche.
+                  {isLoading ? "Chargement…" : "Aucun dossier ne correspond à cette recherche."}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-border px-5 py-3">
+            <span className="text-xs text-muted-foreground">
+              Page {page} sur {totalPages} · {total} dossier(s)
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+                <ChevronLeft className="h-3.5 w-3.5" /> Précédent
+              </Button>
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                Suivant <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiers, useCreneaux, type Creneau } from "@/lib/store";
+import { useDossiersByRdvStatut, useCreneaux, type Creneau } from "@/lib/store";
 import { CENTRES } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,10 @@ export const Route = createFileRoute("/_app/rendez-vous")({
 });
 
 function RendezVous() {
-  const { dossiers, confirmerRdv } = useDossiers();
+  // Chaque statut est chargé séparément et borné côté SQL — à l'échelle réelle on ne
+  // charge jamais tous les dossiers pour en filtrer un sous-ensemble en JS.
+  const { dossiers: enAttente, confirmerRdv } = useDossiersByRdvStatut("recherche");
+  const { dossiers: confirmes } = useDossiersByRdvStatut("confirme");
   const { creneaux, ajouter, modifier, supprimer } = useCreneaux();
   const [target, setTarget] = useState<string | null>(null);
   const [date, setDate] = useState("");
@@ -42,8 +45,7 @@ function RendezVous() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CreneauForm>(EMPTY_FORM);
 
-  const enAttente = dossiers.filter((d) => d.rdv.statut === "recherche");
-  const confirmes = dossiers.filter((d) => d.rdv.statut === "confirme");
+  const dossiers = [...enAttente, ...confirmes];
   const targetDossier = target ? dossiers.find((d) => d.id === target) : null;
 
   function openCreate() {
