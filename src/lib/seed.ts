@@ -218,13 +218,3 @@ export function buildSeed(): Dossier[] {
     } satisfies Dossier;
   });
 }
-
-/** Veille créneaux : ce que le back office consulte chaque matin. */
-export const CRENEAUX = [
-  { centre: "TLScontact Agadir", date: "17/09/2026", places: 2, statut: "reserve", dossier: "EV-2026-0135" },
-  { centre: "TLScontact Agadir", date: "19/09/2026", places: 1, statut: "reserve", dossier: "EV-2026-0139" },
-  { centre: "TLScontact Agadir", date: "24/09/2026", places: 1, statut: "reserve", dossier: "EV-2026-0141" },
-  { centre: "TLScontact Agadir", date: "29/09/2026", places: 3, statut: "libre", dossier: null },
-  { centre: "TLScontact Casablanca", date: "06/10/2026", places: 1, statut: "libre", dossier: null },
-  { centre: "BLS Espagne Agadir", date: "—", places: 0, statut: "ferme", dossier: null },
-] as const;

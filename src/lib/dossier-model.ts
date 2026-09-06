@@ -71,7 +71,7 @@ export const ETAPES = [
 
 export type PackKey = "base" | "voyage" | "global";
 
-export const PACKS: Record<PackKey, { label: string; prix: number; margeNette: number; contenu: string }> = {
+export const PACKS: Record<PackKey, { label: string; prix: number; margeNette: number | null; contenu: string }> = {
   base: {
     label: "Pack Dossier",
     prix: 700,
@@ -87,7 +87,8 @@ export const PACKS: Record<PackKey, { label: string; prix: number; margeNette: n
   global: {
     label: "Pack Global",
     prix: 1300,
-    margeNette: 500,
+    /** Commission courtier assurance non encore figée (EV/2026-08) : pas de chiffre tant qu'elle n'est pas confirmée. */
+    margeNette: null,
     contenu: "Pack voyage + mise en relation courtier assurance (commission non encore figée).",
   },
 };
@@ -113,8 +114,11 @@ export interface Paiement {
   encaisse: boolean;
 }
 
+export const CENTRES = ["TLScontact Agadir", "TLScontact Casablanca", "BLS Espagne Agadir"] as const;
+export type Centre = (typeof CENTRES)[number];
+
 export interface RendezVous {
-  centre: "TLScontact Agadir" | "TLScontact Casablanca" | "BLS Espagne Agadir";
+  centre: Centre;
   date: string | null;
   heure: string | null;
   statut: "recherche" | "confirme" | "depose";

@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eidenvisa
+      POSTGRES_PASSWORD: eidenvisa
+      POSTGRES_DB: eidenvisa
+    ports:
+      - "5435:5432"
+    volumes:
+      - eidenvisa_db:/var/lib/postgresql/data
+
+volumes:
+  eidenvisa_db:

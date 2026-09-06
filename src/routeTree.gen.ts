@@ -9,50 +9,246 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppOpsRouteImport } from './routes/_app/ops'
+import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
+import { Route as AppQualificationRouteImport } from './routes/_app/qualification'
+import { Route as AppReferentielRouteImport } from './routes/_app/referentiel'
+import { Route as AppRendezVousRouteImport } from './routes/_app/rendez-vous'
+import { Route as AppDossiersIndexRouteImport } from './routes/_app/dossiers/index'
+import { Route as AppDossiersIdRouteImport } from './routes/_app/dossiers/$id'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOpsRoute = AppOpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaiementsRoute = AppPaiementsRouteImport.update({
+  id: '/paiements',
+  path: '/paiements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQualificationRoute = AppQualificationRouteImport.update({
+  id: '/qualification',
+  path: '/qualification',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReferentielRoute = AppReferentielRouteImport.update({
+  id: '/referentiel',
+  path: '/referentiel',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRendezVousRoute = AppRendezVousRouteImport.update({
+  id: '/rendez-vous',
+  path: '/rendez-vous',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDossiersIndexRoute = AppDossiersIndexRouteImport.update({
+  id: '/dossiers/',
+  path: '/dossiers/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDossiersIdRoute = AppDossiersIdRouteImport.update({
+  id: '/dossiers/$id',
+  path: '/dossiers/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
+  '/ops': typeof AppOpsRoute
+  '/paiements': typeof AppPaiementsRoute
+  '/qualification': typeof AppQualificationRoute
+  '/referentiel': typeof AppReferentielRoute
+  '/rendez-vous': typeof AppRendezVousRoute
+  '/dossiers/$id': typeof AppDossiersIdRoute
+  '/dossiers/': typeof AppDossiersIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/ops': typeof AppOpsRoute
+  '/paiements': typeof AppPaiementsRoute
+  '/qualification': typeof AppQualificationRoute
+  '/referentiel': typeof AppReferentielRoute
+  '/rendez-vous': typeof AppRendezVousRoute
+  '/': typeof AppIndexRoute
+  '/dossiers/$id': typeof AppDossiersIdRoute
+  '/dossiers': typeof AppDossiersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/ops': typeof AppOpsRoute
+  '/_app/paiements': typeof AppPaiementsRoute
+  '/_app/qualification': typeof AppQualificationRoute
+  '/_app/referentiel': typeof AppReferentielRoute
+  '/_app/rendez-vous': typeof AppRendezVousRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/dossiers/$id': typeof AppDossiersIdRoute
+  '/_app/dossiers/': typeof AppDossiersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/ops'
+    | '/paiements'
+    | '/qualification'
+    | '/referentiel'
+    | '/rendez-vous'
+    | '/dossiers/$id'
+    | '/dossiers/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/login'
+    | '/ops'
+    | '/paiements'
+    | '/qualification'
+    | '/referentiel'
+    | '/rendez-vous'
+    | '/'
+    | '/dossiers/$id'
+    | '/dossiers'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/_app/ops'
+    | '/_app/paiements'
+    | '/_app/qualification'
+    | '/_app/referentiel'
+    | '/_app/rendez-vous'
+    | '/_app/'
+    | '/_app/dossiers/$id'
+    | '/_app/dossiers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ops': {
+      id: '/_app/ops'
+      path: '/ops'
+      fullPath: '/ops'
+      preLoaderRoute: typeof AppOpsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/paiements': {
+      id: '/_app/paiements'
+      path: '/paiements'
+      fullPath: '/paiements'
+      preLoaderRoute: typeof AppPaiementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/qualification': {
+      id: '/_app/qualification'
+      path: '/qualification'
+      fullPath: '/qualification'
+      preLoaderRoute: typeof AppQualificationRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/referentiel': {
+      id: '/_app/referentiel'
+      path: '/referentiel'
+      fullPath: '/referentiel'
+      preLoaderRoute: typeof AppReferentielRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/rendez-vous': {
+      id: '/_app/rendez-vous'
+      path: '/rendez-vous'
+      fullPath: '/rendez-vous'
+      preLoaderRoute: typeof AppRendezVousRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dossiers/': {
+      id: '/_app/dossiers/'
+      path: '/dossiers'
+      fullPath: '/dossiers/'
+      preLoaderRoute: typeof AppDossiersIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dossiers/$id': {
+      id: '/_app/dossiers/$id'
+      path: '/dossiers/$id'
+      fullPath: '/dossiers/$id'
+      preLoaderRoute: typeof AppDossiersIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppOpsRoute: typeof AppOpsRoute
+  AppPaiementsRoute: typeof AppPaiementsRoute
+  AppQualificationRoute: typeof AppQualificationRoute
+  AppReferentielRoute: typeof AppReferentielRoute
+  AppRendezVousRoute: typeof AppRendezVousRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppDossiersIdRoute: typeof AppDossiersIdRoute
+  AppDossiersIndexRoute: typeof AppDossiersIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppOpsRoute: AppOpsRoute,
+  AppPaiementsRoute: AppPaiementsRoute,
+  AppQualificationRoute: AppQualificationRoute,
+  AppReferentielRoute: AppReferentielRoute,
+  AppRendezVousRoute: AppRendezVousRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppDossiersIdRoute: AppDossiersIdRoute,
+  AppDossiersIndexRoute: AppDossiersIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
