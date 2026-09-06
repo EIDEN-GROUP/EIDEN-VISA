@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDossiersPage, type DateRange } from "@/lib/store";
+import { useDossiersPage, useCurrentUser, type DateRange } from "@/lib/store";
 import { DateRangeFilter } from "@/components/filters/date-range-filter";
 import { completion } from "@/lib/dossier-model";
 import { NiveauBadge, RdvBadge, DecisionBadge } from "@/components/dossier/badges";
@@ -39,6 +39,8 @@ function DossiersList() {
   const [vue, setVue] = useState<"liste" | "kanban">("liste");
   const [page, setPage] = useState(1);
   const [range, setRange] = useState<DateRange>({});
+  const [mine, setMine] = useState(false);
+  const { user } = useCurrentUser();
 
   // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête —
   // à l'échelle réelle (potentiellement des millions de lignes) une requête par lettre serait intenable.
@@ -46,11 +48,11 @@ function DossiersList() {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
   }, [q]);
-  useEffect(() => setPage(1), [debouncedQ, niveau, range]);
+  useEffect(() => setPage(1), [debouncedQ, niveau, range, mine]);
 
   const params = useMemo(
-    () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau, range }),
-    [page, debouncedQ, niveau, range],
+    () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau, range, mine }),
+    [page, debouncedQ, niveau, range, mine],
   );
   const { dossiers, total, isLoading, setEtape } = useDossiersPage(params);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -98,6 +100,28 @@ function DossiersList() {
           </SelectContent>
         </Select>
         <DateRangeFilter value={range} onChange={setRange} />
+        {user && (
+          <div className="flex items-center gap-1 rounded-full border border-border p-1">
+            <button
+              onClick={() => setMine(false)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-xs font-medium",
+                !mine ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Tous les dossiers
+            </button>
+            <button
+              onClick={() => setMine(true)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-xs font-medium",
+                mine ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Mes dossiers
+            </button>
+          </div>
+        )}
         <div className="ml-auto flex items-center gap-1 rounded-full border border-border p-1">
           <button
             onClick={() => setVue("liste")}

@@ -38,6 +38,7 @@ function rowToDossier(row: DossierRow): Dossier {
       naissance: row.clientNaissance,
     },
     agent: row.agent,
+    agentUserId: row.agentUserId,
     ouvertLe: row.ouvertLe,
     caseKey: row.caseKey,
     profile: row.profile,
@@ -78,13 +79,15 @@ export const listDossiersPage = createServerFn({ method: "GET" })
       search: z.string().optional(),
       niveau: z.enum(["tous", "standard", "attention", "complexe"]).default("tous"),
       pays: z.enum(["tous", "france", "espagne"]).default("tous"),
+      mine: z.boolean().default(false),
       ...dateRangeInput.shape,
     }),
   )
   .handler(async ({ data }) => {
-    await requireUserId();
+    const userId = await requireUserId();
     const term = data.search?.trim();
     const conditions: SQL[] = [...dateRangeConditions(data)];
+    if (data.mine) conditions.push(eq(dossiersTable.agentUserId, userId));
     if (term) {
       const like = `%${term}%`;
       const digits = term.replace(/\D/g, "");
@@ -286,7 +289,9 @@ const dossierInput = z.object({
 export const createDossier = createServerFn({ method: "POST" })
   .validator(dossierInput)
   .handler(async ({ data }) => {
-    await requireUserId();
+    // Le compte réel qui crée le dossier vient de la session, jamais du client — sinon
+    // n'importe qui pourrait attribuer un dossier à quelqu'un d'autre en modifiant la requête.
+    const agentUserId = await requireUserId();
     await db.insert(dossiersTable).values({
       id: data.id,
       clientNom: data.client.nom,
@@ -294,6 +299,7 @@ export const createDossier = createServerFn({ method: "POST" })
       clientVille: data.client.ville,
       clientNaissance: data.client.naissance,
       agent: data.agent,
+      agentUserId,
       ouvertLe: data.ouvertLe,
       caseKey: data.caseKey,
       profile: data.profile as Profile,

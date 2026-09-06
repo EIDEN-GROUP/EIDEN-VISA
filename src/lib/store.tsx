@@ -68,6 +68,7 @@ export interface DossiersPageParams {
   niveau?: "tous" | "standard" | "attention" | "complexe" | undefined;
   pays?: "tous" | "france" | "espagne" | undefined;
   range?: DateRange | undefined;
+  mine?: boolean | undefined;
 }
 const dossiersPageKey = (params: DossiersPageParams) => ["dossiers", "page", params] as const;
 const dashboardStatsKey = (range: DateRange) => ["dossiers", "dashboard-stats", range] as const;

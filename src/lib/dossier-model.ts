@@ -136,6 +136,9 @@ export interface Dossier {
   id: string;
   client: { nom: string; telephone: string; ville: string; naissance: string };
   agent: string;
+  /** Le VRAI compte qui a ouvert ce dossier — sert à filtrer "Mes dossiers" par utilisateur.
+   * `null` pour les dossiers créés avant l'ajout de ce champ. */
+  agentUserId: string | null;
   ouvertLe: string;
   caseKey: string;
   profile: Profile;

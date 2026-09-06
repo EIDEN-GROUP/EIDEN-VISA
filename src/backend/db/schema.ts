@@ -30,6 +30,9 @@ export const dossiers = pgTable("dossiers", {
   clientVille: text("client_ville").notNull(),
   clientNaissance: text("client_naissance").notNull(),
   agent: text("agent").notNull(),
+  // Le compte réel qui a ouvert le dossier — permet un filtre "Mes dossiers" fiable,
+  // contrairement à `agent` qui n'est qu'un texte d'affichage (nom + rôle au moment de la création).
+  agentUserId: text("agent_user_id").references(() => users.id, { onDelete: "set null" }),
   ouvertLe: text("ouvert_le").notNull(),
   caseKey: text("case_key").notNull(),
   profile: jsonb("profile").$type<Profile>().notNull().default({}),
