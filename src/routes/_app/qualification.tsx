@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { TREE, getFixedCase, buildCourtSejour, type Profile, type CaseResult } from "@/lib/visa-rules";
 import { piecesFromCase, PACKS, CENTRES, type Dossier, type Centre } from "@/lib/dossier-model";
-import { useDossiers, useActingUser, ROLE_LABEL } from "@/lib/store";
+import { useDossiers, useCurrentUser, ROLE_LABEL } from "@/lib/store";
 import { NiveauBadge } from "@/components/dossier/badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ function familyRelated(caseKey: string, profile: Profile) {
 function Qualification() {
   const navigate = useNavigate();
   const { ajouter } = useDossiers();
-  const { actingUser } = useActingUser();
+  const { user: currentUser } = useCurrentUser();
 
   const [nodeKey, setNodeKey] = useState("start");
   const [profile, setProfile] = useState<Profile>({});
@@ -89,7 +89,7 @@ function Qualification() {
     const id = `EV-${year}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     // Attribué à la personne réellement connectée ("Connecté en tant que"), pas un texte
     // figé — sinon le journal d'activité et le champ "agent" du dossier se contredisent.
-    const agent = actingUser ? `${ROLE_LABEL[actingUser.role]} · ${actingUser.nom}` : "Accueil";
+    const agent = currentUser ? `${ROLE_LABEL[currentUser.role]} · ${currentUser.nom}` : "Accueil";
     const dossier: Dossier = {
       id,
       client: { nom, telephone, ville, naissance },

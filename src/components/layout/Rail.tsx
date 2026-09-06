@@ -1,13 +1,6 @@
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { useActingUser, useOpsUsers } from "@/lib/store";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useCurrentUser, ROLE_LABEL } from "@/lib/store";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -33,8 +26,7 @@ const NAV = [
 export function Rail() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { actingUser, devenir } = useActingUser();
-  const { users } = useOpsUsers();
+  const { user } = useCurrentUser();
 
   async function onLogout() {
     await logout();
@@ -51,21 +43,12 @@ export function Rail() {
         </div>
       </div>
 
-      <div className="px-4 pb-3">
-        <div className="ref px-2 pb-1.5 text-rail-muted">Connecté en tant que</div>
-        <Select value={actingUser?.id ?? ""} onValueChange={(v) => devenir(v)}>
-          <SelectTrigger className="h-8 border-rail-foreground/15 bg-rail-active/40 text-xs text-rail-foreground">
-            <SelectValue placeholder="Choisir un compte" />
-          </SelectTrigger>
-          <SelectContent>
-            {users.map((u) => (
-              <SelectItem key={u.id} value={u.id}>
-                {u.nom} · {u.role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {user && (
+        <div className="px-6 pb-3">
+          <div className="text-sm font-medium text-rail-foreground">{user.nom}</div>
+          <div className="ref text-rail-muted">{ROLE_LABEL[user.role]}</div>
+        </div>
+      )}
 
       <nav className="flex-1 px-3">
         {NAV.map(({ to, label, icon: Icon }) => {
@@ -86,7 +69,7 @@ export function Rail() {
             </Link>
           );
         })}
-        {actingUser?.role === "ceo" && (
+        {user?.role === "ceo" && (
           <Link
             to="/ops"
             className={cn(

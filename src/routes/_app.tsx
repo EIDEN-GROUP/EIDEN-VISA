@@ -1,9 +1,13 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Rail } from "@/components/layout/Rail";
+import { currentUser } from "@/backend/functions/auth";
 
-// Auth guard temporairement désactivé (login en cours de mise au point) :
-// voir src/backend/functions/auth.ts et src/routes/login.tsx pour la réactiver.
 export const Route = createFileRoute("/_app")({
+  beforeLoad: async () => {
+    const user = await currentUser();
+    if (!user) throw redirect({ to: "/login" });
+    return { user };
+  },
   component: AppLayout,
 });
 

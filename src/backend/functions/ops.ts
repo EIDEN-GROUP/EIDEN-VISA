@@ -5,6 +5,7 @@ import { eq, desc } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { users, activityLog } from "@/backend/db/schema";
 import { getAuthSession } from "@/backend/auth";
+import { requireCeo } from "@/backend/functions/auth";
 
 const roleEnum = z.enum(["ceo", "reception", "preparation", "back_office"]);
 
@@ -26,7 +27,11 @@ export const logActivity = createServerOnlyFn(async (action: string, detail: str
   });
 });
 
+// Tout ce qui suit gère des comptes et des rôles : réservé au CEO, vérifié côté serveur
+// via requireCeo() (le rôle du VRAI utilisateur connecté), pas une case cochée côté client.
+
 export const listUsers = createServerFn({ method: "GET" }).handler(async () => {
+  await requireCeo();
   return db
     .select({ id: users.id, email: users.email, nom: users.nom, role: users.role, createdAt: users.createdAt })
     .from(users)
@@ -43,6 +48,7 @@ export const createUser = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    await requireCeo();
     const passwordHash = await bcrypt.hash(data.password, 12);
     const id = crypto.randomUUID();
     await db.insert(users).values({
@@ -59,6 +65,7 @@ export const createUser = createServerFn({ method: "POST" })
 export const updateUserRole = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string(), role: roleEnum }))
   .handler(async ({ data }) => {
+    await requireCeo();
     await db.update(users).set({ role: data.role }).where(eq(users.id, data.id));
     await logActivity("utilisateur.role", `Rôle changé -> ${data.role} pour l'utilisateur ${data.id}`);
   });
@@ -66,11 +73,14 @@ export const updateUserRole = createServerFn({ method: "POST" })
 export const deleteUser = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
+    const ceo = await requireCeo();
+    if (data.id === ceo.id) throw new Error("Impossible de supprimer votre propre compte CEO.");
     await db.delete(users).where(eq(users.id, data.id));
     await logActivity("utilisateur.suppression", `Compte supprimé : ${data.id}`);
   });
 
 export const listActivity = createServerFn({ method: "GET" }).handler(async () => {
+  await requireCeo();
   const rows = await db
     .select({
       id: activityLog.id,
@@ -85,21 +95,4 @@ export const listActivity = createServerFn({ method: "GET" }).handler(async () =
     .orderBy(desc(activityLog.createdAt))
     .limit(200);
   return rows;
-});
-
-/** Pas un vrai login : juste "qui es-tu" pour attribuer les actions, le login réel est désactivé. */
-export const setActingUser = createServerFn({ method: "POST" })
-  .validator(z.object({ userId: z.string() }))
-  .handler(async ({ data }) => {
-    const session = await getAuthSession();
-    await session.update({ userId: data.userId });
-  });
-
-export const getActingUser = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await getAuthSession();
-  const userId = session.data.userId;
-  if (!userId) return null;
-  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-  if (!user) return null;
-  return { id: user.id, nom: user.nom, role: user.role };
 });

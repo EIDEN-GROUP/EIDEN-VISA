@@ -41,9 +41,8 @@ import {
   updateUserRole as updateUserRoleFn,
   deleteUser as deleteUserFn,
   listActivity as listActivityFn,
-  setActingUser as setActingUserFn,
-  getActingUser as getActingUserFn,
 } from "@/backend/functions/ops";
+import { currentUser as currentUserFn } from "@/backend/functions/auth";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
 export const ROLE_LABEL: Record<Role, string> = {
@@ -84,7 +83,7 @@ const documentsKey = (dossierId: string) => ["documents", dossierId] as const;
 const CRENEAUX_KEY = ["creneaux"] as const;
 const USERS_KEY = ["ops", "users"] as const;
 const ACTIVITY_KEY = ["ops", "activity"] as const;
-const ACTING_USER_KEY = ["ops", "acting-user"] as const;
+const CURRENT_USER_KEY = ["auth", "current-user"] as const;
 
 export interface Creneau {
   id: string;
@@ -391,21 +390,10 @@ export function useActivity() {
   return { activity: query.data ?? [], isLoading: query.isLoading };
 }
 
-/** "Connecté en tant que" — pas un vrai login, juste l'attribution des actions tant que
- * l'authentification réelle reste désactivée. */
-export function useActingUser() {
-  const queryClient = useQueryClient();
-  const query = useQuery({ queryKey: ACTING_USER_KEY, queryFn: () => getActingUserFn() });
-  const mutation = useMutation({
-    mutationFn: (userId: string) => setActingUserFn({ data: { userId } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ACTING_USER_KEY });
-      queryClient.invalidateQueries({ queryKey: ACTIVITY_KEY });
-    },
-  });
-  return {
-    actingUser: query.data ?? null,
-    isLoading: query.isLoading,
-    devenir: (userId: string) => mutation.mutateAsync(userId),
-  };
+/** Le VRAI utilisateur connecté — remplace l'ancien sélecteur "connecté en tant que"
+ * maintenant que le login réel est actif. Plus aucune façon de se faire passer pour
+ * quelqu'un d'autre sans son mot de passe. */
+export function useCurrentUser() {
+  const query = useQuery({ queryKey: CURRENT_USER_KEY, queryFn: () => currentUserFn() });
+  return { user: query.data ?? null, isLoading: query.isLoading };
 }

@@ -1,4 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
@@ -30,12 +30,28 @@ export const currentUser = createServerFn({ method: "GET" }).handler(async () =>
   if (!userId) return null;
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) return null;
-  return { id: user.id, nom: user.nom, email: user.email };
+  return { id: user.id, nom: user.nom, email: user.email, role: user.role };
 });
 
-// Vérification désactivée en même temps que le guard sur /_app (voir _app.tsx) :
-// tant que le login n'est pas remis en service, on laisse passer sans session.
-export async function requireUserId() {
+/** Échoue fermé : sans session valide, aucune mutation métier ne doit s'exécuter.
+ * Le garde de route sur /_app (voir _app.tsx) empêche déjà d'atteindre ce point sans
+ * être connecté — ceci est la deuxième ligne de défense, côté serveur. */
+export const requireUserId = createServerOnlyFn(async () => {
   const session = await getAuthSession();
-  return session.data.userId ?? "user-accueil";
-}
+  const userId = session.data.userId;
+  if (!userId) throw new Error("Non authentifié — veuillez vous reconnecter.");
+  return userId;
+});
+
+/** Réservé aux actions d'administration (comptes, rôles) : vérifie le rôle du VRAI
+ * utilisateur connecté, pas une identité choisie côté client.
+ * `createServerOnlyFn` est indispensable ici, comme pour `logActivity` dans ops.ts :
+ * une fonction plain qui touche `db` et est importée (même indirectement) depuis une
+ * page client (login.tsx importe `currentUser` de ce même fichier) entraîne tout le
+ * module — bcrypt/postgres compris — dans le bundle navigateur (incident déjà vu). */
+export const requireCeo = createServerOnlyFn(async () => {
+  const userId = await requireUserId();
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user || user.role !== "ceo") throw new Error("Accès réservé au CEO.");
+  return user;
+});

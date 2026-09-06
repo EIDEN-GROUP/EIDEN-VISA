@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useActingUser, useOpsUsers, useActivity, useDossiers, ROLE_LABEL, type Role } from "@/lib/store";
+import { useCurrentUser, useOpsUsers, useActivity, useDossiers, ROLE_LABEL, type Role } from "@/lib/store";
 import { alertes } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_app/ops")({
 });
 
 function Ops() {
-  const { actingUser } = useActingUser();
+  const { user: currentUser } = useCurrentUser();
   const { users, creer, changerRole, supprimer } = useOpsUsers();
   const { activity } = useActivity();
   const { dossiers } = useDossiers();
@@ -44,12 +44,10 @@ function Ops() {
 
   const alertesActives = dossiers.map((d) => ({ d, a: alertes(d) })).filter((x) => x.a.length > 0);
 
-  if (actingUser?.role !== "ceo") {
+  if (currentUser?.role !== "ceo") {
     return (
       <div className="py-16 text-center">
-        <p className="text-sm text-muted-foreground">
-          Accès réservé au CEO — choisissez ce compte dans "Connecté en tant que" pour ouvrir /ops.
-        </p>
+        <p className="text-sm text-muted-foreground">Accès réservé au CEO.</p>
       </div>
     );
   }
