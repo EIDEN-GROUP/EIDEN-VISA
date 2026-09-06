@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, or, ilike, sql, count as sqlCount } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { dossiers as dossiersTable } from "@/backend/db/schema";
 import { requireUserId } from "@/backend/functions/auth";
@@ -46,6 +46,163 @@ export const listDossiers = createServerFn({ method: "GET" }).handler(async () =
   await requireUserId();
   const rows = await db.select().from(dossiersTable).orderBy(desc(dossiersTable.createdAt));
   return rows.map(rowToDossier);
+});
+
+/**
+ * Liste paginée, filtrée côté SQL — pense échelle réelle (potentiellement des millions
+ * de dossiers) : jamais de SELECT * suivi d'un filtrage en JS.
+ */
+export const listDossiersPage = createServerFn({ method: "GET" })
+  .validator(
+    z.object({
+      page: z.number().min(1).default(1),
+      pageSize: z.number().min(1).max(200).default(50),
+      search: z.string().optional(),
+      niveau: z.enum(["tous", "standard", "attention", "complexe"]).default("tous"),
+      pays: z.enum(["tous", "france", "espagne"]).default("tous"),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const term = data.search?.trim();
+    const conditions = [];
+    if (term) {
+      const like = `%${term}%`;
+      const digits = term.replace(/\D/g, "");
+      conditions.push(
+        or(
+          ilike(dossiersTable.clientNom, like),
+          ilike(dossiersTable.clientVille, like),
+          ilike(dossiersTable.id, like),
+          digits.length > 0
+            ? sql`regexp_replace(${dossiersTable.clientTelephone}, '\\D', '', 'g') ilike ${`%${digits}%`}`
+            : ilike(dossiersTable.clientTelephone, like),
+        ),
+      );
+    }
+    if (data.niveau !== "tous") conditions.push(eq(dossiersTable.niveau, data.niveau));
+    if (data.pays === "espagne") conditions.push(ilike(dossiersTable.rdvCentre, "%BLS%"));
+    if (data.pays === "france") conditions.push(sql`${dossiersTable.rdvCentre} not ilike '%BLS%'`);
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [rows, totalRows] = await Promise.all([
+      db
+        .select()
+        .from(dossiersTable)
+        .where(where)
+        .orderBy(desc(dossiersTable.createdAt))
+        .limit(data.pageSize)
+        .offset((data.page - 1) * data.pageSize),
+      db.select({ n: sqlCount() }).from(dossiersTable).where(where),
+    ]);
+    return { rows: rows.map(rowToDossier), total: Number(totalRows[0]?.n ?? 0) };
+  });
+
+/** Bornée à un lot récent, jamais la table entière : les alertes se lisent sur les dossiers actifs. */
+export const listAlertesDossiers = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const rows = await db
+    .select()
+    .from(dossiersTable)
+    .where(sql`${dossiersTable.etape} < 7`)
+    .orderBy(desc(dossiersTable.createdAt))
+    .limit(300);
+  return rows.map(rowToDossier);
+});
+
+export const listDossiersRecents = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const rows = await db.select().from(dossiersTable).orderBy(desc(dossiersTable.createdAt)).limit(6);
+  return rows.map(rowToDossier);
+});
+
+export const listDossiersByRdvStatut = createServerFn({ method: "GET" })
+  .validator(z.object({ statut: z.enum(["recherche", "confirme", "depose"]) }))
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const rows = await db
+      .select()
+      .from(dossiersTable)
+      .where(eq(dossiersTable.rdvStatut, data.statut))
+      .orderBy(desc(dossiersTable.createdAt))
+      .limit(300);
+    return rows.map(rowToDossier);
+  });
+
+/** Dossiers ayant au moins un paiement en attente — pour l'écran Paiements, sans charger la table entière. */
+export const listDossiersAvecImpaye = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const rows = await db
+    .select()
+    .from(dossiersTable)
+    .where(
+      sql`exists (select 1 from jsonb_array_elements(${dossiersTable.paiements}) p where (p->>'encaisse')::boolean = false)`,
+    )
+    .orderBy(desc(dossiersTable.createdAt))
+    .limit(300);
+  return rows.map(rowToDossier);
+});
+
+/** Historique des encaissements — borné aux dossiers les plus récents ayant un encaissement. */
+export const listDossiersAvecEncaissement = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const rows = await db
+    .select()
+    .from(dossiersTable)
+    .where(
+      sql`exists (select 1 from jsonb_array_elements(${dossiersTable.paiements}) p where (p->>'encaisse')::boolean = true)`,
+    )
+    .orderBy(desc(dossiersTable.createdAt))
+    .limit(100);
+  return rows.map(rowToDossier);
+});
+
+/** Statistiques agrégées côté SQL — jamais un reduce() en JS sur la table entière. */
+export const getDashboardStats = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const [[totalRow], [actifsRow], [creneauRow], encaisseResult] = await Promise.all([
+    db.select({ n: sqlCount() }).from(dossiersTable),
+    db.select({ n: sqlCount() }).from(dossiersTable).where(sql`${dossiersTable.etape} < 7`),
+    db.select({ n: sqlCount() }).from(dossiersTable).where(eq(dossiersTable.rdvStatut, "recherche")),
+    db.execute(sql`
+      select coalesce(sum((p->>'montant')::numeric), 0) as total
+      from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+      where (p->>'encaisse')::boolean = true
+    `),
+  ]);
+  const totalEncaisse = Number((encaisseResult as unknown as { total: string }[])[0]?.total ?? 0);
+  return {
+    total: Number(totalRow?.n ?? 0),
+    actifs: Number(actifsRow?.n ?? 0),
+    enAttenteCreneau: Number(creneauRow?.n ?? 0),
+    totalEncaisse,
+  };
+});
+
+/** Statistiques de paiements agrégées côté SQL, pour l'écran Paiements. */
+export const getPaiementsStats = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const result = await db.execute(sql`
+    select
+      coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean = true), 0) as encaisse,
+      coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean = false), 0) as attente,
+      count(*) filter (where (p->>'encaisse')::boolean = true) as n_encaisse,
+      count(*) filter (where (p->>'encaisse')::boolean = false) as n_attente
+    from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+  `);
+  const row = (result as unknown as { encaisse: string; attente: string; n_encaisse: string; n_attente: string }[])[0];
+  return {
+    totalEncaisse: Number(row?.encaisse ?? 0),
+    totalAttente: Number(row?.attente ?? 0),
+    nEncaisse: Number(row?.n_encaisse ?? 0),
+    nAttente: Number(row?.n_attente ?? 0),
+  };
+});
+
+export const getPackCounts = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUserId();
+  const rows = await db.select({ pack: dossiersTable.pack, n: sqlCount() }).from(dossiersTable).groupBy(dossiersTable.pack);
+  return rows as { pack: PackKey; n: number }[];
 });
 
 export const getDossier = createServerFn({ method: "GET" })

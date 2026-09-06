@@ -2,6 +2,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Dossier, PackKey, Centre, Decision } from "./dossier-model";
 import {
   listDossiers,
+  listDossiersPage,
+  listAlertesDossiers,
+  listDossiersRecents,
+  listDossiersByRdvStatut,
+  listDossiersAvecImpaye,
+  listDossiersAvecEncaissement,
+  getDashboardStats,
+  getPaiementsStats,
+  getPackCounts,
   getDossier as getDossierFn,
   togglePiece as togglePieceFn,
   avancerEtape,
@@ -38,8 +47,24 @@ import {
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
 
-const DOSSIERS_KEY = ["dossiers"] as const;
-const dossierKey = (id: string) => ["dossiers", id] as const;
+const DOSSIERS_KEY = ["dossiers", "all"] as const;
+const dossierKey = (id: string) => ["dossiers", "detail", id] as const;
+export interface DossiersPageParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  niveau?: "tous" | "standard" | "attention" | "complexe";
+  pays?: "tous" | "france" | "espagne";
+}
+const dossiersPageKey = (params: DossiersPageParams) => ["dossiers", "page", params] as const;
+const DASHBOARD_STATS_KEY = ["dossiers", "dashboard-stats"] as const;
+const PAIEMENTS_STATS_KEY = ["dossiers", "paiements-stats"] as const;
+const PACK_COUNTS_KEY = ["dossiers", "pack-counts"] as const;
+const ALERTES_KEY = ["dossiers", "alertes"] as const;
+const RECENTS_KEY = ["dossiers", "recents"] as const;
+const IMPAYE_KEY = ["dossiers", "impaye"] as const;
+const ENCAISSEMENT_KEY = ["dossiers", "encaissement"] as const;
+const rdvStatutKey = (statut: "recherche" | "confirme" | "depose") => ["dossiers", "rdv-statut", statut] as const;
 const documentsKey = (dossierId: string) => ["documents", dossierId] as const;
 const CRENEAUX_KEY = ["creneaux"] as const;
 const USERS_KEY = ["ops", "users"] as const;
@@ -59,7 +84,10 @@ export type DocumentType = "france_tls" | "espagne_bls";
 
 function useDossierMutations() {
   const queryClient = useQueryClient();
-  const invalidateAll = () => queryClient.invalidateQueries({ queryKey: DOSSIERS_KEY });
+  // Une seule mutation peut affecter la page filtrée courante, les stats agrégées, le
+  // tableau de bord et les listes bornées (impayés, encaissements, rendez-vous) —
+  // on invalide tout ce qui vit sous le préfixe "dossiers" plutôt que de traquer chaque cas.
+  const invalidateAll = () => queryClient.invalidateQueries({ queryKey: ["dossiers"] });
 
   const togglePieceMutation = useMutation({
     mutationFn: (vars: { id: string; index: number }) => togglePieceFn({ data: vars }),
@@ -108,16 +136,31 @@ function useDossierMutations() {
   const setEtapeMutation = useMutation({
     mutationFn: (vars: { id: string; etape: number }) => setEtapeFn({ data: vars }),
     // Optimiste : le kanban doit bouger la carte tout de suite au dépôt, pas après un aller-retour réseau.
+    // Le kanban lit désormais une page filtrée (["dossiers","page",params]), pas la liste
+    // complète : on met à jour toutes les entrées en cache portant ce préfixe.
     onMutate: async (vars) => {
-      await queryClient.cancelQueries({ queryKey: DOSSIERS_KEY });
-      const previous = queryClient.getQueryData<Dossier[]>(DOSSIERS_KEY);
-      queryClient.setQueryData<Dossier[]>(DOSSIERS_KEY, (old) =>
-        old?.map((d) => (d.id === vars.id ? { ...d, etape: vars.etape } : d)),
-      );
-      return { previous };
+      await queryClient.cancelQueries({ queryKey: ["dossiers"] });
+      const previousEntries = queryClient.getQueriesData<Dossier[] | { rows: Dossier[]; total: number }>({
+        queryKey: ["dossiers"],
+      });
+      for (const [key, data] of previousEntries) {
+        if (!data) continue;
+        if (Array.isArray(data)) {
+          queryClient.setQueryData<Dossier[]>(
+            key,
+            data.map((d) => (d.id === vars.id ? { ...d, etape: vars.etape } : d)),
+          );
+        } else if (Array.isArray(data.rows)) {
+          queryClient.setQueryData(key, {
+            ...data,
+            rows: data.rows.map((d) => (d.id === vars.id ? { ...d, etape: vars.etape } : d)),
+          });
+        }
+      }
+      return { previousEntries };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(DOSSIERS_KEY, context.previous);
+      context?.previousEntries.forEach(([key, data]) => queryClient.setQueryData(key, data));
     },
     onSettled: invalidateAll,
   });
@@ -138,7 +181,68 @@ function useDossierMutations() {
   };
 }
 
-/** Liste complète, pour le tableau de bord, la liste des dossiers, paiements, rendez-vous. */
+/** Page filtrée/paginée côté SQL — écran Dossiers. Tient à l'échelle quel que soit le volume. */
+export function useDossiersPage(params: DossiersPageParams) {
+  const query = useQuery({
+    queryKey: dossiersPageKey(params),
+    queryFn: () => listDossiersPage({ data: params }),
+    placeholderData: (prev) => prev,
+  });
+  const mutations = useDossierMutations();
+  return {
+    dossiers: query.data?.rows ?? [],
+    total: query.data?.total ?? 0,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    ...mutations,
+  };
+}
+
+/** Statistiques agrégées côté SQL pour le tableau de bord. */
+export function useDashboardStats() {
+  const query = useQuery({ queryKey: DASHBOARD_STATS_KEY, queryFn: () => getDashboardStats() });
+  return { stats: query.data, isLoading: query.isLoading };
+}
+
+/** Dossiers actifs, bornés — sert à calculer les alertes sans charger toute la table. */
+export function useAlertesDossiers() {
+  const query = useQuery({ queryKey: ALERTES_KEY, queryFn: () => listAlertesDossiers() });
+  return { dossiers: query.data ?? [], isLoading: query.isLoading };
+}
+
+export function useDossiersRecents() {
+  const query = useQuery({ queryKey: RECENTS_KEY, queryFn: () => listDossiersRecents() });
+  return { dossiers: query.data ?? [], isLoading: query.isLoading };
+}
+
+export function useDossiersByRdvStatut(statut: "recherche" | "confirme" | "depose") {
+  const query = useQuery({ queryKey: rdvStatutKey(statut), queryFn: () => listDossiersByRdvStatut({ data: { statut } }) });
+  const mutations = useDossierMutations();
+  return { dossiers: query.data ?? [], isLoading: query.isLoading, ...mutations };
+}
+
+export function useDossiersAvecImpaye() {
+  const query = useQuery({ queryKey: IMPAYE_KEY, queryFn: () => listDossiersAvecImpaye() });
+  const mutations = useDossierMutations();
+  return { dossiers: query.data ?? [], isLoading: query.isLoading, ...mutations };
+}
+
+export function useDossiersAvecEncaissement() {
+  const query = useQuery({ queryKey: ENCAISSEMENT_KEY, queryFn: () => listDossiersAvecEncaissement() });
+  return { dossiers: query.data ?? [], isLoading: query.isLoading };
+}
+
+export function usePaiementsStats() {
+  const query = useQuery({ queryKey: PAIEMENTS_STATS_KEY, queryFn: () => getPaiementsStats() });
+  return { stats: query.data, isLoading: query.isLoading };
+}
+
+export function usePackCounts() {
+  const query = useQuery({ queryKey: PACK_COUNTS_KEY, queryFn: () => getPackCounts() });
+  return { counts: query.data ?? [], isLoading: query.isLoading };
+}
+
+/** Liste complète — conservée pour les besoins ponctuels (formulaires listant tous les dossiers). */
 export function useDossiers() {
   const query = useQuery({ queryKey: DOSSIERS_KEY, queryFn: () => listDossiers() });
   const mutations = useDossierMutations();
