@@ -41,10 +41,10 @@ const SEED: SeedInput[] = [
     etape: 6,
     rdv: { centre: "TLScontact Agadir", date: "24/09/2026", heure: "09:20", statut: "confirme" },
     fournis: "tout",
-    paiements: [
-      { libelle: "Frais de rendez-vous TLS", montant: 309, date: "05/09/2026", encaisse: true },
-      { libelle: "Solde Pack + voyage", montant: 1000, date: null, encaisse: false },
-    ],
+    // Le forfait rendez-vous TLS est déjà compté dans le prix du pack (voir margeNette dans
+    // dossier-model.ts : 700 - 309 = 391 pour le pack de base) — une seule ligne par dossier,
+    // jamais un "frais de rendez-vous" facturé en plus du solde du palier.
+    paiements: [{ libelle: "Pack + pré-réservation voyage", montant: 1000, date: null, encaisse: false }],
   },
   {
     id: "EV-2026-0140",
@@ -60,7 +60,7 @@ const SEED: SeedInput[] = [
     etape: 2,
     rdv: { centre: "TLScontact Casablanca", date: null, heure: null, statut: "recherche" },
     fournis: [0, 1],
-    paiements: [{ libelle: "Frais de rendez-vous TLS", montant: 309, date: null, encaisse: false }],
+    paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
     notes: ["Employeur contacté le 03/09 : autorisation de travail pas encore déposée sur le portail."],
   },
   {
@@ -77,7 +77,7 @@ const SEED: SeedInput[] = [
     etape: 4,
     rdv: { centre: "TLScontact Agadir", date: "19/09/2026", heure: "11:00", statut: "confirme" },
     fournis: [0, 1, 3, 4, 6, 7],
-    paiements: [{ libelle: "Frais de rendez-vous TLS", montant: 309, date: "30/08/2026", encaisse: true }],
+    paiements: [{ libelle: "Pack Dossier", montant: 700, date: "30/08/2026", encaisse: true }],
     notes: ["Fille française résidant à Lyon : attestation d'accueil déposée en mairie, en attente du tampon."],
   },
   {
@@ -94,10 +94,7 @@ const SEED: SeedInput[] = [
     etape: 7,
     rdv: { centre: "TLScontact Agadir", date: "08/09/2026", heure: "08:40", statut: "depose" },
     fournis: "tout",
-    paiements: [
-      { libelle: "Frais de rendez-vous TLS", montant: 309, date: "29/08/2026", encaisse: true },
-      { libelle: "Solde Pack Global", montant: 1300, date: "06/09/2026", encaisse: true },
-    ],
+    paiements: [{ libelle: "Pack Global", montant: 1300, date: "06/09/2026", encaisse: true }],
     notes: ["Déplacement salon Agro Lyon. Lettre de mission de l'entreprise marocaine jointe."],
   },
   {
@@ -131,7 +128,7 @@ const SEED: SeedInput[] = [
     etape: 3,
     rdv: { centre: "TLScontact Agadir", date: null, heure: null, statut: "recherche" },
     fournis: [0, 1, 3, 4],
-    paiements: [{ libelle: "Frais de rendez-vous TLS", montant: 309, date: null, encaisse: false }],
+    paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
     notes: ["Rejoint son père, ressortissant espagnol résidant à Valence. Ne pas ajouter de pièces hors liste UE."],
   },
   {
@@ -185,10 +182,7 @@ const SEED: SeedInput[] = [
     etape: 7,
     rdv: { centre: "TLScontact Agadir", date: "02/09/2026", heure: "14:30", statut: "depose" },
     fournis: "tout",
-    paiements: [
-      { libelle: "Frais de rendez-vous TLS", montant: 309, date: "18/08/2026", encaisse: true },
-      { libelle: "Solde Pack Dossier", montant: 700, date: "31/08/2026", encaisse: true },
-    ],
+    paiements: [{ libelle: "Pack Dossier", montant: 700, date: "31/08/2026", encaisse: true }],
   },
 ];
 
