@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useDossier } from "@/lib/store";
 import type { Dossier } from "@/lib/dossier-model";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft } from "lucide-react";
+import { Download, ArrowLeft, Check } from "lucide-react";
 
 export const Route = createFileRoute("/dossiers/$id/recu")({
   component: Recu,
@@ -77,6 +77,51 @@ function buildReceiptPdf(d: Dossier) {
     doc.setLineWidth(0.3);
     doc.line(marginX, y, pageW - marginX, y);
 
+    // Checklist des pièces — même contenu que l'onglet Documents du dossier, pour que le
+    // client reparte avec la liste exacte de ce qui a déjà été fourni ou reste à apporter.
+    y += 8;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...gray);
+    doc.text("PIÈCES DU DOSSIER", marginX, y);
+
+    const ensureSpace = (needed: number) => {
+      if (y + needed > 280) {
+        doc.addPage();
+        y = 20;
+      }
+    };
+
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    for (const p of d.pieces) {
+      ensureSpace(6);
+      doc.setDrawColor(...gray);
+      doc.setLineWidth(0.35);
+      doc.rect(marginX, y - 3.2, 3.2, 3.2);
+      if (p.fourni) {
+        doc.setDrawColor(...terracotta);
+        doc.setLineWidth(0.6);
+        doc.line(marginX, y - 1.9, marginX + 1.3, y - 0.6);
+        doc.line(marginX + 1.3, y - 0.6, marginX + 3.2, y - 3.2);
+      }
+      doc.setTextColor(p.fourni ? forest[0] : gray[0], p.fourni ? forest[1] : gray[1], p.fourni ? forest[2] : gray[2]);
+      doc.text(p.label, marginX + 6, y, { maxWidth: contentW - 6 });
+      y += 6;
+    }
+    if (d.pieces.length === 0) {
+      doc.setTextColor(...gray);
+      doc.text("Aucune pièce listée pour ce dossier.", marginX, y);
+      y += 6;
+    }
+
+    y += 4;
+    ensureSpace(16);
+    doc.setDrawColor(220, 214, 200);
+    doc.setLineWidth(0.3);
+    doc.line(marginX, y, pageW - marginX, y);
+
     y += 8;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
@@ -99,6 +144,7 @@ function buildReceiptPdf(d: Dossier) {
       y += 6;
     } else {
       for (const p of paye) {
+        ensureSpace(7);
         doc.setTextColor(...forest);
         doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.5 });
         doc.setTextColor(...gray);
@@ -125,7 +171,10 @@ function buildReceiptPdf(d: Dossier) {
     doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
 
     // Signature block — client acknowledgment and the Eiden Visa agent's countersignature.
-    const sigY = Math.max(y + 30, 210);
+    // Bornée à la page courante : jamais forcée à une position fixe qui déborderait sur une
+    // nouvelle page si la checklist des pièces a déjà poussé le contenu plus bas.
+    ensureSpace(40);
+    const sigY = y + 20;
     const colW = contentW / 2 - 6;
     doc.setDrawColor(...gray);
     doc.setLineWidth(0.3);
@@ -213,6 +262,27 @@ function Recu() {
               {d.rdv.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact"}
             </div>
           </div>
+        </div>
+
+        <div className="border-b border-border py-6">
+          <div className="ref mb-3 text-muted-foreground">Pièces du dossier</div>
+          <ul className="space-y-1.5">
+            {d.pieces.map((p, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <span
+                  className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center border ${
+                    p.fourni ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                  }`}
+                >
+                  {p.fourni && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                </span>
+                <span className={p.fourni ? "text-foreground" : "text-muted-foreground"}>{p.label}</span>
+              </li>
+            ))}
+            {d.pieces.length === 0 && (
+              <li className="text-sm text-muted-foreground">Aucune pièce listée pour ce dossier.</li>
+            )}
+          </ul>
         </div>
 
         <div className="py-6">

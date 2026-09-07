@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ETAPES, type Dossier } from "@/lib/dossier-model";
 import { NiveauBadge, RdvBadge } from "@/components/dossier/badges";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function DossiersKanban({
   dossiers,
@@ -49,10 +50,8 @@ export function DossiersKanban({
               </div>
               <div className="mt-1 flex flex-1 flex-col gap-2">
                 {colDossiers.map((d) => (
-                  <Link
+                  <div
                     key={d.id}
-                    to="/dossiers/$id"
-                    params={{ id: d.id }}
                     draggable
                     onDragStart={(ev) => {
                       ev.dataTransfer.setData("text/plain", d.id);
@@ -61,17 +60,41 @@ export function DossiersKanban({
                     }}
                     onDragEnd={() => setDraggingId(null)}
                     className={cn(
-                      "block cursor-grab rounded-lg border border-border bg-card p-2.5 shadow-sm active:cursor-grabbing",
+                      "cursor-grab rounded-lg border border-border bg-card p-2.5 shadow-sm active:cursor-grabbing",
                       draggingId === d.id && "opacity-40",
                     )}
                   >
-                    <div className="text-sm font-medium text-foreground">{d.client.nom}</div>
-                    <div className="ref mt-0.5 text-muted-foreground">{d.id}</div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <NiveauBadge level={d.niveau} />
-                      <RdvBadge statut={d.rdv.statut} />
+                    <Link to="/dossiers/$id" params={{ id: d.id }} className="block">
+                      <div className="text-sm font-medium text-foreground">{d.client.nom}</div>
+                      <div className="ref mt-0.5 text-muted-foreground">{d.id}</div>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <NiveauBadge level={d.niveau} />
+                        <RdvBadge statut={d.rdv.statut} />
+                      </div>
+                    </Link>
+                    {/* Équivalent clavier au glisser-déposer : déplacer une carte à la souris
+                        seulement exclut tout utilisateur clavier de l'action principale du kanban. */}
+                    <div className="mt-2 flex items-center justify-between gap-1 border-t border-border pt-2">
+                      <button
+                        type="button"
+                        aria-label={`Reculer ${d.client.nom} à l'étape précédente`}
+                        disabled={e.n <= 1}
+                        onClick={() => onMove(d.id, e.n - 1)}
+                        className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Avancer ${d.client.nom} à l'étape suivante`}
+                        disabled={e.n >= 7}
+                        onClick={() => onMove(d.id, e.n + 1)}
+                        className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      </button>
                     </div>
-                  </Link>
+                  </div>
                 ))}
                 {colDossiers.length === 0 && (
                   <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
