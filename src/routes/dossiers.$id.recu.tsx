@@ -70,7 +70,6 @@ function buildReceiptPdf(d: Dossier) {
 
     y += 5;
     doc.text(d.client.ville, marginX, y);
-    doc.text(`Centre : ${d.rdv.centre}`, marginX + contentW / 2, y);
 
     y += 12;
     doc.setDrawColor(220, 214, 200);
@@ -92,23 +91,30 @@ function buildReceiptPdf(d: Dossier) {
       }
     };
 
-    y += 6;
+    y += 7;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
+    const pieceLineHeight = 4.6;
+    const pieceIndent = 6.5;
     for (const p of d.pieces) {
-      ensureSpace(6);
+      // Une pièce dont le libellé tient sur plusieurs lignes doit pousser la suivante
+      // d'autant de lignes, sinon le texte suivant se superpose (bug observé en prod).
+      const lines = doc.splitTextToSize(p.label, contentW - pieceIndent) as string[];
+      ensureSpace(lines.length * pieceLineHeight + 2);
       doc.setDrawColor(...gray);
       doc.setLineWidth(0.35);
-      doc.rect(marginX, y - 3.2, 3.2, 3.2);
+      doc.rect(marginX, y - 3, 3, 3);
       if (p.fourni) {
-        doc.setDrawColor(...terracotta);
-        doc.setLineWidth(0.6);
-        doc.line(marginX, y - 1.9, marginX + 1.3, y - 0.6);
-        doc.line(marginX + 1.3, y - 0.6, marginX + 3.2, y - 3.2);
+        doc.setFillColor(...terracotta);
+        doc.rect(marginX, y - 3, 3, 3, "F");
+        doc.setDrawColor(255, 255, 255);
+        doc.setLineWidth(0.5);
+        doc.line(marginX + 0.5, y - 1.6, marginX + 1.3, y - 0.7);
+        doc.line(marginX + 1.3, y - 0.7, marginX + 2.6, y - 2.7);
       }
       doc.setTextColor(p.fourni ? forest[0] : gray[0], p.fourni ? forest[1] : gray[1], p.fourni ? forest[2] : gray[2]);
-      doc.text(p.label, marginX + 6, y, { maxWidth: contentW - 6 });
-      y += 6;
+      doc.text(lines, marginX + pieceIndent, y);
+      y += lines.length * pieceLineHeight + 2;
     }
     if (d.pieces.length === 0) {
       doc.setTextColor(...gray);
