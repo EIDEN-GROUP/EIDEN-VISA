@@ -95,7 +95,7 @@ export interface Creneau {
   dossierId: string | null;
 }
 
-export type DocumentType = "france_tls" | "espagne_bls";
+export type DocumentType = "france_tls" | "espagne_bls" | "autre";
 
 function useDossierMutations() {
   const queryClient = useQueryClient();

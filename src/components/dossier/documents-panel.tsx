@@ -3,9 +3,9 @@ import { useDocuments, type DocumentType } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, Trash2 } from "lucide-react";
 
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 Mo : largement suffisant pour un PDF de dossier scanné
+const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 Mo par fichier
 
-const SLOTS: { type: DocumentType; label: string }[] = [
+const PDF_SLOTS: { type: DocumentType; label: string }[] = [
   { type: "france_tls", label: "France · TLScontact" },
   { type: "espagne_bls", label: "Espagne · BLS" },
 ];
@@ -26,13 +26,14 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
   const inputRefs = useRef<Record<DocumentType, HTMLInputElement | null>>({
     france_tls: null,
     espagne_bls: null,
+    autre: null,
   });
 
-  async function handleFile(type: DocumentType, file: File | undefined) {
+  async function handlePdfFile(type: DocumentType, file: File | undefined) {
     setError(null);
     if (!file) return;
     if (file.type !== "application/pdf") {
-      setError("Seuls les fichiers PDF sont acceptés.");
+      setError("Seuls les fichiers PDF sont acceptés ici.");
       return;
     }
     if (file.size > MAX_SIZE_BYTES) {
@@ -48,10 +49,37 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
     }
   }
 
+  // "Autres documents" : n'importe quel type et plusieurs fichiers à la fois — pensé pour
+  // ne jamais perdre une pièce (photo prise au comptoir, scan, tableur...) faute d'emplacement dédié.
+  async function handleAnyFiles(files: FileList | null) {
+    setError(null);
+    if (!files || files.length === 0) return;
+    setUploadingType("autre");
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > MAX_SIZE_BYTES) {
+          setError(`"${file.name}" dépasse 10 Mo — non envoyé.`);
+          continue;
+        }
+        const dataBase64 = await readAsBase64(file);
+        await upload({
+          type: "autre",
+          filename: file.name,
+          mimeType: file.type || "application/octet-stream",
+          dataBase64,
+        });
+      }
+    } finally {
+      setUploadingType(null);
+    }
+  }
+
+  const autres = documents.filter((doc) => doc.type === "autre");
+
   return (
     <div className="space-y-4">
       {error && <p className="text-xs text-[var(--stop)]">{error}</p>}
-      {SLOTS.map((slot) => {
+      {PDF_SLOTS.map((slot) => {
         const docs = documents.filter((doc) => doc.type === slot.type);
         return (
           <div key={slot.type}>
@@ -74,7 +102,7 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
                 accept="application/pdf"
                 className="hidden"
                 onChange={(e) => {
-                  void handleFile(slot.type, e.target.files?.[0]);
+                  void handlePdfFile(slot.type, e.target.files?.[0]);
                   e.target.value = "";
                 }}
               />
@@ -105,6 +133,63 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
           </div>
         );
       })}
+
+      <div className="border-t border-border pt-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Autres documents
+            </span>
+            <p className="text-xs text-muted-foreground">Tout type de fichier — pour ne jamais perdre une pièce.</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={uploadingType === "autre"}
+            onClick={() => inputRefs.current.autre?.click()}
+          >
+            <Upload className="h-3.5 w-3.5" strokeWidth={1.5} />
+            {uploadingType === "autre" ? "Envoi…" : "Ajouter des fichiers"}
+          </Button>
+          <input
+            ref={(el) => {
+              inputRefs.current.autre = el;
+            }}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              void handleAnyFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        <div className="mt-2 space-y-1.5">
+          {autres.length === 0 && <p className="text-xs text-muted-foreground">Aucun fichier déposé.</p>}
+          {autres.map((doc) => (
+            <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+              <a
+                href={`/documents/${doc.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm text-foreground hover:text-primary hover:underline"
+              >
+                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                {doc.filename}
+              </a>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => supprimer(doc.id)}
+                  className="text-muted-foreground hover:text-[var(--stop)]"
+                  aria-label="Supprimer le document"
+                >
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

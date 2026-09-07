@@ -69,7 +69,7 @@ export const documents = pgTable("documents", {
   dossierId: text("dossier_id")
     .notNull()
     .references(() => dossiers.id, { onDelete: "cascade" }),
-  type: text("type").$type<"france_tls" | "espagne_bls">().notNull(),
+  type: text("type").$type<"france_tls" | "espagne_bls" | "autre">().notNull(),
   filename: text("filename").notNull(),
   mimeType: text("mime_type").notNull(),
   // Stocké en base64 : volumes modestes (PDF de dossier), évite de gérer un type bytea dédié.
