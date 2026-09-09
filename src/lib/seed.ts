@@ -2,6 +2,7 @@ import {
   piecesFromCase,
   resolveCase,
   type Dossier,
+  type Modalite,
   type PackKey,
   type Paiement,
   type RendezVous,
@@ -19,6 +20,7 @@ interface SeedInput {
   caseKey: string;
   profile: Profile;
   pack: PackKey;
+  modalite?: Modalite;
   etape: number;
   rdv: RendezVous;
   fournis: number[] | "tout";
@@ -38,13 +40,28 @@ const SEED: SeedInput[] = [
     caseKey: "DYNAMIC",
     profile: { base: "tourisme", prof: "salarie", married: true, visaHist: true },
     pack: "voyage",
+    modalite: "acompte",
     etape: 6,
     rdv: { centre: "TLScontact Agadir", date: "24/09/2026", heure: "09:20", statut: "confirme" },
     fournis: "tout",
-    // Le forfait rendez-vous TLS est déjà compté dans le prix du pack (voir margeNette dans
-    // dossier-model.ts : 700 - 309 = 391 pour le pack de base) — une seule ligne par dossier,
-    // jamais un "frais de rendez-vous" facturé en plus du solde du palier.
-    paiements: [{ libelle: "Pack + pré-réservation voyage", montant: 1000, date: null, encaisse: false }],
+    // Cliente en modalité acompte : 20 % versés à la confirmation du créneau, solde des 80 %
+    // dû à la remise du dossier scellé (étape 6). Aucun "frais de rendez-vous" en plus.
+    paiements: [
+      {
+        libelle: "Acompte 20 % · Pack + pré-réservation voyage",
+        montant: 200,
+        date: "05/09/2026",
+        encaisse: true,
+        echeance: "acompte",
+      },
+      {
+        libelle: "Solde 80 % · Pack + pré-réservation voyage",
+        montant: 800,
+        date: null,
+        encaisse: false,
+        echeance: "solde",
+      },
+    ],
   },
   {
     id: "EV-2026-0140",
@@ -61,7 +78,9 @@ const SEED: SeedInput[] = [
     rdv: { centre: "TLScontact Casablanca", date: null, heure: null, statut: "recherche" },
     fournis: [0, 1],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
-    notes: ["Employeur contacté le 03/09 : autorisation de travail pas encore déposée sur le portail."],
+    notes: [
+      "Employeur contacté le 03/09 : autorisation de travail pas encore déposée sur le portail.",
+    ],
   },
   {
     id: "EV-2026-0139",
@@ -78,7 +97,9 @@ const SEED: SeedInput[] = [
     rdv: { centre: "TLScontact Agadir", date: "19/09/2026", heure: "11:00", statut: "confirme" },
     fournis: [0, 1, 3, 4, 6, 7],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: "30/08/2026", encaisse: true }],
-    notes: ["Fille française résidant à Lyon : attestation d'accueil déposée en mairie, en attente du tampon."],
+    notes: [
+      "Fille française résidant à Lyon : attestation d'accueil déposée en mairie, en attente du tampon.",
+    ],
   },
   {
     id: "EV-2026-0138",
@@ -112,7 +133,9 @@ const SEED: SeedInput[] = [
     rdv: { centre: "TLScontact Casablanca", date: null, heure: null, statut: "recherche" },
     fournis: [0, 1],
     paiements: [],
-    notes: ["Conjoint français. Cas complexe : rendez-vous avocat partenaire proposé avant tout encaissement de solde."],
+    notes: [
+      "Conjoint français. Cas complexe : rendez-vous avocat partenaire proposé avant tout encaissement de solde.",
+    ],
   },
   {
     id: "EV-2026-0136",
@@ -129,7 +152,9 @@ const SEED: SeedInput[] = [
     rdv: { centre: "TLScontact Agadir", date: null, heure: null, statut: "recherche" },
     fournis: [0, 1, 3, 4],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
-    notes: ["Rejoint son père, ressortissant espagnol résidant à Valence. Ne pas ajouter de pièces hors liste UE."],
+    notes: [
+      "Rejoint son père, ressortissant espagnol résidant à Valence. Ne pas ajouter de pièces hors liste UE.",
+    ],
   },
   {
     id: "EV-2026-0135",
@@ -146,10 +171,17 @@ const SEED: SeedInput[] = [
     rdv: { centre: "TLScontact Agadir", date: "17/09/2026", heure: "10:10", statut: "confirme" },
     fournis: [0, 1, 3, 4, 5, 6, 8, 9],
     paiements: [
-      { libelle: "Frais de rendez-vous TLS (x2)", montant: 618, date: "23/08/2026", encaisse: true },
+      {
+        libelle: "Frais de rendez-vous TLS (x2)",
+        montant: 618,
+        date: "23/08/2026",
+        encaisse: true,
+      },
       { libelle: "Pré-réservation voyage", montant: 300, date: "04/09/2026", encaisse: true },
     ],
-    notes: ["Un enfant de 9 ans au dossier : autorisation de sortie du territoire à légaliser côté marocain."],
+    notes: [
+      "Un enfant de 9 ans au dossier : autorisation de sortie du territoire à légaliser côté marocain.",
+    ],
   },
   {
     id: "EV-2026-0134",
@@ -165,7 +197,9 @@ const SEED: SeedInput[] = [
     etape: 1,
     rdv: { centre: "TLScontact Agadir", date: null, heure: null, statut: "recherche" },
     fournis: [],
-    paiements: [{ libelle: "Consultation d'orientation", montant: 100, date: "19/08/2026", encaisse: true }],
+    paiements: [
+      { libelle: "Consultation d'orientation", montant: 100, date: "19/08/2026", encaisse: true },
+    ],
     notes: ["Fils étudiant : orienté Campus France, aucun dossier construit par Eiden Visa."],
   },
   {
@@ -189,10 +223,7 @@ const SEED: SeedInput[] = [
 export function buildSeed(): Dossier[] {
   return SEED.map((s) => {
     const c = resolveCase(s.caseKey, s.profile);
-    const pieces = piecesFromCase(
-      c,
-      s.fournis === "tout" ? c.docs.map((_, i) => i) : s.fournis,
-    );
+    const pieces = piecesFromCase(c, s.fournis === "tout" ? c.docs.map((_, i) => i) : s.fournis);
     return {
       id: s.id,
       client: { nom: s.nom, telephone: s.telephone, ville: s.ville, naissance: s.naissance },
@@ -205,10 +236,20 @@ export function buildSeed(): Dossier[] {
       categorie: c.cat,
       niveau: c.level,
       pack: s.pack,
+      modalitePaiement: s.modalite ?? "comptant",
       etape: s.etape,
       rdv: s.rdv,
       pieces,
-      paiements: s.paiements,
+      // Backfill de l'échéance sur les lignes qui n'en portent pas : les options à la carte
+      // sont identifiées par leur libellé, tout le reste est un solde.
+      paiements: s.paiements.map((p) => ({
+        ...p,
+        echeance:
+          p.echeance ??
+          (/pré-réservation|assurance|option|orientation|consultation/i.test(p.libelle)
+            ? "option"
+            : "solde"),
+      })),
       notes: [...(s.notes ?? []), ...c.notes],
       decision: "en_attente",
       decisionDate: null,

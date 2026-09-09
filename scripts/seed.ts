@@ -43,6 +43,7 @@ async function main() {
         categorie: d.categorie,
         niveau: d.niveau,
         pack: d.pack,
+        modalitePaiement: d.modalitePaiement,
         etape: d.etape,
         rdvCentre: d.rdv.centre,
         rdvDate: d.rdv.date,

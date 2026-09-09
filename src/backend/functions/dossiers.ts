@@ -3,9 +3,16 @@ import { z } from "zod";
 import { eq, desc, and, or, ilike, gte, lte, sql, count as sqlCount, type SQL } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { dossiers as dossiersTable } from "@/backend/db/schema";
-import { requireUserId } from "@/backend/functions/auth";
+import { requireUserId, requireCeo } from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
-import { PACKS, type Dossier, type PackKey } from "@/lib/dossier-model";
+import {
+  PACKS,
+  reglerEcheancier,
+  MODALITE_LABEL,
+  type Dossier,
+  type PackKey,
+  type Modalite,
+} from "@/lib/dossier-model";
 import type { Profile } from "@/lib/visa-rules";
 
 /** Filtre de date partagé : "dossiers ouverts entre le X et le Y", sur la vraie colonne
@@ -14,7 +21,10 @@ const dateRangeInput = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
 });
-function dateRangeConditions(data: { dateFrom?: string | undefined; dateTo?: string | undefined }): SQL[] {
+function dateRangeConditions(data: {
+  dateFrom?: string | undefined;
+  dateTo?: string | undefined;
+}): SQL[] {
   const conditions: SQL[] = [];
   if (data.dateFrom) conditions.push(gte(dossiersTable.createdAt, new Date(data.dateFrom)));
   if (data.dateTo) {
@@ -46,6 +56,7 @@ function rowToDossier(row: DossierRow): Dossier {
     categorie: row.categorie,
     niveau: row.niveau,
     pack: row.pack,
+    modalitePaiement: row.modalitePaiement,
     etape: row.etape,
     rdv: {
       centre: row.rdvCentre as Dossier["rdv"]["centre"],
@@ -133,16 +144,27 @@ export const listAlertesDossiers = createServerFn({ method: "GET" }).handler(asy
 
 export const listDossiersRecents = createServerFn({ method: "GET" }).handler(async () => {
   await requireUserId();
-  const rows = await db.select().from(dossiersTable).orderBy(desc(dossiersTable.createdAt)).limit(6);
+  const rows = await db
+    .select()
+    .from(dossiersTable)
+    .orderBy(desc(dossiersTable.createdAt))
+    .limit(6);
   return rows.map(rowToDossier);
 });
 
 export const listDossiersByRdvStatut = createServerFn({ method: "GET" })
-  .validator(z.object({ statut: z.enum(["recherche", "confirme", "depose"]), ...dateRangeInput.shape }))
+  .validator(
+    z.object({ statut: z.enum(["recherche", "confirme", "depose"]), ...dateRangeInput.shape }),
+  )
   .handler(async ({ data }) => {
     await requireUserId();
     const where = and(eq(dossiersTable.rdvStatut, data.statut), ...dateRangeConditions(data));
-    const rows = await db.select().from(dossiersTable).where(where).orderBy(desc(dossiersTable.createdAt)).limit(300);
+    const rows = await db
+      .select()
+      .from(dossiersTable)
+      .where(where)
+      .orderBy(desc(dossiersTable.createdAt))
+      .limit(300);
     return rows.map(rowToDossier);
   });
 
@@ -155,7 +177,12 @@ export const listDossiersAvecImpaye = createServerFn({ method: "GET" })
       sql`exists (select 1 from jsonb_array_elements(${dossiersTable.paiements}) p where (p->>'encaisse')::boolean = false)`,
       ...dateRangeConditions(data),
     );
-    const rows = await db.select().from(dossiersTable).where(where).orderBy(desc(dossiersTable.createdAt)).limit(300);
+    const rows = await db
+      .select()
+      .from(dossiersTable)
+      .where(where)
+      .orderBy(desc(dossiersTable.createdAt))
+      .limit(300);
     return rows.map(rowToDossier);
   });
 
@@ -168,7 +195,12 @@ export const listDossiersAvecEncaissement = createServerFn({ method: "GET" })
       sql`exists (select 1 from jsonb_array_elements(${dossiersTable.paiements}) p where (p->>'encaisse')::boolean = true)`,
       ...dateRangeConditions(data),
     );
-    const rows = await db.select().from(dossiersTable).where(where).orderBy(desc(dossiersTable.createdAt)).limit(100);
+    const rows = await db
+      .select()
+      .from(dossiersTable)
+      .where(where)
+      .orderBy(desc(dossiersTable.createdAt))
+      .limit(100);
     return rows.map(rowToDossier);
   });
 
@@ -194,7 +226,15 @@ export const getDashboardStats = createServerFn({ method: "GET" })
         from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
         where (p->>'encaisse')::boolean = true
         ${data.dateFrom ? sql`and d.created_at >= ${new Date(data.dateFrom)}` : sql``}
-        ${data.dateTo ? sql`and d.created_at <= ${(() => { const e = new Date(data.dateTo); e.setHours(23, 59, 59, 999); return e; })()}` : sql``}
+        ${
+          data.dateTo
+            ? sql`and d.created_at <= ${(() => {
+                const e = new Date(data.dateTo);
+                e.setHours(23, 59, 59, 999);
+                return e;
+              })()}`
+            : sql``
+        }
       `),
     ]);
     const totalEncaisse = Number((encaisseResult as unknown as { total: string }[])[0]?.total ?? 0);
@@ -220,9 +260,24 @@ export const getPaiementsStats = createServerFn({ method: "GET" })
       from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
       where true
       ${data.dateFrom ? sql`and d.created_at >= ${new Date(data.dateFrom)}` : sql``}
-      ${data.dateTo ? sql`and d.created_at <= ${(() => { const e = new Date(data.dateTo); e.setHours(23, 59, 59, 999); return e; })()}` : sql``}
+      ${
+        data.dateTo
+          ? sql`and d.created_at <= ${(() => {
+              const e = new Date(data.dateTo);
+              e.setHours(23, 59, 59, 999);
+              return e;
+            })()}`
+          : sql``
+      }
     `);
-    const row = (result as unknown as { encaisse: string; attente: string; n_encaisse: string; n_attente: string }[])[0];
+    const row = (
+      result as unknown as {
+        encaisse: string;
+        attente: string;
+        n_encaisse: string;
+        n_attente: string;
+      }[]
+    )[0];
     return {
       totalEncaisse: Number(row?.encaisse ?? 0),
       totalAttente: Number(row?.attente ?? 0),
@@ -254,7 +309,12 @@ export const getDossier = createServerFn({ method: "GET" })
 
 const dossierInput = z.object({
   id: z.string(),
-  client: z.object({ nom: z.string(), telephone: z.string(), ville: z.string(), naissance: z.string() }),
+  client: z.object({
+    nom: z.string(),
+    telephone: z.string(),
+    ville: z.string(),
+    naissance: z.string(),
+  }),
   agent: z.string(),
   ouvertLe: z.string(),
   caseKey: z.string(),
@@ -266,12 +326,15 @@ const dossierInput = z.object({
     spouseNoJob: z.boolean().optional(),
     visaHist: z.boolean().optional(),
     grandchildNote: z.boolean().optional(),
-    prof: z.enum(["salarie", "commercant", "agriculteur", "retraite", "etudiant", "sans"]).optional(),
+    prof: z
+      .enum(["salarie", "commercant", "agriculteur", "retraite", "etudiant", "sans"])
+      .optional(),
   }),
   titre: z.string(),
   categorie: z.string(),
   niveau: z.enum(["standard", "attention", "complexe"]),
   pack: z.enum(["base", "voyage", "global"]),
+  modalitePaiement: z.enum(["comptant", "acompte"]).default("comptant"),
   etape: z.number(),
   rdv: z.object({
     centre: z.string(),
@@ -279,9 +342,17 @@ const dossierInput = z.object({
     heure: z.string().nullable(),
     statut: z.enum(["recherche", "confirme", "depose"]),
   }),
-  pieces: z.array(z.object({ label: z.string(), source: z.enum(["officiel", "eiden"]), fourni: z.boolean() })),
+  pieces: z.array(
+    z.object({ label: z.string(), source: z.enum(["officiel", "eiden"]), fourni: z.boolean() }),
+  ),
   paiements: z.array(
-    z.object({ libelle: z.string(), montant: z.number(), date: z.string().nullable(), encaisse: z.boolean() }),
+    z.object({
+      libelle: z.string(),
+      montant: z.number(),
+      date: z.string().nullable(),
+      encaisse: z.boolean(),
+      echeance: z.enum(["acompte", "solde", "option"]).optional(),
+    }),
   ),
   notes: z.array(z.string()),
 });
@@ -307,6 +378,7 @@ export const createDossier = createServerFn({ method: "POST" })
       categorie: data.categorie,
       niveau: data.niveau,
       pack: data.pack as PackKey,
+      modalitePaiement: data.modalitePaiement as Modalite,
       etape: data.etape,
       rdvCentre: data.rdv.centre,
       rdvDate: data.rdv.date,
@@ -316,7 +388,11 @@ export const createDossier = createServerFn({ method: "POST" })
       paiements: data.paiements,
       notes: data.notes,
     });
-    await logActivity("dossier.creation", `Dossier créé pour ${data.client.nom} (${data.titre})`, data.id);
+    await logActivity(
+      "dossier.creation",
+      `Dossier créé pour ${data.client.nom} (${data.titre})`,
+      data.id,
+    );
     return { id: data.id };
   });
 
@@ -339,7 +415,8 @@ export const avancerEtape = createServerFn({ method: "POST" })
     const etape =
       data.direction === "avancer" ? Math.min(7, row.etape + 1) : Math.max(1, row.etape - 1);
     await db.update(dossiersTable).set({ etape }).where(eq(dossiersTable.id, data.id));
-    if (etape === 7 && row.etape !== 7) await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
+    if (etape === 7 && row.etape !== 7)
+      await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
 export const setEtape = createServerFn({ method: "POST" })
@@ -347,11 +424,17 @@ export const setEtape = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireUserId();
     await db.update(dossiersTable).set({ etape: data.etape }).where(eq(dossiersTable.id, data.id));
-    if (data.etape === 7) await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
+    if (data.etape === 7)
+      await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
 export const changerCentre = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), centre: z.enum(["TLScontact Agadir", "TLScontact Casablanca", "BLS Espagne Agadir"]) }))
+  .validator(
+    z.object({
+      id: z.string(),
+      centre: z.enum(["TLScontact Agadir", "TLScontact Casablanca", "BLS Espagne Agadir"]),
+    }),
+  )
   .handler(async ({ data }) => {
     await requireUserId();
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
@@ -398,7 +481,12 @@ export const encaisser = createServerFn({ method: "POST" })
     );
     await db.update(dossiersTable).set({ paiements }).where(eq(dossiersTable.id, data.id));
     const p = row.paiements[data.index];
-    if (p) await logActivity("paiement.encaissement", `${p.montant} MAD encaissés (${p.libelle})`, data.id);
+    if (p)
+      await logActivity(
+        "paiement.encaissement",
+        `${p.montant} MAD encaissés (${p.libelle})`,
+        data.id,
+      );
   });
 
 export const changerPack = createServerFn({ method: "POST" })
@@ -407,30 +495,138 @@ export const changerPack = createServerFn({ method: "POST" })
     await requireUserId();
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     if (!row) throw new Error("Dossier introuvable.");
-    const packInfo = PACKS[data.pack];
-    // Le paiement du solde suit le pack choisi tant qu'il n'a pas déjà été encaissé —
-    // sinon changer de pack laisse un montant dû qui ne correspond plus au pack affiché.
-    // Si le dossier n'a encore aucun paiement (créé avant cette règle, ou vidé manuellement),
-    // on en crée un plutôt que de laisser le dossier invisible sur l'écran Paiements.
-    const paiements =
-      row.paiements.length === 0
-        ? [{ libelle: packInfo.label, montant: packInfo.prix, date: null, encaisse: false }]
-        : row.paiements.map((p, i) =>
-            i === 0 && !p.encaisse ? { ...p, libelle: packInfo.label, montant: packInfo.prix } : p,
-          );
-    await db.update(dossiersTable).set({ pack: data.pack, paiements }).where(eq(dossiersTable.id, data.id));
+    // On régénère l'échéancier (acompte + solde, ou solde comptant) selon le nouveau pack
+    // et la modalité en cours : les lignes déjà encaissées et les options à la carte sont
+    // conservées telles quelles, seules les lignes dues sont recalculées.
+    const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement);
+    await db
+      .update(dossiersTable)
+      .set({ pack: data.pack, paiements })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity("paiement.pack", `Pack changé -> ${PACKS[data.pack].label}`, data.id);
   });
+
+/** Le client choisit de régler comptant ou par acompte de 20 % — régénère l'échéancier dû. */
+export const setModalitePaiement = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), modalite: z.enum(["comptant", "acompte"]) }))
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+    if (!row) throw new Error("Dossier introuvable.");
+    const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite);
+    await db
+      .update(dossiersTable)
+      .set({ modalitePaiement: data.modalite, paiements })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "paiement.modalite",
+      `Modalité de paiement -> ${MODALITE_LABEL[data.modalite]}`,
+      data.id,
+    );
+  });
+
+/**
+ * Suivi complet des encaissements pour l'écran /ops (CEO uniquement).
+ * Tout est agrégé côté SQL — jamais un reduce() en JS sur la table entière.
+ */
+export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async () => {
+  await requireCeo();
+  const [totaux, parModalite, soldesDus, acomptesEnRetard, journal] = await Promise.all([
+    db.execute(sql`
+      select
+        coalesce(sum((p->>'montant')::numeric) filter (where (p->>'encaisse')::boolean), 0) as encaisse,
+        coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean), 0) as attente,
+        coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and p->>'echeance' = 'acompte'), 0) as acompte_du,
+        coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) as solde_du
+      from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+    `),
+    db
+      .select({ modalite: dossiersTable.modalitePaiement, n: sqlCount() })
+      .from(dossiersTable)
+      .groupBy(dossiersTable.modalitePaiement),
+    db.execute(sql`
+      select d.id, d.client_nom as nom, d.etape,
+        coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) as montant
+      from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+      where d.etape >= 6
+      group by d.id, d.client_nom, d.etape
+      having coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) > 0
+      order by d.etape desc
+      limit 100
+    `),
+    db.execute(sql`
+      select d.id, d.client_nom as nom, d.etape,
+        coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and p->>'echeance' = 'acompte'), 0) as montant
+      from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
+      where d.modalite_paiement = 'acompte' and d.etape >= 2
+      group by d.id, d.client_nom, d.etape
+      having coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and p->>'echeance' = 'acompte'), 0) > 0
+      order by d.etape desc
+      limit 100
+    `),
+    db.execute(sql`
+      select a.id, a.detail, a.dossier_id as "dossierId", a.created_at as "createdAt", u.nom as "userNom"
+      from activity_log a left join users u on u.id = a.user_id
+      where a.action like 'paiement.%'
+      order by a.created_at desc
+      limit 40
+    `),
+  ]);
+  const t = (
+    totaux as unknown as {
+      encaisse: string;
+      attente: string;
+      acompte_du: string;
+      solde_du: string;
+    }[]
+  )[0];
+  const mod = parModalite as { modalite: Modalite; n: number }[];
+  const toRows = (r: unknown) =>
+    (r as { id: string; nom: string; etape: number; montant: string }[]).map((x) => ({
+      id: x.id,
+      nom: x.nom,
+      etape: Number(x.etape),
+      montant: Number(x.montant),
+    }));
+  return {
+    totaux: {
+      encaisse: Number(t?.encaisse ?? 0),
+      attente: Number(t?.attente ?? 0),
+      acompteDu: Number(t?.acompte_du ?? 0),
+      soldeDu: Number(t?.solde_du ?? 0),
+    },
+    parModalite: {
+      comptant: Number(mod.find((m) => m.modalite === "comptant")?.n ?? 0),
+      acompte: Number(mod.find((m) => m.modalite === "acompte")?.n ?? 0),
+    },
+    soldesDus: toRows(soldesDus),
+    acomptesEnRetard: toRows(acomptesEnRetard),
+    journal: journal as unknown as {
+      id: string;
+      detail: string;
+      dossierId: string | null;
+      createdAt: string;
+      userNom: string | null;
+    }[],
+  };
+});
 
 export const setDecision = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string(), decision: z.enum(["en_attente", "approuve", "refuse"]) }))
   .handler(async ({ data }) => {
     await requireUserId();
-    const decisionDate = data.decision === "en_attente" ? null : new Date().toLocaleDateString("fr-FR");
-    await db.update(dossiersTable).set({ decision: data.decision, decisionDate }).where(eq(dossiersTable.id, data.id));
+    const decisionDate =
+      data.decision === "en_attente" ? null : new Date().toLocaleDateString("fr-FR");
+    await db
+      .update(dossiersTable)
+      .set({ decision: data.decision, decisionDate })
+      .where(eq(dossiersTable.id, data.id));
     if (data.decision !== "en_attente") {
       await logActivity(
         "dossier.decision",
-        data.decision === "approuve" ? "Visa approuvé par le consulat." : "Visa refusé par le consulat.",
+        data.decision === "approuve"
+          ? "Visa approuvé par le consulat."
+          : "Visa refusé par le consulat.",
         data.id,
       );
     }
@@ -470,5 +666,9 @@ export const deleteDossier = createServerFn({ method: "POST" })
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     if (!row) throw new Error("Dossier introuvable.");
     await db.delete(dossiersTable).where(eq(dossiersTable.id, data.id));
-    await logActivity("dossier.suppression", `Dossier supprimé : ${row.clientNom} (${data.id})`, data.id);
+    await logActivity(
+      "dossier.suppression",
+      `Dossier supprimé : ${row.clientNom} (${data.id})`,
+      data.id,
+    );
   });

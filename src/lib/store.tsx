@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Dossier, PackKey, Centre, Decision } from "./dossier-model";
+import type { Dossier, PackKey, Centre, Decision, Modalite } from "./dossier-model";
 import {
   listDossiers,
   listDossiersPage,
@@ -20,6 +20,8 @@ import {
   confirmerRdv as confirmerRdvFn,
   encaisser as encaisserFn,
   changerPack as changerPackFn,
+  setModalitePaiement as setModalitePaiementFn,
+  getPaiementsSuivi,
   createDossier,
   updateClient as updateClientFn,
   deleteDossier as deleteDossierFn,
@@ -41,6 +43,7 @@ import {
   updateUserRole as updateUserRoleFn,
   deleteUser as deleteUserFn,
   listActivity as listActivityFn,
+  getAnalytics,
 } from "@/backend/functions/ops";
 import { currentUser as currentUserFn } from "@/backend/functions/auth";
 
@@ -85,6 +88,8 @@ const CRENEAUX_KEY = ["creneaux"] as const;
 const USERS_KEY = ["ops", "users"] as const;
 const ACTIVITY_KEY = ["ops", "activity"] as const;
 const CURRENT_USER_KEY = ["auth", "current-user"] as const;
+const PAIEMENTS_SUIVI_KEY = ["ops", "paiements-suivi"] as const;
+const ANALYTICS_KEY = ["ops", "analytics"] as const;
 
 export interface Creneau {
   id: string;
@@ -102,7 +107,11 @@ function useDossierMutations() {
   // Une seule mutation peut affecter la page filtrée courante, les stats agrégées, le
   // tableau de bord et les listes bornées (impayés, encaissements, rendez-vous) —
   // on invalide tout ce qui vit sous le préfixe "dossiers" plutôt que de traquer chaque cas.
-  const invalidateAll = () => queryClient.invalidateQueries({ queryKey: ["dossiers"] });
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["dossiers"] });
+    // Le suivi des paiements /ops et le journal d'activité dérivent des mêmes mutations.
+    queryClient.invalidateQueries({ queryKey: ["ops"] });
+  };
 
   const togglePieceMutation = useMutation({
     mutationFn: (vars: { id: string; index: number }) => togglePieceFn({ data: vars }),
@@ -117,7 +126,8 @@ function useDossierMutations() {
     onSuccess: invalidateAll,
   });
   const confirmerRdvMutation = useMutation({
-    mutationFn: (vars: { id: string; date: string; heure: string }) => confirmerRdvFn({ data: vars }),
+    mutationFn: (vars: { id: string; date: string; heure: string }) =>
+      confirmerRdvFn({ data: vars }),
     onSuccess: invalidateAll,
   });
   const encaisserMutation = useMutation({
@@ -126,6 +136,10 @@ function useDossierMutations() {
   });
   const changerPackMutation = useMutation({
     mutationFn: (vars: { id: string; pack: PackKey }) => changerPackFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
+  const changerModaliteMutation = useMutation({
+    mutationFn: (vars: { id: string; modalite: Modalite }) => setModalitePaiementFn({ data: vars }),
     onSuccess: invalidateAll,
   });
   const changerCentreMutation = useMutation({
@@ -155,7 +169,9 @@ function useDossierMutations() {
     // complète : on met à jour toutes les entrées en cache portant ce préfixe.
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["dossiers"] });
-      const previousEntries = queryClient.getQueriesData<Dossier[] | { rows: Dossier[]; total: number }>({
+      const previousEntries = queryClient.getQueriesData<
+        Dossier[] | { rows: Dossier[]; total: number }
+      >({
         queryKey: ["dossiers"],
       });
       for (const [key, data] of previousEntries) {
@@ -184,13 +200,19 @@ function useDossierMutations() {
     togglePiece: (id: string, index: number) => togglePieceMutation.mutateAsync({ id, index }),
     avancer: (id: string) => avancerMutation.mutateAsync(id),
     reculer: (id: string) => reculerMutation.mutateAsync(id),
-    confirmerRdv: (id: string, date: string, heure: string) => confirmerRdvMutation.mutateAsync({ id, date, heure }),
+    confirmerRdv: (id: string, date: string, heure: string) =>
+      confirmerRdvMutation.mutateAsync({ id, date, heure }),
     encaisser: (id: string, index: number) => encaisserMutation.mutateAsync({ id, index }),
     changerPack: (id: string, pack: PackKey) => changerPackMutation.mutateAsync({ id, pack }),
-    changerCentre: (id: string, centre: Centre) => changerCentreMutation.mutateAsync({ id, centre }),
-    setDecision: (id: string, decision: Decision) => setDecisionMutation.mutateAsync({ id, decision }),
+    changerModalite: (id: string, modalite: Modalite) =>
+      changerModaliteMutation.mutateAsync({ id, modalite }),
+    changerCentre: (id: string, centre: Centre) =>
+      changerCentreMutation.mutateAsync({ id, centre }),
+    setDecision: (id: string, decision: Decision) =>
+      setDecisionMutation.mutateAsync({ id, decision }),
     ajouter: (d: Dossier) => ajouterMutation.mutateAsync(d),
-    updateClient: (id: string, client: Dossier["client"]) => updateClientMutation.mutateAsync({ id, client }),
+    updateClient: (id: string, client: Dossier["client"]) =>
+      updateClientMutation.mutateAsync({ id, client }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
     setEtape: (id: string, etape: number) => setEtapeMutation.mutateAsync({ id, etape }),
   };
@@ -201,7 +223,8 @@ export function useDossiersPage(params: DossiersPageParams) {
   const { range, ...rest } = params;
   const query = useQuery({
     queryKey: dossiersPageKey(params),
-    queryFn: () => listDossiersPage({ data: { ...rest, dateFrom: range?.from, dateTo: range?.to } }),
+    queryFn: () =>
+      listDossiersPage({ data: { ...rest, dateFrom: range?.from, dateTo: range?.to } }),
     placeholderData: (prev) => prev,
   });
   const mutations = useDossierMutations();
@@ -234,10 +257,14 @@ export function useDossiersRecents() {
   return { dossiers: query.data ?? [], isLoading: query.isLoading };
 }
 
-export function useDossiersByRdvStatut(statut: "recherche" | "confirme" | "depose", range: DateRange = emptyRange) {
+export function useDossiersByRdvStatut(
+  statut: "recherche" | "confirme" | "depose",
+  range: DateRange = emptyRange,
+) {
   const query = useQuery({
     queryKey: rdvStatutKey(statut, range),
-    queryFn: () => listDossiersByRdvStatut({ data: { statut, dateFrom: range.from, dateTo: range.to } }),
+    queryFn: () =>
+      listDossiersByRdvStatut({ data: { statut, dateFrom: range.from, dateTo: range.to } }),
   });
   const mutations = useDossierMutations();
   return { dossiers: query.data ?? [], isLoading: query.isLoading, ...mutations };
@@ -255,7 +282,8 @@ export function useDossiersAvecImpaye(range: DateRange = emptyRange) {
 export function useDossiersAvecEncaissement(range: DateRange = emptyRange) {
   const query = useQuery({
     queryKey: encaissementKey(range),
-    queryFn: () => listDossiersAvecEncaissement({ data: { dateFrom: range.from, dateTo: range.to } }),
+    queryFn: () =>
+      listDossiersAvecEncaissement({ data: { dateFrom: range.from, dateTo: range.to } }),
   });
   return { dossiers: query.data ?? [], isLoading: query.isLoading };
 }
@@ -291,7 +319,10 @@ export function useDossiers() {
 
 /** Un seul dossier, pour l'écran de détail — n'attend pas que la liste soit en cache. */
 export function useDossier(id: string) {
-  const query = useQuery({ queryKey: dossierKey(id), queryFn: () => getDossierFn({ data: { id } }) });
+  const query = useQuery({
+    queryKey: dossierKey(id),
+    queryFn: () => getDossierFn({ data: { id } }),
+  });
   const mutations = useDossierMutations();
 
   return {
@@ -311,8 +342,12 @@ export function useDocuments(dossierId: string) {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: documentsKey(dossierId) });
 
   const uploadMutation = useMutation({
-    mutationFn: (vars: { type: DocumentType; filename: string; mimeType: string; dataBase64: string }) =>
-      uploadDocumentFn({ data: { dossierId, ...vars } }),
+    mutationFn: (vars: {
+      type: DocumentType;
+      filename: string;
+      mimeType: string;
+      dataBase64: string;
+    }) => uploadDocumentFn({ data: { dossierId, ...vars } }),
     onSuccess: invalidate,
   });
   const deleteMutation = useMutation({
@@ -323,8 +358,12 @@ export function useDocuments(dossierId: string) {
   return {
     documents: query.data ?? [],
     isLoading: query.isLoading,
-    upload: (vars: { type: DocumentType; filename: string; mimeType: string; dataBase64: string }) =>
-      uploadMutation.mutateAsync(vars),
+    upload: (vars: {
+      type: DocumentType;
+      filename: string;
+      mimeType: string;
+      dataBase64: string;
+    }) => uploadMutation.mutateAsync(vars),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
   };
 }
@@ -364,7 +403,8 @@ export function useOpsUsers() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: USERS_KEY });
 
   const createMutation = useMutation({
-    mutationFn: (vars: { email: string; password: string; nom: string; role: Role }) => createUserFn({ data: vars }),
+    mutationFn: (vars: { email: string; password: string; nom: string; role: Role }) =>
+      createUserFn({ data: vars }),
     onSuccess: invalidate,
   });
   const updateRoleMutation = useMutation({
@@ -379,7 +419,8 @@ export function useOpsUsers() {
   return {
     users: query.data ?? [],
     isLoading: query.isLoading,
-    creer: (vars: { email: string; password: string; nom: string; role: Role }) => createMutation.mutateAsync(vars),
+    creer: (vars: { email: string; password: string; nom: string; role: Role }) =>
+      createMutation.mutateAsync(vars),
     changerRole: (id: string, role: Role) => updateRoleMutation.mutateAsync({ id, role }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
   };
@@ -387,8 +428,33 @@ export function useOpsUsers() {
 
 /** Journal d'activité — écran /ops. */
 export function useActivity() {
-  const query = useQuery({ queryKey: ACTIVITY_KEY, queryFn: () => listActivityFn(), refetchInterval: 15_000 });
+  const query = useQuery({
+    queryKey: ACTIVITY_KEY,
+    queryFn: () => listActivityFn(),
+    refetchInterval: 15_000,
+  });
   return { activity: query.data ?? [], isLoading: query.isLoading };
+}
+
+/** Suivi complet des encaissements — écran /ops, réservé au CEO. */
+export function usePaiementsSuivi() {
+  const query = useQuery({
+    queryKey: PAIEMENTS_SUIVI_KEY,
+    queryFn: () => getPaiementsSuivi(),
+    refetchInterval: 30_000,
+  });
+  return { suivi: query.data ?? null, isLoading: query.isLoading };
+}
+
+/** Tableau analytique complet — écran /ops, réservé au CEO. */
+export function useAnalytics() {
+  const query = useQuery({
+    queryKey: ANALYTICS_KEY,
+    queryFn: () => getAnalytics(),
+    refetchInterval: 60_000,
+    retry: 1,
+  });
+  return { data: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
 }
 
 /** Le VRAI utilisateur connecté — remplace l'ancien sélecteur "connecté en tant que"

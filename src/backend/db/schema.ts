@@ -1,5 +1,5 @@
 import { pgTable, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
-import type { Piece, Paiement, RendezVous, PackKey } from "@/lib/dossier-model";
+import type { Piece, Paiement, RendezVous, PackKey, Modalite } from "@/lib/dossier-model";
 import type { Level, Profile } from "@/lib/visa-rules";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
@@ -40,6 +40,7 @@ export const dossiers = pgTable("dossiers", {
   categorie: text("categorie").notNull(),
   niveau: text("niveau").$type<Level>().notNull(),
   pack: text("pack").$type<PackKey>().notNull().default("base"),
+  modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
   etape: integer("etape").notNull().default(1),
   rdvCentre: text("rdv_centre").notNull(),
   rdvDate: text("rdv_date"),

@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { TREE, getFixedCase, buildCourtSejour, type Profile, type CaseResult } from "@/lib/visa-rules";
-import { piecesFromCase, PACKS, CENTRES, type Dossier, type Centre } from "@/lib/dossier-model";
+import {
+  TREE,
+  getFixedCase,
+  buildCourtSejour,
+  type Profile,
+  type CaseResult,
+} from "@/lib/visa-rules";
+import {
+  piecesFromCase,
+  planPaiement,
+  MODALITE_LABEL,
+  CENTRES,
+  type Dossier,
+  type Centre,
+  type Modalite,
+} from "@/lib/dossier-model";
 import { useDossiers, useCurrentUser, ROLE_LABEL } from "@/lib/store";
 import { NiveauBadge } from "@/components/dossier/badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +61,7 @@ function Qualification() {
   const [ville, setVille] = useState("");
   const [naissance, setNaissance] = useState("");
   const [centre, setCentre] = useState<Centre>(CENTRES[0]);
+  const [modalite, setModalite] = useState<Modalite>("comptant");
 
   const node = TREE[nodeKey]!;
 
@@ -57,7 +72,10 @@ function Qualification() {
 
     if (opt.r) {
       const caseKey = opt.n === "DYNAMIC" ? "DYNAMIC" : opt.n;
-      const c = caseKey === "DYNAMIC" ? buildCourtSejour(nextProfile) : (getFixedCase(caseKey) ?? buildCourtSejour(nextProfile));
+      const c =
+        caseKey === "DYNAMIC"
+          ? buildCourtSejour(nextProfile)
+          : (getFixedCase(caseKey) ?? buildCourtSejour(nextProfile));
       setResult({ caseKey, c });
       return;
     }
@@ -70,6 +88,7 @@ function Qualification() {
     setHistory([]);
     setResult(null);
     setCentre(CENTRES[0]);
+    setModalite("comptant");
   }
 
   function retour() {
@@ -104,12 +123,13 @@ function Qualification() {
       categorie: result.c.cat,
       niveau: result.c.level,
       pack: "base",
+      modalitePaiement: modalite,
       etape: 1,
       rdv: { centre, date: null, heure: null, statut: "recherche" },
       pieces,
-      // Le solde du pack choisi (base par défaut) devient tout de suite un paiement
-      // dû, sinon le dossier n'existe nulle part sur l'écran Paiements.
-      paiements: [{ libelle: PACKS.base.label, montant: PACKS.base.prix, date: null, encaisse: false }],
+      // Échéancier dérivé du pack (base par défaut) et de la modalité choisie à l'accueil :
+      // comptant = une ligne de solde, acompte = 20 % + solde 80 %.
+      paiements: planPaiement("base", modalite),
       notes: result.c.notes,
       decision: "en_attente",
       decisionDate: null,
@@ -123,7 +143,9 @@ function Qualification() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Assistant de qualification</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Boussole de qualification Eiden Visa, pas à pas.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Boussole de qualification Eiden Visa, pas à pas.
+          </p>
         </div>
         {(history.length > 0 || result) && (
           <Button variant="ghost" size="sm" onClick={reset}>
@@ -135,7 +157,10 @@ function Qualification() {
       {history.length > 0 && (
         <div className="space-y-2">
           {history.map((h, i) => (
-            <div key={i} className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3"
+            >
               <span className="text-sm text-muted-foreground">{TREE[h.nodeKey]!.q}</span>
               <span className="ml-4 shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
                 {h.label}
@@ -176,7 +201,9 @@ function Qualification() {
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  {result.c.level === "standard" && <img src={stampApproved} alt="" className="h-10 w-10" />}
+                  {result.c.level === "standard" && (
+                    <img src={stampApproved} alt="" className="h-10 w-10" />
+                  )}
                   <CardTitle className="text-lg">{result.c.title}</CardTitle>
                 </div>
                 <NiveauBadge level={result.c.level} />
@@ -242,14 +269,14 @@ function Qualification() {
               )}
               {result.c.docs.length === 0 && result.c.extra.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Ce cas ne fait pas l'objet d'une checklist Eiden Visa — voir les points de vigilance ci-dessus pour
-                  l'orientation à donner au client.
+                  Ce cas ne fait pas l'objet d'une checklist Eiden Visa — voir les points de
+                  vigilance ci-dessus pour l'orientation à donner au client.
                 </p>
               )}
             </CardContent>
           </Card>
 
-          {(
+          {
             // Même un cas sans checklist officielle (orientation, référé à un tiers) doit
             // pouvoir devenir un dossier — ne serait-ce que pour tracer une consultation
             // d'orientation facturée. Bloquer la création ici laissait ces cas sans issue.
@@ -258,28 +285,50 @@ function Qualification() {
                 <img src={stampName} alt="" className="h-9 w-9" />
                 <CardTitle className="text-base">Créer le dossier</CardTitle>
                 {result.c.docs.length === 0 && (
-                  <span className="ref ml-auto text-muted-foreground">Sans checklist officielle</span>
+                  <span className="ref ml-auto text-muted-foreground">
+                    Sans checklist officielle
+                  </span>
                 )}
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
-                  <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Nom complet" />
+                  <Input
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    placeholder="Nom complet"
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Téléphone</label>
-                  <Input value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="06 00 00 00 00" />
+                  <Input
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    placeholder="06 00 00 00 00"
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Ville</label>
-                  <Input value={ville} onChange={(e) => setVille(e.target.value)} placeholder="Agadir" />
+                  <Input
+                    value={ville}
+                    onChange={(e) => setVille(e.target.value)}
+                    placeholder="Agadir"
+                  />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">Date de naissance</label>
-                  <Input value={naissance} onChange={(e) => setNaissance(e.target.value)} placeholder="JJ/MM/AAAA" />
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Date de naissance
+                  </label>
+                  <Input
+                    value={naissance}
+                    onChange={(e) => setNaissance(e.target.value)}
+                    placeholder="JJ/MM/AAAA"
+                  />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">Centre de dépôt</label>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Centre de dépôt
+                  </label>
                   <Select value={centre} onValueChange={(v) => setCentre(v as Centre)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -293,6 +342,28 @@ function Qualification() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Modalité de paiement
+                  </label>
+                  <Select value={modalite} onValueChange={(v) => setModalite(v as Modalite)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(MODALITE_LABEL) as Modalite[]).map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {MODALITE_LABEL[m]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {modalite === "acompte"
+                      ? "20 % à la confirmation du créneau, solde des 80 % à la remise du dossier."
+                      : "Règlement du pack en une fois, à la remise du dossier."}
+                  </p>
+                </div>
                 <div className="col-span-2 pt-2">
                   <Button className="w-full" disabled={!nom} onClick={creerDossier}>
                     Créer le dossier
@@ -300,7 +371,7 @@ function Qualification() {
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
 
           <Button variant="ghost" size="sm" onClick={retour}>
             <ArrowLeft className="h-3.5 w-3.5" /> Revenir sur la dernière question

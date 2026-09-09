@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDossier } from "@/lib/store";
-import { alertes, completion, encaisse, ETAPES, PACKS, CENTRES, type PackKey, type Centre } from "@/lib/dossier-model";
+import {
+  alertes,
+  completion,
+  encaisse,
+  ETAPES,
+  PACKS,
+  CENTRES,
+  MODALITE_LABEL,
+  type PackKey,
+  type Centre,
+  type Modalite,
+  type Echeance,
+} from "@/lib/dossier-model";
 import { NiveauBadge, RdvBadge, ClotureBadge, DecisionBadge } from "@/components/dossier/badges";
 import { DocumentsPanel } from "@/components/dossier/documents-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,10 +44,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Circle, FileText, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  FileText,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
 import stampTime from "@/assets/decorations/stamp-time.png";
+
+const ECHEANCE_LABEL: Record<Echeance, string> = {
+  acompte: "Acompte, dû à la confirmation du créneau",
+  solde: "Solde, dû à la remise du dossier",
+  option: "Option à la carte",
+};
 
 export const Route = createFileRoute("/_app/dossiers/$id")({
   component: DossierDetail,
@@ -53,6 +80,7 @@ function DossierDetail() {
     confirmerRdv,
     encaisser,
     changerPack,
+    changerModalite,
     changerCentre,
     setDecision,
     updateClient,
@@ -76,7 +104,10 @@ function DossierDetail() {
           {isLoading ? "Chargement du dossier…" : "Dossier introuvable."}
         </p>
         {!isLoading && (
-          <Link to="/dossiers" className="mt-4 inline-flex items-center gap-1 text-sm text-primary hover:underline">
+          <Link
+            to="/dossiers"
+            className="mt-4 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+          >
             <ArrowLeft className="h-3.5 w-3.5" /> Retour aux dossiers
           </Link>
         )}
@@ -124,7 +155,10 @@ function DossierDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Link to="/dossiers" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/dossiers"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-3.5 w-3.5" /> Retour aux dossiers
         </Link>
         <div className="flex items-center gap-2">
@@ -189,7 +223,12 @@ function DossierDetail() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Parcours en 7 étapes</CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => reculer(d.id)} disabled={d.etape <= 1}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => reculer(d.id)}
+              disabled={d.etape <= 1}
+            >
               Étape précédente
             </Button>
             <Button size="sm" onClick={() => avancer(d.id)} disabled={d.etape >= 7}>
@@ -215,7 +254,13 @@ function DossierDetail() {
                     {done ? (
                       <CheckCircle2 className="h-3.5 w-3.5 text-[var(--ok)]" strokeWidth={1.5} />
                     ) : (
-                      <Circle className={cn("h-3.5 w-3.5", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} />
+                      <Circle
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          active ? "text-primary" : "text-muted-foreground",
+                        )}
+                        strokeWidth={1.5}
+                      />
                     )}
                     <span className="font-semibold text-foreground">Étape {e.n}</span>
                   </div>
@@ -255,7 +300,11 @@ function DossierDetail() {
             <Button
               size="sm"
               variant={d.decision === "approuve" ? "default" : "outline"}
-              className={d.decision === "approuve" ? "" : "border-[var(--ok)]/40 text-[var(--ok)] hover:bg-[var(--ok-soft)]"}
+              className={
+                d.decision === "approuve"
+                  ? ""
+                  : "border-[var(--ok)]/40 text-[var(--ok)] hover:bg-[var(--ok-soft)]"
+              }
               onClick={() => setDecision(d.id, "approuve")}
             >
               Visa approuvé
@@ -277,7 +326,11 @@ function DossierDetail() {
                 Revenir à "en attente"
               </Button>
             )}
-            {d.decisionDate && <span className="ref ml-auto text-muted-foreground">Décision du {d.decisionDate}</span>}
+            {d.decisionDate && (
+              <span className="ref ml-auto text-muted-foreground">
+                Décision du {d.decisionDate}
+              </span>
+            )}
           </CardContent>
         </Card>
       )}
@@ -310,7 +363,12 @@ function DossierDetail() {
                         onCheckedChange={() => togglePiece(d.id, i)}
                         className="mt-0.5"
                       />
-                      <span className={cn("text-sm", p.fourni ? "text-foreground" : "text-foreground/90")}>
+                      <span
+                        className={cn(
+                          "text-sm",
+                          p.fourni ? "text-foreground" : "text-foreground/90",
+                        )}
+                      >
                         {p.label}
                       </span>
                     </li>
@@ -347,7 +405,9 @@ function DossierDetail() {
             )}
             {d.notes.length > 0 && (
               <div className="border-l-2 border-[var(--info)] pl-3">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--info)]">Notes</div>
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--info)]">
+                  Notes
+                </div>
                 <ul className="space-y-1">
                   {d.notes.map((n, i) => (
                     <li key={i} className="text-xs text-foreground/80">
@@ -375,7 +435,11 @@ function DossierDetail() {
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="shrink-0 text-muted-foreground">Centre</span>
-                <Select value={d.rdv.centre} disabled={cloture} onValueChange={(v) => changerCentre(d.id, v as Centre)}>
+                <Select
+                  value={d.rdv.centre}
+                  disabled={cloture}
+                  onValueChange={(v) => changerCentre(d.id, v as Centre)}
+                >
                   <SelectTrigger className="h-8 w-auto text-sm font-medium">
                     <SelectValue />
                   </SelectTrigger>
@@ -412,7 +476,11 @@ function DossierDetail() {
               <CardTitle className="text-base">Pack & paiements</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={d.pack} disabled={cloture} onValueChange={(v) => changerPack(d.id, v as PackKey)}>
+              <Select
+                value={d.pack}
+                disabled={cloture}
+                onValueChange={(v) => changerPack(d.id, v as PackKey)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -426,12 +494,41 @@ function DossierDetail() {
               </Select>
               <p className="text-xs text-muted-foreground">{PACKS[d.pack].contenu}</p>
 
+              <div className="border-t border-border pt-3">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Modalité de paiement
+                </label>
+                <Select
+                  value={d.modalitePaiement}
+                  disabled={cloture}
+                  onValueChange={(v) => changerModalite(d.id, v as Modalite)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(MODALITE_LABEL) as Modalite[]).map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {MODALITE_LABEL[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {d.modalitePaiement === "acompte"
+                    ? "20 % à la confirmation du créneau, solde des 80 % à la remise du dossier."
+                    : "Règlement du pack en une fois, à la remise du dossier."}
+                </p>
+              </div>
+
               <div className="space-y-2 border-t border-border pt-3">
                 {d.paiements.map((p, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
                     <div>
                       <div className="text-foreground">{p.libelle}</div>
-                      <div className="text-xs text-muted-foreground">{p.date ?? "En attente"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {p.date ?? "En attente"} · {ECHEANCE_LABEL[p.echeance ?? "solde"]}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="ref text-foreground">{p.montant} MAD</span>
@@ -440,7 +537,12 @@ function DossierDetail() {
                           Encaissé
                         </span>
                       ) : (
-                        <Button size="sm" variant="outline" disabled={cloture} onClick={() => encaisser(d.id, i)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={cloture}
+                          onClick={() => encaisser(d.id, i)}
+                        >
                           Encaisser
                         </Button>
                       )}
@@ -481,7 +583,11 @@ function DossierDetail() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-muted-foreground">Date</label>
-              <Input value={date} onChange={(e) => setDate(e.target.value)} placeholder="JJ/MM/AAAA" />
+              <Input
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                placeholder="JJ/MM/AAAA"
+              />
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">Heure</label>
@@ -512,26 +618,45 @@ function DossierDetail() {
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
-              <Input value={editNom} onChange={(e) => setEditNom(e.target.value)} placeholder="Nom complet" />
+              <Input
+                value={editNom}
+                onChange={(e) => setEditNom(e.target.value)}
+                placeholder="Nom complet"
+              />
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">Téléphone</label>
-              <Input value={editTelephone} onChange={(e) => setEditTelephone(e.target.value)} placeholder="06 00 00 00 00" />
+              <Input
+                value={editTelephone}
+                onChange={(e) => setEditTelephone(e.target.value)}
+                placeholder="06 00 00 00 00"
+              />
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">Ville</label>
-              <Input value={editVille} onChange={(e) => setEditVille(e.target.value)} placeholder="Agadir" />
+              <Input
+                value={editVille}
+                onChange={(e) => setEditVille(e.target.value)}
+                placeholder="Agadir"
+              />
             </div>
             <div className="col-span-2">
               <label className="text-xs font-medium text-muted-foreground">Date de naissance</label>
-              <Input value={editNaissance} onChange={(e) => setEditNaissance(e.target.value)} placeholder="JJ/MM/AAAA" />
+              <Input
+                value={editNaissance}
+                onChange={(e) => setEditNaissance(e.target.value)}
+                placeholder="JJ/MM/AAAA"
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>
               Annuler
             </Button>
-            <Button disabled={!editNom.trim() || !editTelephone.trim() || !editVille.trim()} onClick={saveEdit}>
+            <Button
+              disabled={!editNom.trim() || !editTelephone.trim() || !editVille.trim()}
+              onClick={saveEdit}
+            >
               Enregistrer
             </Button>
           </DialogFooter>
@@ -543,8 +668,8 @@ function DossierDetail() {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce dossier ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Le dossier <b>{d.id}</b> de <b>{d.client.nom}</b> sera définitivement supprimé, avec ses pièces,
-              paiements et rendez-vous. Cette action est irréversible.
+              Le dossier <b>{d.id}</b> de <b>{d.client.nom}</b> sera définitivement supprimé, avec
+              ses pièces, paiements et rendez-vous. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

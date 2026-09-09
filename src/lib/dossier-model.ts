@@ -3,7 +3,13 @@
  * frais reversés aux centres. Chiffres issus de l'étude EV/2026-08.
  */
 
-import { buildCourtSejour, getFixedCase, type CaseResult, type Level, type Profile } from "./visa-rules";
+import {
+  buildCourtSejour,
+  getFixedCase,
+  type CaseResult,
+  type Level,
+  type Profile,
+} from "./visa-rules";
 
 export const ETAPES = [
   {
@@ -28,7 +34,8 @@ export const ETAPES = [
     n: 3,
     key: "attente",
     label: "Attente de créneau",
-    detail: "Délai hors contrôle d'Eiden. C'est ici que le dossier peut stagner : à surveiller chaque jour.",
+    detail:
+      "Délai hors contrôle d'Eiden. C'est ici que le dossier peut stagner : à surveiller chaque jour.",
     encaissement: "—",
     role: "Back office",
   },
@@ -63,7 +70,8 @@ export const ETAPES = [
     n: 7,
     key: "depot",
     label: "Dépôt chez TLS",
-    detail: "Le client se présente au rendez-vous avec un dossier complet. Fin du cycle Eiden Visa.",
+    detail:
+      "Le client se présente au rendez-vous avec un dossier complet. Fin du cycle Eiden Visa.",
     encaissement: "Droit de visa payé en direct par le client",
     role: "Client",
   },
@@ -71,7 +79,10 @@ export const ETAPES = [
 
 export type PackKey = "base" | "voyage" | "global";
 
-export const PACKS: Record<PackKey, { label: string; prix: number; margeNette: number | null; contenu: string }> = {
+export const PACKS: Record<
+  PackKey,
+  { label: string; prix: number; margeNette: number | null; contenu: string }
+> = {
   base: {
     label: "Pack Dossier",
     prix: 700,
@@ -107,14 +118,95 @@ export interface Piece {
   fourni: boolean;
 }
 
+/**
+ * Modalité de règlement choisie par le client à l'ouverture du dossier :
+ * - `comptant` : il règle le pack en une fois (encaissement au solde, étape 6) ;
+ * - `acompte`  : il verse 20 % du prix du pack pour sécuriser l'engagement
+ *   (étape 2, une fois le créneau confirmé), le solde des 80 % restant dû à l'étape 6.
+ * Les options à la carte (voyage, assurance) sont toujours facturées à part,
+ * hors du calcul des 20 %.
+ */
+export type Modalite = "comptant" | "acompte";
+export const MODALITE_LABEL: Record<Modalite, string> = {
+  comptant: "Paiement comptant",
+  acompte: "Acompte 20 % + solde",
+};
+export const ACOMPTE_PCT = 0.2;
+
+/** Quand une ligne de paiement est due — la règle métier n'est plus cachée dans le libellé. */
+export type Echeance = "acompte" | "solde" | "option";
+
 export interface Paiement {
   libelle: string;
   montant: number;
   date: string | null;
   encaisse: boolean;
+  /** Absent sur les dossiers créés avant l'échéancier explicite : traité alors comme un solde. */
+  echeance?: Echeance | undefined;
 }
 
-export const CENTRES = ["TLScontact Agadir", "TLScontact Casablanca", "BLS Espagne Agadir"] as const;
+/**
+ * Échéancier dérivé du pack et de la modalité — jamais saisi à la main.
+ * Ne produit que des lignes non encaissées : l'appelant fusionne avec l'historique déjà encaissé.
+ */
+export function planPaiement(pack: PackKey, modalite: Modalite): Paiement[] {
+  const { label, prix } = PACKS[pack];
+  if (modalite === "acompte") {
+    const acompte = Math.round(prix * ACOMPTE_PCT);
+    return [
+      {
+        libelle: `Acompte 20 % · ${label}`,
+        montant: acompte,
+        date: null,
+        encaisse: false,
+        echeance: "acompte",
+      },
+      {
+        libelle: `Solde 80 % · ${label}`,
+        montant: prix - acompte,
+        date: null,
+        encaisse: false,
+        echeance: "solde",
+      },
+    ];
+  }
+  return [
+    {
+      libelle: `${label} · paiement intégral`,
+      montant: prix,
+      date: null,
+      encaisse: false,
+      echeance: "solde",
+    },
+  ];
+}
+
+/**
+ * Applique une nouvelle modalité (ou un nouveau pack) à un dossier : on régénère les
+ * lignes d'échéancier non encaissées, on garde intactes celles déjà encaissées et
+ * toutes les options à la carte.
+ */
+export function reglerEcheancier(
+  paiements: Paiement[],
+  pack: PackKey,
+  modalite: Modalite,
+): Paiement[] {
+  const gardees = paiements.filter((p) => p.encaisse || p.echeance === "option");
+  const echeancesReglees = new Set(
+    gardees.filter((p) => p.encaisse).map((p) => p.echeance ?? "solde"),
+  );
+  const fraiches = planPaiement(pack, modalite).filter((l) => !echeancesReglees.has(l.echeance!));
+  const ordre: Record<Echeance, number> = { acompte: 0, solde: 1, option: 2 };
+  return [...gardees, ...fraiches].sort(
+    (a, b) => ordre[a.echeance ?? "solde"] - ordre[b.echeance ?? "solde"],
+  );
+}
+
+export const CENTRES = [
+  "TLScontact Agadir",
+  "TLScontact Casablanca",
+  "BLS Espagne Agadir",
+] as const;
 export type Centre = (typeof CENTRES)[number];
 
 export interface RendezVous {
@@ -146,6 +238,8 @@ export interface Dossier {
   categorie: string;
   niveau: Level;
   pack: PackKey;
+  /** `comptant` par défaut pour les dossiers créés avant l'ajout de la modalité. */
+  modalitePaiement: Modalite;
   etape: number;
   rdv: RendezVous;
   pieces: Piece[];
@@ -184,7 +278,11 @@ export function piecesFromCase(c: CaseResult, fournis: number[] = []): Piece[] {
 export function completion(d: Dossier) {
   const officiels = d.pieces.filter((p) => p.source === "officiel");
   const ok = officiels.filter((p) => p.fourni).length;
-  return { ok, total: officiels.length, pct: officiels.length ? Math.round((ok / officiels.length) * 100) : 0 };
+  return {
+    ok,
+    total: officiels.length,
+    pct: officiels.length ? Math.round((ok / officiels.length) * 100) : 0,
+  };
 }
 
 export function encaisse(d: Dossier) {
@@ -200,10 +298,20 @@ export function alertes(d: Dossier): string[] {
   if (d.etape >= 6 && c.pct < 100)
     out.push(`Solde en cours alors que ${c.total - c.ok} pièce(s) officielle(s) manquent encore.`);
   if (d.caseKey === "tc3" && d.etape < 4)
-    out.push("Autorisation de travail employeur à vérifier avant toute autre pièce, sinon le dossier est bloqué.");
+    out.push(
+      "Autorisation de travail employeur à vérifier avant toute autre pièce, sinon le dossier est bloqué.",
+    );
   if (d.niveau === "complexe")
-    out.push("Cas complexe : hors pack standard, faire valider par un accompagnement dédié avant d'encaisser un solde.");
+    out.push(
+      "Cas complexe : hors pack standard, faire valider par un accompagnement dédié avant d'encaisser un solde.",
+    );
+  if (d.modalitePaiement === "acompte" && d.etape >= 2) {
+    const acompte = d.paiements.find((p) => p.echeance === "acompte");
+    if (acompte && !acompte.encaisse)
+      out.push("Acompte de 20 % non encaissé : l'engagement du client n'est pas sécurisé.");
+  }
   const impayes = d.paiements.filter((p) => !p.encaisse);
-  if (d.etape >= 6 && impayes.length) out.push(`Solde non encaissé : ${impayes.map((p) => p.libelle).join(", ")}.`);
+  if (d.etape >= 6 && impayes.length)
+    out.push(`Solde non encaissé : ${impayes.map((p) => p.libelle).join(", ")}.`);
   return out;
 }
