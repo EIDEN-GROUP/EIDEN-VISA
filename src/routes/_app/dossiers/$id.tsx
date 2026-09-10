@@ -154,14 +154,14 @@ function DossierDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/dossiers"
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Retour aux dossiers
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link to="/dossiers/$id/recu" params={{ id: d.id }} target="_blank">
             <Button variant="outline" size="sm">
               <FileText className="h-3.5 w-3.5" /> Reçu client
@@ -615,8 +615,8 @@ function DossierDetail() {
           <DialogHeader>
             <DialogTitle>Modifier les informations du client</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
               <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
               <Input
                 value={editNom}

@@ -292,7 +292,10 @@ function Ops() {
           >
             <Menu className="h-5 w-5" />
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 border-0 bg-rail p-0">
+          <SheetContent
+            side="left"
+            className="w-64 border-0 bg-rail p-0 [&>button]:z-10 [&>button]:bg-rail-active/70 [&>button]:p-1.5 [&>button]:text-rail-foreground [&>button]:opacity-90 [&>button]:hover:opacity-100"
+          >
             <NavBody onPick={() => setNavOpen(false)} />
           </SheetContent>
         </Sheet>

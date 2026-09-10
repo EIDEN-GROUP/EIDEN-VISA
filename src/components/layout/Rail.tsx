@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { useCurrentUser, ROLE_LABEL } from "@/lib/store";
+import { ProfileChip } from "@/components/layout/profile-chip";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -28,7 +28,6 @@ const NAV = [
 function RailBody({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const { user } = useCurrentUser();
 
   async function onLogout() {
     await logout();
@@ -47,25 +46,8 @@ function RailBody({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      {user && (
-        <Link
-          to="/profil"
-          onClick={onNavigate}
-          className="mx-3 mb-3 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-rail-active/50"
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-active text-xs font-semibold text-rail-foreground">
-            {user.nom
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((s) => s[0]?.toUpperCase() ?? "")
-              .join("")}
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-medium text-rail-foreground">{user.nom}</div>
-            <div className="ref text-rail-muted">{ROLE_LABEL[user.role]} · Mon profil</div>
-          </div>
-        </Link>
-      )}
+      {/* La pastille de profil n'est plus dans le rail : barre supérieure sur mobile,
+          en-tête à droite sur desktop (voir _app.tsx). */}
 
       <nav className="flex-1 px-3">
         {NAV.map(({ to, label, icon: Icon }) => {
@@ -115,22 +97,24 @@ export function Rail() {
   return (
     <>
       {/* Barre supérieure mobile */}
-      <div className="flex items-center justify-between border-b border-border bg-rail px-4 py-3 text-rail-foreground md:hidden">
-        <div className="flex items-center gap-2">
-          <img src={sealEiden} alt="" className="h-7 w-7" />
-          <span className="font-display text-sm font-semibold">Eiden Visa</span>
-        </div>
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-rail px-3 py-2 text-rail-foreground md:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
-            className="rounded-md p-1.5 text-rail-muted hover:text-rail-foreground"
+            className="flex items-center gap-2 rounded-md p-1.5 text-rail-foreground hover:bg-rail-active/50"
             aria-label="Ouvrir le menu"
           >
             <Menu className="h-5 w-5" />
+            <img src={sealEiden} alt="" className="h-6 w-6" />
+            <span className="font-display text-sm font-semibold">Eiden Visa</span>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 border-0 bg-rail p-0">
+          <SheetContent
+            side="left"
+            className="w-64 border-0 bg-rail p-0 [&>button]:z-10 [&>button]:bg-rail-active/70 [&>button]:p-1.5 [&>button]:text-rail-foreground [&>button]:opacity-90 [&>button]:hover:opacity-100"
+          >
             <RailBody onNavigate={() => setOpen(false)} />
           </SheetContent>
         </Sheet>
+        <ProfileChip tone="rail" compact />
       </div>
 
       {/* Rail fixe desktop */}

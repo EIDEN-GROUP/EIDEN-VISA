@@ -59,7 +59,7 @@ function DossiersList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <img src={stampDossier} alt="" className="h-12 w-12" />
           <div>
@@ -79,7 +79,7 @@ function DossiersList() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <div className="relative w-72">
+        <div className="relative w-full sm:w-72">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             strokeWidth={1.5}
@@ -92,7 +92,7 @@ function DossiersList() {
           />
         </div>
         <Select value={niveau} onValueChange={(v) => setNiveau(v as typeof niveau)}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Niveau" />
           </SelectTrigger>
           <SelectContent>

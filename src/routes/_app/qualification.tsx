@@ -140,7 +140,7 @@ function Qualification() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="page-title">Assistant de qualification</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -290,8 +290,8 @@ function Qualification() {
                   </span>
                 )}
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
+              <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2">
                   <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
                   <Input
                     value={nom}
