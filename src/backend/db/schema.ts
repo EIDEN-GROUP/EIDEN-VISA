@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   nom: text("nom").notNull(),
   role: text("role").$type<Role>().notNull().default("reception"),
+  /** Photo de profil, image encodée en data URL base64 (comme les documents). Nullable. */
+  photoBase64: text("photo_base64"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -51,7 +53,10 @@ export const dossiers = pgTable("dossiers", {
   notes: jsonb("notes").$type<string[]>().notNull().default([]),
   // Ce qui se passe après l'étape 7 (dépôt) : la décision du consulat, hors du contrôle
   // d'Eiden mais à suivre — c'est le vrai "après" du cycle, pas juste un dossier gelé.
-  decision: text("decision").$type<"en_attente" | "approuve" | "refuse">().notNull().default("en_attente"),
+  decision: text("decision")
+    .$type<"en_attente" | "approuve" | "refuse">()
+    .notNull()
+    .default("en_attente"),
   decisionDate: text("decision_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

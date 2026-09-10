@@ -13,6 +13,7 @@ import {
 import { MODALITE_LABEL, alertes, ETAPES } from "@/lib/dossier-model";
 import { exportOpsPdf } from "@/lib/ops-pdf";
 import { AnalyticsPanel } from "@/components/ops/analytics-panel";
+import { UserProfile } from "@/components/ops/user-profile";
 import { login, logout } from "@/backend/functions/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,10 +33,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   AlertTriangle,
   Plus,
-  Trash2,
   LogOut,
   LayoutDashboard,
   BarChart3,
@@ -44,6 +45,7 @@ import {
   ScrollText,
   Download,
   Receipt,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import sealEiden from "@/assets/decorations/stamp-eiden.png";
@@ -62,9 +64,13 @@ type OpsSection = (typeof SECTIONS)[number];
 // distincte du login du reste de l'équipe, et n'apparaît nulle part dans le rail latéral.
 // La section active vit dans l'URL (?s=) pour être partageable et gérer le bouton retour.
 export const Route = createFileRoute("/ops")({
-  validateSearch: (search: Record<string, unknown>): { s: OpsSection } => ({
-    s: SECTIONS.includes(search["s"] as OpsSection) ? (search["s"] as OpsSection) : "synthese",
-  }),
+  validateSearch: (search: Record<string, unknown>): { s: OpsSection; u?: string } => {
+    const s = SECTIONS.includes(search["s"] as OpsSection)
+      ? (search["s"] as OpsSection)
+      : "synthese";
+    const u = typeof search["u"] === "string" && search["u"] ? (search["u"] as string) : undefined;
+    return u ? { s, u } : { s };
+  },
   component: OpsGate,
 });
 
@@ -171,16 +177,17 @@ function OpsDenied() {
 /* -------------------------------------------------------------------------- */
 
 function Ops() {
-  const { s: section } = Route.useSearch();
+  const { s: section, u: userId } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const go = (s: OpsSection) => navigate({ search: { s } });
+  const go = (s: OpsSection, u?: string) => navigate({ search: u ? { s, u } : { s } });
 
-  const { users, creer, changerRole, supprimer } = useOpsUsers();
+  const { users, creer, changerRole } = useOpsUsers();
   const { activity } = useActivity();
   const { dossiers } = useDossiers();
   const { suivi } = usePaiementsSuivi();
   const queryClient = useQueryClient();
 
+  const [navOpen, setNavOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
@@ -223,53 +230,81 @@ function Ops() {
     { key: "activite", label: "Activité", icon: ScrollText },
   ];
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
-      <aside className="flex w-60 shrink-0 flex-col bg-rail text-rail-foreground">
-        <div className="flex items-center gap-3 px-5 py-5">
-          <img src={sealEiden} alt="" className="h-8 w-8" />
-          <div>
-            <div className="font-display text-base font-semibold leading-none">Eiden Visa</div>
-            <div className="ref mt-1 text-rail-muted">Espace Ops</div>
-          </div>
+  const NavBody = ({ onPick }: { onPick?: () => void }) => (
+    <div className="flex h-full flex-col text-rail-foreground">
+      <div className="hidden items-center gap-3 px-5 py-5 md:flex">
+        <img src={sealEiden} alt="" className="h-8 w-8" />
+        <div>
+          <div className="font-display text-base font-semibold leading-none">Eiden Visa</div>
+          <div className="ref mt-1 text-rail-muted">Espace Ops</div>
         </div>
-        <nav className="flex-1 space-y-0.5 px-3 py-2">
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            const active = section === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => go(item.key)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-rail-active font-medium text-rail-foreground"
-                    : "text-rail-muted hover:bg-rail-active/50",
-                )}
-              >
-                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                <span className="flex-1 text-left">{item.label}</span>
-                {item.badge ? (
-                  <span className="rounded-full bg-[var(--stop)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {item.badge}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-2 px-5 py-4 text-sm text-rail-muted hover:text-rail-foreground"
-        >
-          <LogOut className="h-4 w-4" strokeWidth={1.5} /> Se déconnecter
-        </button>
+      </div>
+      <nav className="flex-1 space-y-0.5 px-3 py-4 md:py-2">
+        {NAV.map((item) => {
+          const Icon = item.icon;
+          const active = section === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => {
+                go(item.key);
+                onPick?.();
+              }}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                active
+                  ? "bg-rail-active font-medium text-rail-foreground"
+                  : "text-rail-muted hover:bg-rail-active/50",
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              <span className="flex-1 text-left">{item.label}</span>
+              {item.badge ? (
+                <span className="rounded-full bg-[var(--stop)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {item.badge}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </nav>
+      <button
+        onClick={onLogout}
+        className="flex items-center gap-2 px-5 py-4 text-sm text-rail-muted hover:text-rail-foreground"
+      >
+        <LogOut className="h-4 w-4" strokeWidth={1.5} /> Se déconnecter
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen flex-col overflow-hidden bg-background md:flex-row">
+      {/* Barre supérieure mobile */}
+      <div className="flex items-center justify-between border-b border-border bg-rail px-4 py-3 text-rail-foreground md:hidden">
+        <div className="flex items-center gap-2">
+          <img src={sealEiden} alt="" className="h-7 w-7" />
+          <span className="font-display text-sm font-semibold">Espace Ops</span>
+        </div>
+        <Sheet open={navOpen} onOpenChange={setNavOpen}>
+          <SheetTrigger
+            className="rounded-md p-1.5 text-rail-muted hover:text-rail-foreground"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="h-5 w-5" />
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 border-0 bg-rail p-0">
+            <NavBody onPick={() => setNavOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Sidebar fixe desktop */}
+      <aside className="hidden w-60 shrink-0 bg-rail md:block">
+        <NavBody />
       </aside>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto px-8 py-8">
+      <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 md:px-8 md:py-8">
         <div className="mx-auto max-w-5xl">
           {section === "synthese" && (
             <Synthese
@@ -281,14 +316,17 @@ function Ops() {
           )}
           {section === "analytique" && <AnalyticsPanel />}
           {section === "paiements" && <PaiementsSection suivi={suivi} />}
-          {section === "equipe" && (
-            <EquipeSection
-              users={users}
-              changerRole={changerRole}
-              supprimer={supprimer}
-              onCreate={() => setCreateOpen(true)}
-            />
-          )}
+          {section === "equipe" &&
+            (userId ? (
+              <UserProfile id={userId} onBack={() => go("equipe")} />
+            ) : (
+              <EquipeSection
+                users={users}
+                changerRole={changerRole}
+                onOpen={(id) => go("equipe", id)}
+                onCreate={() => setCreateOpen(true)}
+              />
+            ))}
           {section === "alertes" && <AlertesSection rows={alertesActives} />}
           {section === "activite" && <ActiviteSection activity={activity} />}
         </div>
@@ -716,12 +754,12 @@ function PaiementsSection({ suivi }: { suivi: Suivi }) {
 function EquipeSection({
   users,
   changerRole,
-  supprimer,
+  onOpen,
   onCreate,
 }: {
   users: ReturnType<typeof useOpsUsers>["users"];
   changerRole: ReturnType<typeof useOpsUsers>["changerRole"];
-  supprimer: ReturnType<typeof useOpsUsers>["supprimer"];
+  onOpen: (id: string) => void;
   onCreate: () => void;
 }) {
   const { data } = useAnalytics();
@@ -789,14 +827,20 @@ function EquipeSection({
         </CardHeader>
         <CardContent className="divide-y divide-border p-0">
           {users.map((u) => (
-            <div key={u.id} className="flex items-center justify-between px-5 py-3.5">
-              <div>
-                <div className="text-sm font-medium text-foreground">{u.nom}</div>
+            <div
+              key={u.id}
+              className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
+            >
+              <button
+                onClick={() => onOpen(u.id)}
+                className="min-w-0 flex-1 text-left hover:underline"
+              >
+                <div className="truncate text-sm font-medium text-foreground">{u.nom}</div>
                 <div className="ref text-muted-foreground">{u.email}</div>
-              </div>
-              <div className="flex items-center gap-2">
+              </button>
+              <div className="flex shrink-0 items-center gap-2">
                 <Select value={u.role} onValueChange={(v) => changerRole(u.id, v as Role)}>
-                  <SelectTrigger className="h-8 w-40 text-xs">
+                  <SelectTrigger className="h-8 w-36 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -807,13 +851,9 @@ function EquipeSection({
                     ))}
                   </SelectContent>
                 </Select>
-                <button
-                  onClick={() => supprimer(u.id)}
-                  className="text-muted-foreground hover:text-[var(--stop)]"
-                  aria-label="Supprimer le compte"
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                </button>
+                <Button size="sm" variant="ghost" onClick={() => onOpen(u.id)}>
+                  Ouvrir la fiche
+                </Button>
               </div>
             </div>
           ))}

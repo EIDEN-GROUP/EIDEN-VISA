@@ -44,6 +44,11 @@ import {
   deleteUser as deleteUserFn,
   listActivity as listActivityFn,
   getAnalytics,
+  getUser as getUserFn,
+  updateUser as updateUserFn,
+  setUserPhoto as setUserPhotoFn,
+  resetUserPassword as resetUserPasswordFn,
+  getUserProfile as getUserProfileFn,
 } from "@/backend/functions/ops";
 import { currentUser as currentUserFn } from "@/backend/functions/auth";
 
@@ -413,7 +418,7 @@ export function useOpsUsers() {
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteUserFn({ data: { id } }),
-    onSuccess: invalidate,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ops"] }),
   });
 
   return {
@@ -424,6 +429,47 @@ export function useOpsUsers() {
     changerRole: (id: string, role: Role) => updateRoleMutation.mutateAsync({ id, role }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
   };
+}
+
+const userKey = (id: string) => ["ops", "user", id] as const;
+const userProfileKey = (id: string) => ["ops", "user-profile", id] as const;
+
+/** Fiche d'un agent : infos éditables + photo + mot de passe. Réservé au CEO. */
+export function useUser(id: string) {
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: userKey(id), queryFn: () => getUserFn({ data: { id } }) });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["ops"] });
+
+  const infosMutation = useMutation({
+    mutationFn: (vars: { nom: string; email: string }) => updateUserFn({ data: { id, ...vars } }),
+    onSuccess: invalidate,
+  });
+  const photoMutation = useMutation({
+    mutationFn: (photoBase64: string | null) => setUserPhotoFn({ data: { id, photoBase64 } }),
+    onSuccess: invalidate,
+  });
+  const passwordMutation = useMutation({
+    mutationFn: (password: string) => resetUserPasswordFn({ data: { id, password } }),
+    onSuccess: invalidate,
+  });
+
+  return {
+    user: query.data ?? null,
+    isLoading: query.isLoading,
+    modifier: (vars: { nom: string; email: string }) => infosMutation.mutateAsync(vars),
+    changerPhoto: (photoBase64: string | null) => photoMutation.mutateAsync(photoBase64),
+    reinitialiserMotDePasse: (password: string) => passwordMutation.mutateAsync(password),
+  };
+}
+
+/** Profil analytique complet d'un agent — dossiers, pièces, encaissements, activité. */
+export function useUserProfile(id: string) {
+  const query = useQuery({
+    queryKey: userProfileKey(id),
+    queryFn: () => getUserProfileFn({ data: { id } }),
+    refetchInterval: 60_000,
+  });
+  return { data: query.data ?? null, isLoading: query.isLoading };
 }
 
 /** Journal d'activité — écran /ops. */

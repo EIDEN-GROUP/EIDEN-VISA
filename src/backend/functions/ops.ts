@@ -219,3 +219,190 @@ export const getAnalytics = createServerFn({ method: "GET" }).handler(async () =
     activiteParAction: r.activiteParAction ?? [],
   };
 });
+
+/* ============ Fiche agent (profil d'un utilisateur) ============ */
+
+const MAX_PHOTO_BYTES = 1_500_000; // ~1,5 Mo de data URL — largement assez pour un avatar.
+
+export const getUser = createServerFn({ method: "GET" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    await requireCeo();
+    const u = await db.query.users.findFirst({ where: eq(users.id, data.id) });
+    if (!u) return null;
+    return {
+      id: u.id,
+      email: u.email,
+      nom: u.nom,
+      role: u.role,
+      photoBase64: u.photoBase64,
+      createdAt: u.createdAt,
+    };
+  });
+
+export const updateUser = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), nom: z.string().min(1), email: z.string().email() }))
+  .handler(async ({ data }) => {
+    await requireCeo();
+    const email = data.email.toLowerCase();
+    const clash = await db.query.users.findFirst({ where: eq(users.email, email) });
+    if (clash && clash.id !== data.id)
+      throw new Error("Cet email est déjà utilisé par un autre compte.");
+    await db.update(users).set({ nom: data.nom, email }).where(eq(users.id, data.id));
+    await logActivity("utilisateur.modification", `Fiche modifiée : ${data.nom} (${email})`);
+  });
+
+export const setUserPhoto = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), photoBase64: z.string().nullable() }))
+  .handler(async ({ data }) => {
+    await requireCeo();
+    if (data.photoBase64) {
+      if (!data.photoBase64.startsWith("data:image/"))
+        throw new Error("Le fichier n'est pas une image.");
+      if (data.photoBase64.length > MAX_PHOTO_BYTES)
+        throw new Error("Image trop lourde (max ~1 Mo).");
+    }
+    await db.update(users).set({ photoBase64: data.photoBase64 }).where(eq(users.id, data.id));
+    await logActivity(
+      "utilisateur.photo",
+      data.photoBase64 ? "Photo de profil mise à jour." : "Photo de profil retirée.",
+    );
+  });
+
+export const resetUserPassword = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), password: z.string().min(6) }))
+  .handler(async ({ data }) => {
+    await requireCeo();
+    const passwordHash = await bcrypt.hash(data.password, 12);
+    await db.update(users).set({ passwordHash }).where(eq(users.id, data.id));
+    await logActivity(
+      "utilisateur.motdepasse",
+      `Mot de passe réinitialisé pour l'utilisateur ${data.id}`,
+    );
+  });
+
+/**
+ * Profil complet d'un agent : ses dossiers, les pièces rassemblées, ses encaissements,
+ * son activité, et l'analytique le concernant — le tout en une requête (leçon du pooler).
+ */
+export const getUserProfile = createServerFn({ method: "GET" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    await requireCeo();
+    const id = data.id;
+    const rows = await db.execute(sql`
+      with
+        mine as (select * from dossiers where agent_user_id = ${id}),
+        kp as (select
+                 (count(*))::int dossiers,
+                 (count(*) filter (where etape < 7))::int actifs,
+                 (count(*) filter (where decision = 'approuve'))::int approuve,
+                 (count(*) filter (where decision = 'refuse'))::int refuse
+               from mine),
+        docs_count as (select (count(*))::int c from documents d join mine on mine.id = d.dossier_id),
+        enc as (select coalesce(sum(substring(detail from '^([0-9]+)')::numeric), 0)::int total,
+                       (count(*))::int n
+                from activity_log where user_id = ${id} and action = 'paiement.encaissement'),
+        par_etape as (select json_agg(json_build_object('k', etape::text, 'n', c) order by etape) v
+                      from (select etape, count(*)::int c from mine group by etape) t),
+        par_niveau as (select json_agg(json_build_object('k', niveau, 'n', c)) v
+                       from (select niveau, count(*)::int c from mine group by niveau) t),
+        dossiers_list as (select json_agg(json_build_object(
+                            'id', id, 'nom', client_nom, 'titre', titre, 'niveau', niveau,
+                            'etape', etape, 'decision', decision, 'ouvertLe', ouvert_le
+                          ) order by created_at desc) v
+                          from (select * from mine order by created_at desc limit 60) t),
+        docs_list as (select json_agg(json_build_object(
+                        'id', id, 'dossierId', dossier_id, 'clientNom', client_nom,
+                        'filename', filename, 'type', type, 'uploadedAt', uploaded_at
+                      ) order by uploaded_at desc) v
+                      from (select d.id, d.dossier_id, mine.client_nom, d.filename, d.type, d.uploaded_at
+                            from documents d join mine on mine.id = d.dossier_id
+                            order by d.uploaded_at desc limit 80) t),
+        enc_list as (select json_agg(json_build_object(
+                       'id', id, 'detail', detail, 'dossierId', dossier_id, 'createdAt', created_at
+                     ) order by created_at desc) v
+                     from (select * from activity_log
+                           where user_id = ${id} and action = 'paiement.encaissement'
+                           order by created_at desc limit 40) t),
+        act_list as (select json_agg(json_build_object(
+                       'id', id, 'action', action, 'detail', detail, 'dossierId', dossier_id, 'createdAt', created_at
+                     ) order by created_at desc) v
+                     from (select * from activity_log where user_id = ${id}
+                           order by created_at desc limit 40) t)
+      select json_build_object(
+        'kpi', (select row_to_json(kp) from kp),
+        'documents', (select c from docs_count),
+        'encaisse', (select total from enc),
+        'nEncaissements', (select n from enc),
+        'parEtape', (select v from par_etape),
+        'parNiveau', (select v from par_niveau),
+        'dossiers', (select v from dossiers_list),
+        'docs', (select v from docs_list),
+        'encaissements', (select v from enc_list),
+        'activite', (select v from act_list)
+      ) result
+    `);
+    type Prof = {
+      kpi: { dossiers: number; actifs: number; approuve: number; refuse: number } | null;
+      documents: number | null;
+      encaisse: number | null;
+      nEncaissements: number | null;
+      parEtape: { k: string; n: number }[] | null;
+      parNiveau: { k: string; n: number }[] | null;
+      dossiers:
+        | {
+            id: string;
+            nom: string;
+            titre: string;
+            niveau: string;
+            etape: number;
+            decision: string;
+            ouvertLe: string;
+          }[]
+        | null;
+      docs:
+        | {
+            id: string;
+            dossierId: string;
+            clientNom: string;
+            filename: string;
+            type: string;
+            uploadedAt: string;
+          }[]
+        | null;
+      encaissements:
+        { id: string; detail: string; dossierId: string | null; createdAt: string }[] | null;
+      activite:
+        | {
+            id: string;
+            action: string;
+            detail: string;
+            dossierId: string | null;
+            createdAt: string;
+          }[]
+        | null;
+    };
+    const p = ((rows as unknown as { result: Prof }[])[0]?.result ?? {}) as Partial<Prof>;
+    const approuve = p.kpi?.approuve ?? 0;
+    const refuse = p.kpi?.refuse ?? 0;
+    return {
+      kpis: {
+        dossiers: p.kpi?.dossiers ?? 0,
+        actifs: p.kpi?.actifs ?? 0,
+        approuve,
+        refuse,
+        tauxApprobation:
+          approuve + refuse ? Math.round((approuve / (approuve + refuse)) * 100) : null,
+        documents: p.documents ?? 0,
+        encaisse: p.encaisse ?? 0,
+        nEncaissements: p.nEncaissements ?? 0,
+      },
+      parEtape: p.parEtape ?? [],
+      parNiveau: p.parNiveau ?? [],
+      dossiers: p.dossiers ?? [],
+      documents: p.docs ?? [],
+      encaissements: p.encaissements ?? [],
+      activite: p.activite ?? [],
+    };
+  });

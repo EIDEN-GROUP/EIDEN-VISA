@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useCurrentUser, ROLE_LABEL } from "@/lib/store";
@@ -9,8 +10,10 @@ import {
   Wallet,
   BookOpen,
   LogOut,
+  Menu,
 } from "lucide-react";
 import { logout } from "@/backend/functions/auth";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import sealEiden from "@/assets/decorations/stamp-eiden.png";
 
 const NAV = [
@@ -22,7 +25,7 @@ const NAV = [
   { to: "/referentiel", label: "Référentiel", icon: BookOpen },
 ] as const;
 
-export function Rail() {
+function RailBody({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
   const { user } = useCurrentUser();
@@ -33,11 +36,13 @@ export function Rail() {
   }
 
   return (
-    <aside className="flex h-screen w-56 shrink-0 flex-col bg-rail text-rail-foreground">
+    <div className="flex h-full flex-col text-rail-foreground">
       <div className="flex items-center gap-3 px-6 py-7">
         <img src={sealEiden} alt="" className="h-9 w-9" />
         <div>
-          <div className="font-display text-base leading-tight font-semibold tracking-tight">Eiden Visa</div>
+          <div className="font-display text-base leading-tight font-semibold tracking-tight">
+            Eiden Visa
+          </div>
           <div className="ref mt-0.5 text-rail-muted">Back-office</div>
         </div>
       </div>
@@ -56,6 +61,7 @@ export function Rail() {
             <Link
               key={to}
               to={to}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm",
                 active
@@ -78,10 +84,46 @@ export function Rail() {
           Déconnexion
         </button>
         <div className="ref mt-3 text-rail-muted">Agadir · Maroc</div>
-        <Link to="/confidentialite" className="ref mt-1 block text-rail-muted hover:text-rail-foreground">
+        <Link
+          to="/confidentialite"
+          onClick={onNavigate}
+          className="ref mt-1 block text-rail-muted hover:text-rail-foreground"
+        >
           Confidentialité
         </Link>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+export function Rail() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      {/* Barre supérieure mobile */}
+      <div className="flex items-center justify-between border-b border-border bg-rail px-4 py-3 text-rail-foreground md:hidden">
+        <div className="flex items-center gap-2">
+          <img src={sealEiden} alt="" className="h-7 w-7" />
+          <span className="font-display text-sm font-semibold">Eiden Visa</span>
+        </div>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger
+            className="rounded-md p-1.5 text-rail-muted hover:text-rail-foreground"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="h-5 w-5" />
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 border-0 bg-rail p-0">
+            <RailBody onNavigate={() => setOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Rail fixe desktop */}
+      <aside className="hidden w-56 shrink-0 bg-rail md:block">
+        <RailBody />
+      </aside>
+    </>
   );
 }
