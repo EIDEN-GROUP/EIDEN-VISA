@@ -13,15 +13,14 @@ import {
   Tooltip,
   LabelList,
 } from "recharts";
+import { useRef, useState } from "react";
 import { useAnalytics, ROLE_LABEL, type Role } from "@/lib/store";
 import { ETAPES, PACKS, DECISION_LABEL, MODALITE_LABEL, type PackKey } from "@/lib/dossier-model";
 import { LEVEL_LABEL, type Level } from "@/lib/visa-rules";
-import { exportOpsPdf } from "@/lib/ops-pdf";
+import { exportElementPdf } from "@/lib/ops-pdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-
-type AnalyticsData = NonNullable<ReturnType<typeof useAnalytics>["data"]>;
 
 /* Palette : tokens de marque. Catégoriel = ordre fixe, jamais cyclé.
  * Les graphiques d'état réutilisent les couleurs de statut (avec légende, jamais couleur seule). */
@@ -84,6 +83,21 @@ function Panel({
 
 export function AnalyticsPanel() {
   const { data, isLoading, isError } = useAnalytics();
+  const captureRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  async function onExport() {
+    if (!captureRef.current || exporting) return;
+    setExporting(true);
+    try {
+      await exportElementPdf(captureRef.current, {
+        title: "Rapport analytique",
+        filename: "rapport-analytique-eiden-visa.pdf",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (!data) {
     return (
@@ -135,7 +149,7 @@ export function AnalyticsPanel() {
   }));
 
   return (
-    <Card className="panel">
+    <Card className="panel" ref={captureRef}>
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="text-base">Analytique</CardTitle>
@@ -143,8 +157,8 @@ export function AnalyticsPanel() {
             L'état complet de l'agence : où sont les dossiers, ce qui rentre, et qui produit quoi.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => exportRapport(data)}>
-          <Download className="h-3.5 w-3.5" /> Rapport (PDF)
+        <Button size="sm" variant="outline" onClick={onExport} disabled={exporting} data-pdf-hide>
+          <Download className="h-3.5 w-3.5" /> {exporting ? "Génération…" : "Rapport (PDF)"}
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -411,121 +425,4 @@ function fmtWeek(iso: string) {
   return Number.isNaN(d.getTime())
     ? iso
     : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
-}
-
-/** Rapport analytique — instantané complet de l'agence, imprimable / archivable. */
-function exportRapport(data: AnalyticsData) {
-  const k = data.kpis;
-  const kv = (rows: { k: string; n: number }[], label: (k: string) => string) =>
-    rows.map((r) => [label(r.k), `${r.n}`]);
-  const total = data.kpis.total || 1;
-  const pct = (n: number) => `${Math.round((n / total) * 100)} %`;
-
-  void exportOpsPdf({
-    title: "Rapport analytique",
-    filename: "rapport-analytique-eiden-visa.pdf",
-    intro:
-      "Instantané de l'activité Eiden Visa à la date d'édition : répartition des dossiers, tendance sur 10 semaines, et production par rôle et par agent.",
-    kpis: [
-      { label: "Dossiers", value: `${k.total}` },
-      { label: "Actifs", value: `${k.actifs}` },
-      {
-        label: "Taux d'approbation",
-        value: k.tauxApprobation === null ? "—" : `${k.tauxApprobation} %`,
-      },
-      { label: "Encaissé", value: `${k.totalEncaisse.toLocaleString("fr-FR")} MAD` },
-      { label: "Ticket moyen", value: `${k.ticketMoyen.toLocaleString("fr-FR")} MAD` },
-      { label: "Décisions", value: `${k.approuve} ✓ · ${k.refuse} ✗` },
-    ],
-    sections: [
-      {
-        heading: "Pipeline — dossiers par étape",
-        columns: [
-          { header: "Étape", w: 5 },
-          { header: "Rôle", w: 3 },
-          { header: "Dossiers", w: 2, align: "right" },
-          { header: "Part", w: 2, align: "right" },
-        ],
-        rows: data.pipeline.map((r) => {
-          const e = ETAPES.find((x) => String(x.n) === r.k);
-          return [e ? `${e.n}. ${e.label}` : r.k, e?.role ?? "—", `${r.n}`, pct(r.n)];
-        }),
-      },
-      {
-        heading: "Niveau de dossier",
-        columns: [
-          { header: "Niveau", w: 4 },
-          { header: "Dossiers", w: 2, align: "right" },
-        ],
-        rows: kv(data.parNiveau, (x) => LEVEL_LABEL[x as Level] ?? x),
-      },
-      {
-        heading: "Décision consulaire",
-        columns: [
-          { header: "Décision", w: 4 },
-          { header: "Dossiers", w: 2, align: "right" },
-        ],
-        rows: kv(data.parDecision, (x) => DECISION_LABEL[x as keyof typeof DECISION_LABEL] ?? x),
-      },
-      {
-        heading: "Packs",
-        columns: [
-          { header: "Pack", w: 4 },
-          { header: "Dossiers", w: 2, align: "right" },
-        ],
-        rows: kv(data.parPack, (x) => PACKS[x as PackKey]?.label ?? x),
-      },
-      {
-        heading: "Centre de dépôt",
-        columns: [
-          { header: "Centre", w: 4 },
-          { header: "Dossiers", w: 2, align: "right" },
-        ],
-        rows: kv(data.parCentre, (x) => x),
-      },
-      {
-        heading: "Modalité de paiement",
-        columns: [
-          { header: "Modalité", w: 4 },
-          { header: "Dossiers", w: 2, align: "right" },
-        ],
-        rows: kv(data.parModalite, (x) => MODALITE_LABEL[x as keyof typeof MODALITE_LABEL] ?? x),
-      },
-      {
-        heading: "Production par rôle",
-        columns: [
-          { header: "Rôle", w: 3 },
-          { header: "Comptes", w: 2, align: "right" },
-          { header: "Dossiers", w: 2, align: "right" },
-          { header: "Actifs", w: 2, align: "right" },
-        ],
-        rows: data.parRole.map((r) => [
-          roleLabel(r.role),
-          `${r.agents}`,
-          `${r.dossiers}`,
-          `${r.actifs}`,
-        ]),
-      },
-      {
-        heading: "Top agents",
-        empty: "Aucun dossier attribué.",
-        columns: [
-          { header: "Agent", w: 4 },
-          { header: "Rôle", w: 3 },
-          { header: "Dossiers", w: 2, align: "right" },
-          { header: "Actifs", w: 2, align: "right" },
-        ],
-        rows: data.parAgent.map((a) => [a.nom, roleLabel(a.role), `${a.dossiers}`, `${a.actifs}`]),
-      },
-      {
-        heading: "Activité (30 derniers jours)",
-        empty: "Aucune activité.",
-        columns: [
-          { header: "Type d'action", w: 4 },
-          { header: "Occurrences", w: 2, align: "right" },
-        ],
-        rows: data.activiteParAction.map((r) => [r.k.replace(/_/g, " "), `${r.n}`]),
-      },
-    ],
-  });
 }

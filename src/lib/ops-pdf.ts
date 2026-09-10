@@ -177,16 +177,153 @@ export async function exportOpsPdf(opts: OpsPdfOptions): Promise<void> {
     y += 5;
   }
 
-  // ---- Pied de page : pagination ----
+  pdfFooters(doc);
+  doc.save(opts.filename);
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function pdfFooters(doc: any) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY);
-    doc.text(`Eiden Visa · document interne`, marginX, pageH - 8);
-    doc.text(`${p} / ${pages}`, pageW - marginX, pageH - 8, { align: "right" });
+    doc.text("Eiden Visa · document interne", 18, pageH - 8);
+    doc.text(`${p} / ${pages}`, pageW - 18, pageH - 8, { align: "right" });
+  }
+}
+
+/** Bandeau de titre en haut d'une page, renvoie le y sous le filet terracotta. */
+function pdfHeader(doc: any, title: string): number {
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 12;
+  const y = 16;
+  doc.setFont("times", "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(...FOREST);
+  doc.text("Eiden Visa", marginX, y);
+  doc.setFont("courier", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text(title.toUpperCase(), pageW - marginX, y - 3, { align: "right" });
+  doc.text(`Édité le ${new Date().toLocaleString("fr-FR")}`, pageW - marginX, y + 1.5, {
+    align: "right",
+  });
+  doc.setDrawColor(...TERRACOTTA);
+  doc.setLineWidth(0.5);
+  doc.line(marginX, y + 5, pageW - marginX, y + 5);
+  return y + 11;
+}
+
+const THEME_TOKENS = [
+  "--background",
+  "--foreground",
+  "--card",
+  "--card-foreground",
+  "--popover",
+  "--popover-foreground",
+  "--primary",
+  "--primary-foreground",
+  "--secondary",
+  "--secondary-foreground",
+  "--muted",
+  "--muted-foreground",
+  "--accent",
+  "--accent-foreground",
+  "--destructive",
+  "--destructive-foreground",
+  "--border",
+  "--input",
+  "--ring",
+  "--rail",
+  "--rail-foreground",
+  "--rail-muted",
+  "--rail-active",
+  "--ok",
+  "--ok-soft",
+  "--warn",
+  "--warn-soft",
+  "--stop",
+  "--stop-soft",
+  "--info",
+  "--info-soft",
+];
+
+/**
+ * Rend un élément du DOM tel quel dans un PDF A4 (capture pixel — le PDF est la copie
+ * conforme de ce qui est à l'écran). Utilisé pour le rapport analytique : graphiques inclus.
+ *
+ * html2canvas 1.4.1 ne sait pas interpréter `oklch()` (tout le thème est en tokens oklch) :
+ * on résout chaque token en `rgb()` via une sonde dans le vrai document, puis on réinjecte
+ * ces valeurs dans le clone que html2canvas dessine.
+ */
+export async function exportElementPdf(
+  el: HTMLElement,
+  opts: { title: string; filename: string },
+): Promise<void> {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import("html2canvas"),
+    import("jspdf"),
+  ]);
+
+  const probe = document.createElement("span");
+  probe.style.cssText = "position:absolute;left:-9999px;top:0;opacity:0;pointer-events:none";
+  document.body.appendChild(probe);
+  const resolved: Record<string, string> = {};
+  for (const token of THEME_TOKENS) {
+    probe.style.color = "";
+    probe.style.color = `var(${token})`;
+    const c = getComputedStyle(probe).color;
+    if (c) resolved[token] = c;
+  }
+  probe.remove();
+
+  const canvas = await html2canvas(el, {
+    backgroundColor: resolved["--background"] ?? "#ffffff",
+    scale: 2,
+    logging: false,
+    onclone: (clonedDoc: Document) => {
+      const style = clonedDoc.createElement("style");
+      style.textContent =
+        ":root{" +
+        Object.entries(resolved)
+          .map(([k, v]) => `${k}:${v};`)
+          .join("") +
+        "}[data-pdf-hide]{display:none!important}";
+      clonedDoc.head.appendChild(style);
+    },
+  });
+
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginX = 12;
+  const marginBottom = 12;
+  const imgW = pageW - marginX * 2;
+  const pxPerMm = canvas.width / imgW;
+
+  const firstTop = pdfHeader(doc, opts.title);
+  let sy = 0;
+  let page = 0;
+  while (sy < canvas.height - 1) {
+    const top = page === 0 ? firstTop : 12;
+    const availMm = pageH - marginBottom - top;
+    const sliceH = Math.min(canvas.height - sy, Math.floor(availMm * pxPerMm));
+    const slice = document.createElement("canvas");
+    slice.width = canvas.width;
+    slice.height = sliceH;
+    slice
+      .getContext("2d")!
+      .drawImage(canvas, 0, sy, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    if (page > 0) doc.addPage();
+    doc.addImage(slice, "PNG", marginX, top, imgW, sliceH / pxPerMm);
+    sy += sliceH;
+    page += 1;
   }
 
+  pdfFooters(doc);
   doc.save(opts.filename);
 }
