@@ -284,13 +284,12 @@ export const resetUserPassword = createServerFn({ method: "POST" })
 /**
  * Profil complet d'un agent : ses dossiers, les pièces rassemblées, ses encaissements,
  * son activité, et l'analytique le concernant — le tout en une requête (leçon du pooler).
+ *
+ * `createServerOnlyFn` (pas un RPC) : réutilisé côté serveur par `getUserProfile` (CEO) et
+ * par `getMyProfile` (l'agent lui-même, dans profile.ts). Le contrôle d'accès est à l'appelant.
  */
-export const getUserProfile = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string() }))
-  .handler(async ({ data }) => {
-    await requireCeo();
-    const id = data.id;
-    const rows = await db.execute(sql`
+export const fetchUserProfile = createServerOnlyFn(async (id: string) => {
+  const rows = await db.execute(sql`
       with
         mine as (select * from dossiers where agent_user_id = ${id}),
         kp as (select
@@ -343,66 +342,73 @@ export const getUserProfile = createServerFn({ method: "GET" })
         'activite', (select v from act_list)
       ) result
     `);
-    type Prof = {
-      kpi: { dossiers: number; actifs: number; approuve: number; refuse: number } | null;
-      documents: number | null;
-      encaisse: number | null;
-      nEncaissements: number | null;
-      parEtape: { k: string; n: number }[] | null;
-      parNiveau: { k: string; n: number }[] | null;
-      dossiers:
-        | {
-            id: string;
-            nom: string;
-            titre: string;
-            niveau: string;
-            etape: number;
-            decision: string;
-            ouvertLe: string;
-          }[]
-        | null;
-      docs:
-        | {
-            id: string;
-            dossierId: string;
-            clientNom: string;
-            filename: string;
-            type: string;
-            uploadedAt: string;
-          }[]
-        | null;
-      encaissements:
-        { id: string; detail: string; dossierId: string | null; createdAt: string }[] | null;
-      activite:
-        | {
-            id: string;
-            action: string;
-            detail: string;
-            dossierId: string | null;
-            createdAt: string;
-          }[]
-        | null;
-    };
-    const p = ((rows as unknown as { result: Prof }[])[0]?.result ?? {}) as Partial<Prof>;
-    const approuve = p.kpi?.approuve ?? 0;
-    const refuse = p.kpi?.refuse ?? 0;
-    return {
-      kpis: {
-        dossiers: p.kpi?.dossiers ?? 0,
-        actifs: p.kpi?.actifs ?? 0,
-        approuve,
-        refuse,
-        tauxApprobation:
-          approuve + refuse ? Math.round((approuve / (approuve + refuse)) * 100) : null,
-        documents: p.documents ?? 0,
-        encaisse: p.encaisse ?? 0,
-        nEncaissements: p.nEncaissements ?? 0,
-      },
-      parEtape: p.parEtape ?? [],
-      parNiveau: p.parNiveau ?? [],
-      dossiers: p.dossiers ?? [],
-      documents: p.docs ?? [],
-      encaissements: p.encaissements ?? [],
-      activite: p.activite ?? [],
-    };
+  type Prof = {
+    kpi: { dossiers: number; actifs: number; approuve: number; refuse: number } | null;
+    documents: number | null;
+    encaisse: number | null;
+    nEncaissements: number | null;
+    parEtape: { k: string; n: number }[] | null;
+    parNiveau: { k: string; n: number }[] | null;
+    dossiers:
+      | {
+          id: string;
+          nom: string;
+          titre: string;
+          niveau: string;
+          etape: number;
+          decision: string;
+          ouvertLe: string;
+        }[]
+      | null;
+    docs:
+      | {
+          id: string;
+          dossierId: string;
+          clientNom: string;
+          filename: string;
+          type: string;
+          uploadedAt: string;
+        }[]
+      | null;
+    encaissements:
+      { id: string; detail: string; dossierId: string | null; createdAt: string }[] | null;
+    activite:
+      | {
+          id: string;
+          action: string;
+          detail: string;
+          dossierId: string | null;
+          createdAt: string;
+        }[]
+      | null;
+  };
+  const p = ((rows as unknown as { result: Prof }[])[0]?.result ?? {}) as Partial<Prof>;
+  const approuve = p.kpi?.approuve ?? 0;
+  const refuse = p.kpi?.refuse ?? 0;
+  return {
+    kpis: {
+      dossiers: p.kpi?.dossiers ?? 0,
+      actifs: p.kpi?.actifs ?? 0,
+      approuve,
+      refuse,
+      tauxApprobation:
+        approuve + refuse ? Math.round((approuve / (approuve + refuse)) * 100) : null,
+      documents: p.documents ?? 0,
+      encaisse: p.encaisse ?? 0,
+      nEncaissements: p.nEncaissements ?? 0,
+    },
+    parEtape: p.parEtape ?? [],
+    parNiveau: p.parNiveau ?? [],
+    dossiers: p.dossiers ?? [],
+    documents: p.docs ?? [],
+    encaissements: p.encaissements ?? [],
+    activite: p.activite ?? [],
+  };
+});
+
+export const getUserProfile = createServerFn({ method: "GET" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    await requireCeo();
+    return fetchUserProfile(data.id);
   });

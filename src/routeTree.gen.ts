@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as OpsRouteImport } from './routes/ops'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
+import { Route as AppProfilRouteImport } from './routes/_app/profil'
 import { Route as AppQualificationRouteImport } from './routes/_app/qualification'
 import { Route as AppReferentielRouteImport } from './routes/_app/referentiel'
 import { Route as AppRendezVousRouteImport } from './routes/_app/rendez-vous'
@@ -49,6 +50,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppPaiementsRoute = AppPaiementsRouteImport.update({
   id: '/paiements',
   path: '/paiements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfilRoute = AppProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
   getParentRoute: () => AppRoute,
 } as any)
 const AppQualificationRoute = AppQualificationRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/ops': typeof OpsRoute
   '/paiements': typeof AppPaiementsRoute
+  '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
   '/referentiel': typeof AppReferentielRoute
   '/rendez-vous': typeof AppRendezVousRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/ops': typeof OpsRoute
   '/paiements': typeof AppPaiementsRoute
+  '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
   '/referentiel': typeof AppReferentielRoute
   '/rendez-vous': typeof AppRendezVousRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/ops': typeof OpsRoute
   '/_app/paiements': typeof AppPaiementsRoute
+  '/_app/profil': typeof AppProfilRoute
   '/_app/qualification': typeof AppQualificationRoute
   '/_app/referentiel': typeof AppReferentielRoute
   '/_app/rendez-vous': typeof AppRendezVousRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/ops'
     | '/paiements'
+    | '/profil'
     | '/qualification'
     | '/referentiel'
     | '/rendez-vous'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/ops'
     | '/paiements'
+    | '/profil'
     | '/qualification'
     | '/referentiel'
     | '/rendez-vous'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/ops'
     | '/_app/paiements'
+    | '/_app/profil'
     | '/_app/qualification'
     | '/_app/referentiel'
     | '/_app/rendez-vous'
@@ -218,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaiementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profil': {
+      id: '/_app/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof AppProfilRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/qualification': {
       id: '/_app/qualification'
       path: '/qualification'
@@ -265,6 +284,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppPaiementsRoute: typeof AppPaiementsRoute
+  AppProfilRoute: typeof AppProfilRoute
   AppQualificationRoute: typeof AppQualificationRoute
   AppReferentielRoute: typeof AppReferentielRoute
   AppRendezVousRoute: typeof AppRendezVousRoute
@@ -275,6 +295,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppPaiementsRoute: AppPaiementsRoute,
+  AppProfilRoute: AppProfilRoute,
   AppQualificationRoute: AppQualificationRoute,
   AppReferentielRoute: AppReferentielRoute,
   AppRendezVousRoute: AppRendezVousRoute,

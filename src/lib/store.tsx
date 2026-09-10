@@ -51,6 +51,12 @@ import {
   getUserProfile as getUserProfileFn,
 } from "@/backend/functions/ops";
 import { currentUser as currentUserFn } from "@/backend/functions/auth";
+import {
+  getMyProfile as getMyProfileFn,
+  updateMyName as updateMyNameFn,
+  setMyPhoto as setMyPhotoFn,
+  changeMyPassword as changeMyPasswordFn,
+} from "@/backend/functions/profile";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
 export const ROLE_LABEL: Record<Role, string> = {
@@ -470,6 +476,44 @@ export function useUserProfile(id: string) {
     refetchInterval: 60_000,
   });
   return { data: query.data ?? null, isLoading: query.isLoading };
+}
+
+const MY_PROFILE_KEY = ["my-profile"] as const;
+
+/** La fiche de l'utilisateur connecté — accessible depuis le rail, avec self-service. */
+export function useMyProfile() {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: MY_PROFILE_KEY,
+    queryFn: () => getMyProfileFn(),
+    refetchInterval: 60_000,
+  });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: MY_PROFILE_KEY });
+    queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEY });
+  };
+
+  const nameMutation = useMutation({
+    mutationFn: (nom: string) => updateMyNameFn({ data: { nom } }),
+    onSuccess: invalidate,
+  });
+  const photoMutation = useMutation({
+    mutationFn: (photoBase64: string | null) => setMyPhotoFn({ data: { photoBase64 } }),
+    onSuccess: invalidate,
+  });
+  const passwordMutation = useMutation({
+    mutationFn: (vars: { actuel: string; nouveau: string }) => changeMyPasswordFn({ data: vars }),
+  });
+
+  return {
+    data: query.data ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    changerNom: (nom: string) => nameMutation.mutateAsync(nom),
+    changerPhoto: (photoBase64: string | null) => photoMutation.mutateAsync(photoBase64),
+    changerMotDePasse: (vars: { actuel: string; nouveau: string }) =>
+      passwordMutation.mutateAsync(vars),
+  };
 }
 
 /** Journal d'activité — écran /ops. */
