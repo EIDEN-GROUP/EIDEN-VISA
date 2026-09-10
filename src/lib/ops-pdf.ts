@@ -266,20 +266,30 @@ const COLOR_PROPS = [
   "border-bottom-color",
   "border-left-color",
   "outline-color",
+  "text-decoration-color",
+  "column-rule-color",
+  "caret-color",
   "fill",
   "stroke",
 ] as const;
 
-/** Normalise une couleur CSS en hex/rgb via le canvas ; renvoie null si non convertible. */
-function normalizeColor(input: string, ctx: CanvasRenderingContext2D): string | null {
+/** Fonctions couleur modernes que html2canvas 1.4.1 ne sait pas parser. */
+const EXOTIC = /oklch|oklab|\blab\(|\blch\(|color\(|color-mix|light-dark/i;
+
+/** Convertit n'importe quelle couleur CSS en `rgb()/rgba()` via le canvas ; null si impossible. */
+function toRgb(input: string, ctx: CanvasRenderingContext2D): string | null {
   const s = input.trim();
-  if (!s || s === "transparent" || s === "none") return null;
-  if (/^#|^rgb|^hsl/i.test(s)) return s;
+  if (!s || s === "none" || s === "transparent") return null;
   try {
-    ctx.fillStyle = "#000000";
+    // Deux sentinelles différentes : si l'entrée n'est pas prise, les deux lectures diffèrent.
+    ctx.fillStyle = "#010203";
     ctx.fillStyle = s;
-    const out = ctx.fillStyle;
-    return /oklch|oklab|\blab\(|\blch\(|color\(/i.test(out) ? null : out;
+    const a = ctx.fillStyle;
+    ctx.fillStyle = "#040506";
+    ctx.fillStyle = s;
+    const b = ctx.fillStyle;
+    if (a !== b) return null;
+    return EXOTIC.test(a) ? null : a;
   } catch {
     return null;
   }
@@ -310,8 +320,9 @@ export async function exportElementPdf(
   const tokenValue: Record<string, string> = {};
   for (const token of THEME_TOKENS) {
     const authored = rootStyle.getPropertyValue(token);
-    tokenValue[token] = (measureCtx && normalizeColor(authored, measureCtx)) || TOKEN_HEX[token]!;
+    tokenValue[token] = (measureCtx && toRgb(authored, measureCtx)) || TOKEN_HEX[token]!;
   }
+  const inkFallback = tokenValue["--foreground"] ?? "#1d271d";
 
   const canvas = await html2canvas(el, {
     backgroundColor: tokenValue["--background"] ?? "#ffffff",
@@ -328,27 +339,45 @@ export async function exportElementPdf(
       clonedDoc.head.appendChild(style);
 
       const win = clonedDoc.defaultView;
-      if (!win || !measureCtx) return;
-      clonedDoc.querySelectorAll<HTMLElement>("*").forEach((node) => {
-        const cs = win.getComputedStyle(node);
-        const isSvg = node.namespaceURI === "http://www.w3.org/2000/svg";
-        for (const prop of COLOR_PROPS) {
-          if (!isSvg && (prop === "fill" || prop === "stroke")) continue;
-          const raw = cs.getPropertyValue(prop);
-          if (!raw) continue;
-          if (raw.includes("oklch")) {
-            const fixed =
-              prop === "background-color"
-                ? "transparent"
-                : (tokenValue["--foreground"] ?? "#1d271d");
-            node.style.setProperty(prop, fixed, "important");
-          } else if (isSvg && (prop === "fill" || prop === "stroke")) {
-            // Fige la couleur résolue du SVG en style inline pour survivre à la rastérisation.
-            const norm = normalizeColor(raw, measureCtx);
-            if (norm) node.style.setProperty(prop, norm);
+      const ctx = measureCtx;
+      if (!win || !ctx) return;
+      try {
+        const nodes: Element[] = [clonedDoc.documentElement, ...clonedDoc.querySelectorAll("*")];
+        for (const node of nodes) {
+          const el = node as HTMLElement;
+          const cs = win.getComputedStyle(el);
+          const isSvg = node.namespaceURI === "http://www.w3.org/2000/svg";
+
+          for (const prop of COLOR_PROPS) {
+            if (!isSvg && (prop === "fill" || prop === "stroke")) continue;
+            const raw = cs.getPropertyValue(prop);
+            if (!raw || raw === "none") continue;
+            // Toujours réécrire fill/stroke des SVG (le var() ne survit pas à la rastérisation).
+            // Sinon, ne toucher que les couleurs exotiques que html2canvas ne sait pas lire.
+            if (!isSvg && !EXOTIC.test(raw)) continue;
+            const rgb = toRgb(raw, ctx);
+            if (rgb) {
+              el.style.setProperty(prop, rgb, "important");
+            } else if (EXOTIC.test(raw)) {
+              el.style.setProperty(
+                prop,
+                prop === "background-color" || prop.endsWith("-color")
+                  ? "transparent"
+                  : inkFallback,
+                "important",
+              );
+            }
+          }
+
+          // box-shadow / text-shadow peuvent contenir une fonction couleur exotique.
+          for (const prop of ["box-shadow", "text-shadow"] as const) {
+            if (EXOTIC.test(cs.getPropertyValue(prop)))
+              el.style.setProperty(prop, "none", "important");
           }
         }
-      });
+      } catch {
+        /* best-effort : mieux vaut un PDF aux couleurs approximatives qu'aucun PDF */
+      }
     },
   });
 

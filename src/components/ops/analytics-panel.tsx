@@ -17,7 +17,7 @@ import { useRef, useState } from "react";
 import { useAnalytics, ROLE_LABEL, type Role } from "@/lib/store";
 import { ETAPES, PACKS, DECISION_LABEL, MODALITE_LABEL, type PackKey } from "@/lib/dossier-model";
 import { LEVEL_LABEL, type Level } from "@/lib/visa-rules";
-import { exportElementPdf } from "@/lib/ops-pdf";
+import { exportElementPdf, exportOpsPdf } from "@/lib/ops-pdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -87,13 +87,17 @@ export function AnalyticsPanel() {
   const [exporting, setExporting] = useState(false);
 
   async function onExport() {
-    if (!captureRef.current || exporting) return;
+    if (!captureRef.current || exporting || !data) return;
     setExporting(true);
     try {
       await exportElementPdf(captureRef.current, {
         title: "Rapport analytique",
         filename: "rapport-analytique-eiden-visa.pdf",
       });
+    } catch {
+      // La capture pixel a échoué (couleurs modernes non gérées par html2canvas
+      // selon le navigateur) : on retombe sur un rapport tabulé propre, mêmes chiffres.
+      await exportRapportTable(data);
     } finally {
       setExporting(false);
     }
@@ -425,4 +429,122 @@ function fmtWeek(iso: string) {
   return Number.isNaN(d.getTime())
     ? iso
     : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+}
+
+type AnalyticsData = NonNullable<ReturnType<typeof useAnalytics>["data"]>;
+
+/** Repli tabulé quand la capture pixel échoue — mêmes chiffres, format « rapport ». */
+async function exportRapportTable(data: AnalyticsData) {
+  const k = data.kpis;
+  const total = data.kpis.total || 1;
+  const pct = (n: number) => `${Math.round((n / total) * 100)} %`;
+  const kv = (rows: { k: string; n: number }[], label: (x: string) => string) =>
+    rows.map((r) => [label(r.k), `${r.n}`]);
+
+  await exportOpsPdf({
+    title: "Rapport analytique",
+    filename: "rapport-analytique-eiden-visa.pdf",
+    intro:
+      "Instantané de l'activité Eiden Visa : répartition des dossiers, production par rôle et par agent.",
+    kpis: [
+      { label: "Dossiers", value: `${k.total}` },
+      { label: "Actifs", value: `${k.actifs}` },
+      {
+        label: "Taux d'approbation",
+        value: k.tauxApprobation === null ? "—" : `${k.tauxApprobation} %`,
+      },
+      { label: "Encaissé", value: `${k.totalEncaisse.toLocaleString("fr-FR")} MAD` },
+      { label: "Ticket moyen", value: `${k.ticketMoyen.toLocaleString("fr-FR")} MAD` },
+      { label: "Décisions", value: `${k.approuve} ok · ${k.refuse} refus` },
+    ],
+    sections: [
+      {
+        heading: "Pipeline — dossiers par étape",
+        columns: [
+          { header: "Étape", w: 5 },
+          { header: "Rôle", w: 3 },
+          { header: "Dossiers", w: 2, align: "right" },
+          { header: "Part", w: 2, align: "right" },
+        ],
+        rows: data.pipeline.map((r) => {
+          const e = ETAPES.find((x) => String(x.n) === r.k);
+          return [e ? `${e.n}. ${e.label}` : r.k, e?.role ?? "—", `${r.n}`, pct(r.n)];
+        }),
+      },
+      {
+        heading: "Niveau de dossier",
+        columns: [
+          { header: "Niveau", w: 4 },
+          { header: "Dossiers", w: 2, align: "right" },
+        ],
+        rows: kv(data.parNiveau, (x) => LEVEL_LABEL[x as Level] ?? x),
+      },
+      {
+        heading: "Décision consulaire",
+        columns: [
+          { header: "Décision", w: 4 },
+          { header: "Dossiers", w: 2, align: "right" },
+        ],
+        rows: kv(data.parDecision, (x) => DECISION_LABEL[x as keyof typeof DECISION_LABEL] ?? x),
+      },
+      {
+        heading: "Packs",
+        columns: [
+          { header: "Pack", w: 4 },
+          { header: "Dossiers", w: 2, align: "right" },
+        ],
+        rows: kv(data.parPack, (x) => PACKS[x as PackKey]?.label ?? x),
+      },
+      {
+        heading: "Centre de dépôt",
+        columns: [
+          { header: "Centre", w: 4 },
+          { header: "Dossiers", w: 2, align: "right" },
+        ],
+        rows: kv(data.parCentre, (x) => x),
+      },
+      {
+        heading: "Modalité de paiement",
+        columns: [
+          { header: "Modalité", w: 4 },
+          { header: "Dossiers", w: 2, align: "right" },
+        ],
+        rows: kv(data.parModalite, (x) => MODALITE_LABEL[x as keyof typeof MODALITE_LABEL] ?? x),
+      },
+      {
+        heading: "Production par rôle",
+        columns: [
+          { header: "Rôle", w: 3 },
+          { header: "Comptes", w: 2, align: "right" },
+          { header: "Dossiers", w: 2, align: "right" },
+          { header: "Actifs", w: 2, align: "right" },
+        ],
+        rows: data.parRole.map((r) => [
+          roleLabel(r.role),
+          `${r.agents}`,
+          `${r.dossiers}`,
+          `${r.actifs}`,
+        ]),
+      },
+      {
+        heading: "Top agents",
+        empty: "Aucun dossier attribué.",
+        columns: [
+          { header: "Agent", w: 4 },
+          { header: "Rôle", w: 3 },
+          { header: "Dossiers", w: 2, align: "right" },
+        ],
+        rows: data.parAgent.map((a) => [a.nom, roleLabel(a.role), `${a.dossiers}`]),
+      },
+      {
+        heading: "Activité (30 jours)",
+        empty: "Aucune activité.",
+        columns: [
+          { header: "Type d'action", w: 4 },
+          { header: "Occurrences", w: 2, align: "right" },
+        ],
+        rows: data.activiteParAction.map((r) => [r.k.replace(/_/g, " "), `${r.n}`]),
+      },
+    ],
+  });
 }
