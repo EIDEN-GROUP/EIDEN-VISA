@@ -229,6 +229,7 @@ export function buildSeed(): Dossier[] {
       client: { nom: s.nom, telephone: s.telephone, ville: s.ville, naissance: s.naissance },
       agent: s.agent,
       agentUserId: null,
+      assigneeUserId: null,
       ouvertLe: s.ouvertLe,
       caseKey: s.caseKey,
       profile: s.profile,

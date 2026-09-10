@@ -57,6 +57,13 @@ import {
   setMyPhoto as setMyPhotoFn,
   changeMyPassword as changeMyPasswordFn,
 } from "@/backend/functions/profile";
+import {
+  listAssignableUsers as listAssignableUsersFn,
+  assignDossier as assignDossierFn,
+  unassignDossier as unassignDossierFn,
+  listMyNotifications as listMyNotificationsFn,
+  markNotificationsRead as markNotificationsReadFn,
+} from "@/backend/functions/assignments";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
 export const ROLE_LABEL: Record<Role, string> = {
@@ -161,6 +168,20 @@ function useDossierMutations() {
     mutationFn: (vars: { id: string; decision: Decision }) => setDecisionFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const assignerMutation = useMutation({
+    mutationFn: (vars: { dossierId: string; assigneeUserId: string; note?: string | undefined }) =>
+      assignDossierFn({
+        data: vars.note ? vars : { dossierId: vars.dossierId, assigneeUserId: vars.assigneeUserId },
+      }),
+    onSuccess: () => {
+      invalidateAll();
+      queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
+    },
+  });
+  const desassignerMutation = useMutation({
+    mutationFn: (dossierId: string) => unassignDossierFn({ data: { dossierId } }),
+    onSuccess: invalidateAll,
+  });
   const ajouterMutation = useMutation({
     mutationFn: (d: Dossier) => createDossier({ data: d }),
     onSuccess: invalidateAll,
@@ -221,6 +242,9 @@ function useDossierMutations() {
       changerCentreMutation.mutateAsync({ id, centre }),
     setDecision: (id: string, decision: Decision) =>
       setDecisionMutation.mutateAsync({ id, decision }),
+    assigner: (dossierId: string, assigneeUserId: string, note?: string | undefined) =>
+      assignerMutation.mutateAsync({ dossierId, assigneeUserId, note }),
+    desassigner: (dossierId: string) => desassignerMutation.mutateAsync(dossierId),
     ajouter: (d: Dossier) => ajouterMutation.mutateAsync(d),
     updateClient: (id: string, client: Dossier["client"]) =>
       updateClientMutation.mutateAsync({ id, client }),
@@ -479,6 +503,37 @@ export function useUserProfile(id: string) {
 }
 
 const MY_PROFILE_KEY = ["my-profile"] as const;
+const NOTIFICATIONS_KEY = ["notifications"] as const;
+const ASSIGNABLE_USERS_KEY = ["assignable-users"] as const;
+
+/** Liste légère des comptes pour le sélecteur d'assignation (tout le personnel). */
+export function useAssignableUsers() {
+  const query = useQuery({
+    queryKey: ASSIGNABLE_USERS_KEY,
+    queryFn: () => listAssignableUsersFn(),
+    staleTime: 60_000,
+  });
+  return { users: query.data ?? [] };
+}
+
+/** Notifications de l'utilisateur connecté (assignations…) + compteur non-lus. */
+export function useNotifications() {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: NOTIFICATIONS_KEY,
+    queryFn: () => listMyNotificationsFn(),
+    refetchInterval: 20_000,
+  });
+  const markRead = useMutation({
+    mutationFn: (ids?: string[]) => markNotificationsReadFn({ data: ids ? { ids } : {} }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY }),
+  });
+  return {
+    items: query.data?.items ?? [],
+    unread: query.data?.unread ?? 0,
+    marquerLu: (ids?: string[]) => markRead.mutateAsync(ids),
+  };
+}
 
 /** La fiche de l'utilisateur connecté — accessible depuis le rail, avec self-service. */
 export function useMyProfile() {

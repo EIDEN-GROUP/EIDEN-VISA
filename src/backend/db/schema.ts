@@ -15,6 +15,21 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** Notifications personnelles — surtout les assignations de dossier. Lues/non lues. */
+export const notifications = pgTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").$type<"assignation" | "info">().notNull().default("assignation"),
+  message: text("message").notNull(),
+  dossierId: text("dossier_id"),
+  /** Qui a déclenché la notification (affichage : « par X »). */
+  acteurNom: text("acteur_nom"),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Journal d'activité — qui a fait quoi, pour l'écran /ops du CEO. */
 export const activityLog = pgTable("activity_log", {
   id: text("id").primaryKey(),
@@ -35,6 +50,9 @@ export const dossiers = pgTable("dossiers", {
   // Le compte réel qui a ouvert le dossier — permet un filtre "Mes dossiers" fiable,
   // contrairement à `agent` qui n'est qu'un texte d'affichage (nom + rôle au moment de la création).
   agentUserId: text("agent_user_id").references(() => users.id, { onDelete: "set null" }),
+  // À qui le dossier est actuellement confié (peut différer de celui qui l'a ouvert).
+  // Nul = non assigné. Toute (ré)assignation notifie la personne concernée.
+  assigneeUserId: text("assignee_user_id").references(() => users.id, { onDelete: "set null" }),
   ouvertLe: text("ouvert_le").notNull(),
   caseKey: text("case_key").notNull(),
   profile: jsonb("profile").$type<Profile>().notNull().default({}),

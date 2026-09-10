@@ -116,6 +116,7 @@ function Qualification() {
       // Le serveur dérive le VRAI agentUserId de la session (voir createDossier) — cette
       // valeur client n'est là que pour satisfaire le type, elle est ignorée par le backend.
       agentUserId: currentUser?.id ?? null,
+      assigneeUserId: null,
       ouvertLe: new Date().toLocaleDateString("fr-FR"),
       caseKey: result.caseKey,
       profile,

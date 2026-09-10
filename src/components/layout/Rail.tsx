@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { ProfileChip } from "@/components/layout/profile-chip";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -114,7 +115,10 @@ export function Rail() {
             <RailBody onNavigate={() => setOpen(false)} />
           </SheetContent>
         </Sheet>
-        <ProfileChip tone="rail" compact />
+        <div className="flex items-center gap-1">
+          <NotificationBell tone="rail" />
+          <ProfileChip tone="rail" compact />
+        </div>
       </div>
 
       {/* Rail fixe desktop */}

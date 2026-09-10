@@ -16,6 +16,7 @@ import {
 } from "@/lib/dossier-model";
 import { NiveauBadge, RdvBadge, ClotureBadge, DecisionBadge } from "@/components/dossier/badges";
 import { DocumentsPanel } from "@/components/dossier/documents-panel";
+import { AssignationCard } from "@/components/dossier/assignation-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -561,6 +562,9 @@ function DossierDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Assignation */}
+          <AssignationCard dossier={d} />
 
           {/* Documents PDF */}
           <Card className="panel">

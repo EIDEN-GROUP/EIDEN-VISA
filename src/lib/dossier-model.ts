@@ -231,6 +231,8 @@ export interface Dossier {
   /** Le VRAI compte qui a ouvert ce dossier — sert à filtrer "Mes dossiers" par utilisateur.
    * `null` pour les dossiers créés avant l'ajout de ce champ. */
   agentUserId: string | null;
+  /** À qui le dossier est confié actuellement (assignation), `null` si non assigné. */
+  assigneeUserId: string | null;
   ouvertLe: string;
   caseKey: string;
   profile: Profile;

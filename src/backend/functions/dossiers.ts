@@ -49,6 +49,7 @@ function rowToDossier(row: DossierRow): Dossier {
     },
     agent: row.agent,
     agentUserId: row.agentUserId,
+    assigneeUserId: row.assigneeUserId,
     ouvertLe: row.ouvertLe,
     caseKey: row.caseKey,
     profile: row.profile,
@@ -98,7 +99,14 @@ export const listDossiersPage = createServerFn({ method: "GET" })
     const userId = await requireUserId();
     const term = data.search?.trim();
     const conditions: SQL[] = [...dateRangeConditions(data)];
-    if (data.mine) conditions.push(eq(dossiersTable.agentUserId, userId));
+    // « Mes dossiers » = ceux que j'ai ouverts OU ceux qui me sont assignés.
+    if (data.mine) {
+      const mineCond = or(
+        eq(dossiersTable.agentUserId, userId),
+        eq(dossiersTable.assigneeUserId, userId),
+      );
+      if (mineCond) conditions.push(mineCond);
+    }
     if (term) {
       const like = `%${term}%`;
       const digits = term.replace(/\D/g, "");
@@ -316,6 +324,7 @@ const dossierInput = z.object({
     naissance: z.string(),
   }),
   agent: z.string(),
+  assigneeUserId: z.string().nullable().default(null),
   ouvertLe: z.string(),
   caseKey: z.string(),
   profile: z.object({
@@ -371,6 +380,7 @@ export const createDossier = createServerFn({ method: "POST" })
       clientNaissance: data.client.naissance,
       agent: data.agent,
       agentUserId,
+      assigneeUserId: data.assigneeUserId,
       ouvertLe: data.ouvertLe,
       caseKey: data.caseKey,
       profile: data.profile as Profile,
