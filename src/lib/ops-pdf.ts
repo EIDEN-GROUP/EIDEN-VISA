@@ -218,47 +218,83 @@ function pdfHeader(doc: any, title: string): number {
   return y + 11;
 }
 
-const THEME_TOKENS = [
-  "--background",
-  "--foreground",
-  "--card",
-  "--card-foreground",
-  "--popover",
-  "--popover-foreground",
-  "--primary",
-  "--primary-foreground",
-  "--secondary",
-  "--secondary-foreground",
-  "--muted",
-  "--muted-foreground",
-  "--accent",
-  "--accent-foreground",
-  "--destructive",
-  "--destructive-foreground",
-  "--border",
-  "--input",
-  "--ring",
-  "--rail",
-  "--rail-foreground",
-  "--rail-muted",
-  "--rail-active",
-  "--ok",
-  "--ok-soft",
-  "--warn",
-  "--warn-soft",
-  "--stop",
-  "--stop-soft",
-  "--info",
-  "--info-soft",
-];
+/**
+ * Équivalents sRGB des tokens de thème (thème clair, styles.css), pré-calculés depuis
+ * les valeurs oklch. Sert de repli : certains navigateurs (Firefox) sérialisent encore
+ * `getComputedStyle().color` en `oklch(...)`, que html2canvas 1.4.1 ne sait pas parser.
+ */
+const TOKEN_HEX: Record<string, string> = {
+  "--background": "#f3f0e6",
+  "--foreground": "#1d271d",
+  "--card": "#fefdfb",
+  "--card-foreground": "#1d271d",
+  "--popover": "#fefdfb",
+  "--popover-foreground": "#1d271d",
+  "--primary": "#86442e",
+  "--primary-foreground": "#faf8f2",
+  "--secondary": "#eae6da",
+  "--secondary-foreground": "#2b362b",
+  "--muted": "#eae6da",
+  "--muted-foreground": "#676f60",
+  "--accent": "#f5dcd1",
+  "--accent-foreground": "#6b3725",
+  "--destructive": "#86442e",
+  "--destructive-foreground": "#faf8f2",
+  "--border": "#ded9cc",
+  "--input": "#ded9cc",
+  "--ring": "#86442e",
+  "--rail": "#202e24",
+  "--rail-foreground": "#f3f0e7",
+  "--rail-muted": "#919c8e",
+  "--rail-active": "#334335",
+  "--ok": "#346b45",
+  "--ok-soft": "#dbeede",
+  "--warn": "#946c25",
+  "--warn-soft": "#f9eaca",
+  "--stop": "#86442e",
+  "--stop-soft": "#fee1d6",
+  "--info": "#33636e",
+  "--info-soft": "#d7edf1",
+};
+const THEME_TOKENS = Object.keys(TOKEN_HEX);
+
+const COLOR_PROPS = [
+  "color",
+  "background-color",
+  "border-top-color",
+  "border-right-color",
+  "border-bottom-color",
+  "border-left-color",
+  "outline-color",
+  "fill",
+  "stroke",
+] as const;
+
+/** Normalise une couleur CSS en hex/rgb via le canvas ; renvoie null si non convertible. */
+function normalizeColor(input: string, ctx: CanvasRenderingContext2D): string | null {
+  const s = input.trim();
+  if (!s || s === "transparent" || s === "none") return null;
+  if (/^#|^rgb|^hsl/i.test(s)) return s;
+  try {
+    ctx.fillStyle = "#000000";
+    ctx.fillStyle = s;
+    const out = ctx.fillStyle;
+    return /oklch|oklab|\blab\(|\blch\(|color\(/i.test(out) ? null : out;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Rend un élément du DOM tel quel dans un PDF A4 (capture pixel — le PDF est la copie
  * conforme de ce qui est à l'écran). Utilisé pour le rapport analytique : graphiques inclus.
  *
- * html2canvas 1.4.1 ne sait pas interpréter `oklch()` (tout le thème est en tokens oklch) :
- * on résout chaque token en `rgb()` via une sonde dans le vrai document, puis on réinjecte
- * ces valeurs dans le clone que html2canvas dessine.
+ * html2canvas 1.4.1 plante sur `oklch()` (tout le thème est en tokens oklch). On corrige
+ * en trois temps sur le clone que html2canvas dessine :
+ *   1. on réécrit les tokens `:root` en hex ;
+ *   2. on repasse chaque élément pour neutraliser toute couleur oklch résiduelle ;
+ *   3. on fige les couleurs des SVG (recharts) en attributs inline — sinon le `var()`
+ *      ne se résout pas quand html2canvas rastérise le SVG isolément.
  */
 export async function exportElementPdf(
   el: HTMLElement,
@@ -269,31 +305,50 @@ export async function exportElementPdf(
     import("jspdf"),
   ]);
 
-  const probe = document.createElement("span");
-  probe.style.cssText = "position:absolute;left:-9999px;top:0;opacity:0;pointer-events:none";
-  document.body.appendChild(probe);
-  const resolved: Record<string, string> = {};
+  const measureCtx = document.createElement("canvas").getContext("2d");
+  const rootStyle = getComputedStyle(document.documentElement);
+  const tokenValue: Record<string, string> = {};
   for (const token of THEME_TOKENS) {
-    probe.style.color = "";
-    probe.style.color = `var(${token})`;
-    const c = getComputedStyle(probe).color;
-    if (c) resolved[token] = c;
+    const authored = rootStyle.getPropertyValue(token);
+    tokenValue[token] = (measureCtx && normalizeColor(authored, measureCtx)) || TOKEN_HEX[token]!;
   }
-  probe.remove();
 
   const canvas = await html2canvas(el, {
-    backgroundColor: resolved["--background"] ?? "#ffffff",
+    backgroundColor: tokenValue["--background"] ?? "#ffffff",
     scale: 2,
     logging: false,
     onclone: (clonedDoc: Document) => {
       const style = clonedDoc.createElement("style");
       style.textContent =
         ":root{" +
-        Object.entries(resolved)
+        Object.entries(tokenValue)
           .map(([k, v]) => `${k}:${v};`)
           .join("") +
         "}[data-pdf-hide]{display:none!important}";
       clonedDoc.head.appendChild(style);
+
+      const win = clonedDoc.defaultView;
+      if (!win || !measureCtx) return;
+      clonedDoc.querySelectorAll<HTMLElement>("*").forEach((node) => {
+        const cs = win.getComputedStyle(node);
+        const isSvg = node.namespaceURI === "http://www.w3.org/2000/svg";
+        for (const prop of COLOR_PROPS) {
+          if (!isSvg && (prop === "fill" || prop === "stroke")) continue;
+          const raw = cs.getPropertyValue(prop);
+          if (!raw) continue;
+          if (raw.includes("oklch")) {
+            const fixed =
+              prop === "background-color"
+                ? "transparent"
+                : (tokenValue["--foreground"] ?? "#1d271d");
+            node.style.setProperty(prop, fixed, "important");
+          } else if (isSvg && (prop === "fill" || prop === "stroke")) {
+            // Fige la couleur résolue du SVG en style inline pour survivre à la rastérisation.
+            const norm = normalizeColor(raw, measureCtx);
+            if (norm) node.style.setProperty(prop, norm);
+          }
+        }
+      });
     },
   });
 
