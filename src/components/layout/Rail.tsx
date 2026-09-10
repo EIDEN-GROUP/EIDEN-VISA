@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   FolderOpen,
   ListTree,
-  CalendarClock,
   Wallet,
   BookOpen,
   LogOut,
@@ -21,7 +20,6 @@ const NAV = [
   { to: "/", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dossiers", label: "Dossiers", icon: FolderOpen },
   { to: "/qualification", label: "Qualification", icon: ListTree },
-  { to: "/rendez-vous", label: "Rendez-vous", icon: CalendarClock },
   { to: "/paiements", label: "Paiements", icon: Wallet },
   { to: "/referentiel", label: "Référentiel", icon: BookOpen },
 ] as const;

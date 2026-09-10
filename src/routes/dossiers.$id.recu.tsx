@@ -66,7 +66,11 @@ function buildReceiptPdf(d: Dossier) {
     doc.setFontSize(9);
     doc.setTextColor(...gray);
     doc.text(d.client.telephone, marginX, y);
-    doc.text(d.rdv.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact", marginX + contentW / 2, y);
+    doc.text(
+      d.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact",
+      marginX + contentW / 2,
+      y,
+    );
 
     y += 5;
     doc.text(d.client.ville, marginX, y);
@@ -112,7 +116,11 @@ function buildReceiptPdf(d: Dossier) {
         doc.line(marginX + 0.5, y - 1.6, marginX + 1.3, y - 0.7);
         doc.line(marginX + 1.3, y - 0.7, marginX + 2.6, y - 2.7);
       }
-      doc.setTextColor(p.fourni ? forest[0] : gray[0], p.fourni ? forest[1] : gray[1], p.fourni ? forest[2] : gray[2]);
+      doc.setTextColor(
+        p.fourni ? forest[0] : gray[0],
+        p.fourni ? forest[1] : gray[1],
+        p.fourni ? forest[2] : gray[2],
+      );
       doc.text(lines, marginX + pieceIndent, y);
       y += lines.length * pieceLineHeight + 2;
     }
@@ -202,7 +210,7 @@ function buildReceiptPdf(d: Dossier) {
     doc.setTextColor(...gray);
     const note =
       "Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de l'accompagnement de ce dossier. " +
-      "Les frais de rendez-vous et droits de visa réglés directement à TLScontact ou BLS International n'apparaissent " +
+      "Les droits de visa réglés directement au centre de dépôt (TLScontact ou BLS) n'apparaissent " +
       "ici que s'ils ont transité par Eiden Visa.";
     doc.text(note, marginX, y, { maxWidth: contentW, lineHeightFactor: 1.4 });
 
@@ -265,7 +273,7 @@ function Recu() {
             <div className="ref text-muted-foreground">Dossier</div>
             <div className="mt-1 font-medium text-foreground">{d.titre}</div>
             <div className="mt-0.5 text-muted-foreground">
-              {d.rdv.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact"}
+              {d.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact"}
             </div>
           </div>
         </div>
@@ -282,11 +290,15 @@ function Recu() {
                 >
                   {p.fourni && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
                 </span>
-                <span className={p.fourni ? "text-foreground" : "text-muted-foreground"}>{p.label}</span>
+                <span className={p.fourni ? "text-foreground" : "text-muted-foreground"}>
+                  {p.label}
+                </span>
               </li>
             ))}
             {d.pieces.length === 0 && (
-              <li className="text-sm text-muted-foreground">Aucune pièce listée pour ce dossier.</li>
+              <li className="text-sm text-muted-foreground">
+                Aucune pièce listée pour ce dossier.
+              </li>
             )}
           </ul>
         </div>
@@ -337,9 +349,9 @@ function Recu() {
         </div>
 
         <p className="mt-6 text-xs text-muted-foreground">
-          Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de l'accompagnement de ce dossier.
-          Les frais de rendez-vous et droits de visa réglés directement à TLScontact ou BLS International n'apparaissent
-          ici que s'ils ont transité par Eiden Visa.
+          Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de
+          l'accompagnement de ce dossier. Les droits de visa réglés directement au centre de dépôt
+          (TLScontact ou BLS) n'apparaissent ici que s'ils ont transité par Eiden Visa.
         </p>
       </div>
     </div>

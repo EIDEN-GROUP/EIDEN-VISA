@@ -126,7 +126,8 @@ function Qualification() {
       pack: "base",
       modalitePaiement: modalite,
       etape: 1,
-      rdv: { centre, date: null, heure: null, statut: "recherche" },
+      centre,
+      uploadAutorise: false,
       pieces,
       // Échéancier dérivé du pack (base par défaut) et de la modalité choisie à l'accueil :
       // comptant = une ligne de solde, acompte = 20 % + solde 80 %.
@@ -361,7 +362,7 @@ function Qualification() {
                   </Select>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {modalite === "acompte"
-                      ? "20 % à la confirmation du créneau, solde des 80 % à la remise du dossier."
+                      ? "20 % à l'ouverture du dossier, solde des 80 % à la remise du dossier."
                       : "Règlement du pack en une fois, à la remise du dossier."}
                   </p>
                 </div>

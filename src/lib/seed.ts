@@ -1,11 +1,11 @@
 import {
   piecesFromCase,
   resolveCase,
+  type Centre,
   type Dossier,
   type Modalite,
   type PackKey,
   type Paiement,
-  type RendezVous,
 } from "./dossier-model";
 import type { Profile } from "./visa-rules";
 
@@ -22,7 +22,8 @@ interface SeedInput {
   pack: PackKey;
   modalite?: Modalite;
   etape: number;
-  rdv: RendezVous;
+  centre: Centre;
+  autorise?: boolean;
   fournis: number[] | "tout";
   paiements: Paiement[];
   notes?: string[];
@@ -42,7 +43,7 @@ const SEED: SeedInput[] = [
     pack: "voyage",
     modalite: "acompte",
     etape: 6,
-    rdv: { centre: "TLScontact Agadir", date: "24/09/2026", heure: "09:20", statut: "confirme" },
+    centre: "TLScontact Agadir",
     fournis: "tout",
     // Cliente en modalité acompte : 20 % versés à la confirmation du créneau, solde des 80 %
     // dû à la remise du dossier scellé (étape 6). Aucun "frais de rendez-vous" en plus.
@@ -75,7 +76,7 @@ const SEED: SeedInput[] = [
     profile: {},
     pack: "base",
     etape: 2,
-    rdv: { centre: "TLScontact Casablanca", date: null, heure: null, statut: "recherche" },
+    centre: "TLScontact Casablanca",
     fournis: [0, 1],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
     notes: [
@@ -94,7 +95,8 @@ const SEED: SeedInput[] = [
     profile: { base: "visite_enfant_parent", prof: "retraite", married: false },
     pack: "base",
     etape: 4,
-    rdv: { centre: "TLScontact Agadir", date: "19/09/2026", heure: "11:00", statut: "confirme" },
+    centre: "TLScontact Agadir",
+    autorise: true,
     fournis: [0, 1, 3, 4, 6, 7],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: "30/08/2026", encaisse: true }],
     notes: [
@@ -113,7 +115,8 @@ const SEED: SeedInput[] = [
     profile: {},
     pack: "global",
     etape: 7,
-    rdv: { centre: "TLScontact Agadir", date: "08/09/2026", heure: "08:40", statut: "depose" },
+    centre: "TLScontact Agadir",
+    autorise: true,
     fournis: "tout",
     paiements: [{ libelle: "Pack Global", montant: 1300, date: "06/09/2026", encaisse: true }],
     notes: ["Déplacement salon Agro Lyon. Lettre de mission de l'entreprise marocaine jointe."],
@@ -130,7 +133,7 @@ const SEED: SeedInput[] = [
     profile: {},
     pack: "base",
     etape: 1,
-    rdv: { centre: "TLScontact Casablanca", date: null, heure: null, statut: "recherche" },
+    centre: "TLScontact Casablanca",
     fournis: [0, 1],
     paiements: [],
     notes: [
@@ -149,7 +152,7 @@ const SEED: SeedInput[] = [
     profile: { base: "famille_ue", dependent: true },
     pack: "base",
     etape: 3,
-    rdv: { centre: "TLScontact Agadir", date: null, heure: null, statut: "recherche" },
+    centre: "TLScontact Agadir",
     fournis: [0, 1, 3, 4],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
     notes: [
@@ -168,12 +171,13 @@ const SEED: SeedInput[] = [
     profile: { base: "visite_generale", prof: "commercant", married: true, minor: true },
     pack: "voyage",
     etape: 5,
-    rdv: { centre: "TLScontact Agadir", date: "17/09/2026", heure: "10:10", statut: "confirme" },
+    centre: "TLScontact Agadir",
+    autorise: true,
     fournis: [0, 1, 3, 4, 5, 6, 8, 9],
     paiements: [
       {
-        libelle: "Frais de rendez-vous TLS (x2)",
-        montant: 618,
+        libelle: "Pack + pré-réservation voyage",
+        montant: 1000,
         date: "23/08/2026",
         encaisse: true,
       },
@@ -195,7 +199,7 @@ const SEED: SeedInput[] = [
     profile: {},
     pack: "base",
     etape: 1,
-    rdv: { centre: "TLScontact Agadir", date: null, heure: null, statut: "recherche" },
+    centre: "TLScontact Agadir",
     fournis: [],
     paiements: [
       { libelle: "Consultation d'orientation", montant: 100, date: "19/08/2026", encaisse: true },
@@ -214,7 +218,8 @@ const SEED: SeedInput[] = [
     profile: { base: "tourisme", prof: "agriculteur", married: true, spouseNoJob: true },
     pack: "base",
     etape: 7,
-    rdv: { centre: "TLScontact Agadir", date: "02/09/2026", heure: "14:30", statut: "depose" },
+    centre: "TLScontact Agadir",
+    autorise: true,
     fournis: "tout",
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: "31/08/2026", encaisse: true }],
   },
@@ -239,7 +244,8 @@ export function buildSeed(): Dossier[] {
       pack: s.pack,
       modalitePaiement: s.modalite ?? "comptant",
       etape: s.etape,
-      rdv: s.rdv,
+      centre: s.centre,
+      uploadAutorise: s.autorise ?? false,
       pieces,
       // Backfill de l'échéance sur les lignes qui n'en portent pas : les options à la carte
       // sont identifiées par leur libellé, tout le reste est un solde.

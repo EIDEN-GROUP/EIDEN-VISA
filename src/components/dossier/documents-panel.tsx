@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useDocuments, type DocumentType } from "@/lib/store";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Trash2 } from "lucide-react";
+import { Upload, FileText, Trash2, Lock } from "lucide-react";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 Mo par fichier
 
@@ -19,7 +19,13 @@ function readAsBase64(file: File): Promise<string> {
   });
 }
 
-export function DocumentsPanel({ dossierId }: { dossierId: string }) {
+export function DocumentsPanel({
+  dossierId,
+  authorized,
+}: {
+  dossierId: string;
+  authorized: boolean;
+}) {
   const { documents, upload, supprimer } = useDocuments(dossierId);
   const [error, setError] = useState<string | null>(null);
   const [uploadingType, setUploadingType] = useState<DocumentType | null>(null);
@@ -31,6 +37,7 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
 
   async function handlePdfFile(type: DocumentType, file: File | undefined) {
     setError(null);
+    if (!authorized) return;
     if (!file) return;
     if (file.type !== "application/pdf") {
       setError("Seuls les fichiers PDF sont acceptés ici.");
@@ -53,6 +60,7 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
   // ne jamais perdre une pièce (photo prise au comptoir, scan, tableur...) faute d'emplacement dédié.
   async function handleAnyFiles(files: FileList | null) {
     setError(null);
+    if (!authorized) return;
     if (!files || files.length === 0) return;
     setUploadingType("autre");
     try {
@@ -78,17 +86,26 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
 
   return (
     <div className="space-y-4">
+      {!authorized && (
+        <p className="flex items-start gap-1.5 rounded-lg bg-[var(--warn-soft)] px-3 py-2 text-xs text-[var(--warn)]">
+          <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+          Téléversement bloqué : ce dossier n'est pas autorisé. Un responsable (CEO ou Réception)
+          doit l'autoriser. Les documents déjà déposés restent consultables.
+        </p>
+      )}
       {error && <p className="text-xs text-[var(--stop)]">{error}</p>}
       {PDF_SLOTS.map((slot) => {
         const docs = documents.filter((doc) => doc.type === slot.type);
         return (
           <div key={slot.type}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{slot.label}</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {slot.label}
+              </span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={uploadingType === slot.type}
+                disabled={!authorized || uploadingType === slot.type}
                 onClick={() => inputRefs.current[slot.type]?.click()}
               >
                 <Upload className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -108,16 +125,24 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
               />
             </div>
             <div className="mt-2 space-y-1.5">
-              {docs.length === 0 && <p className="text-xs text-muted-foreground">Aucun PDF déposé.</p>}
+              {docs.length === 0 && (
+                <p className="text-xs text-muted-foreground">Aucun PDF déposé.</p>
+              )}
               {docs.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+                >
                   <a
                     href={`/documents/${doc.id}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 text-sm text-foreground hover:text-primary hover:underline"
                   >
-                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                    <FileText
+                      className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                      strokeWidth={1.5}
+                    />
                     {doc.filename}
                   </a>
                   <button
@@ -140,12 +165,14 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Autres documents
             </span>
-            <p className="text-xs text-muted-foreground">Tout type de fichier — pour ne jamais perdre une pièce.</p>
+            <p className="text-xs text-muted-foreground">
+              Tout type de fichier — pour ne jamais perdre une pièce.
+            </p>
           </div>
           <Button
             variant="outline"
             size="sm"
-            disabled={uploadingType === "autre"}
+            disabled={!authorized || uploadingType === "autre"}
             onClick={() => inputRefs.current.autre?.click()}
           >
             <Upload className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -165,16 +192,24 @@ export function DocumentsPanel({ dossierId }: { dossierId: string }) {
           />
         </div>
         <div className="mt-2 space-y-1.5">
-          {autres.length === 0 && <p className="text-xs text-muted-foreground">Aucun fichier déposé.</p>}
+          {autres.length === 0 && (
+            <p className="text-xs text-muted-foreground">Aucun fichier déposé.</p>
+          )}
           {autres.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+            <div
+              key={doc.id}
+              className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+            >
               <a
                 href={`/documents/${doc.id}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-sm text-foreground hover:text-primary hover:underline"
               >
-                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                <FileText
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
                 {doc.filename}
               </a>
               <div className="flex items-center gap-3">

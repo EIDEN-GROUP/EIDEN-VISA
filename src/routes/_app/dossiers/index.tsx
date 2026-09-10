@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useDossiersPage, useCurrentUser, type DateRange } from "@/lib/store";
 import { DateRangeFilter } from "@/components/filters/date-range-filter";
 import { completion } from "@/lib/dossier-model";
-import { NiveauBadge, RdvBadge, DecisionBadge } from "@/components/dossier/badges";
+import { NiveauBadge, DecisionBadge } from "@/components/dossier/badges";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -175,7 +175,7 @@ function DossiersList() {
                 <TableHead className="ref">Étape</TableHead>
                 <TableHead className="ref">Pièces</TableHead>
                 <TableHead className="ref">Pays</TableHead>
-                <TableHead className="ref">Rendez-vous</TableHead>
+                <TableHead className="ref">Upload</TableHead>
                 <TableHead className="ref px-5">Niveau</TableHead>
               </TableRow>
             </TableHeader>
@@ -211,10 +211,14 @@ function DossiersList() {
                       {c.ok}/{c.total}
                     </TableCell>
                     <TableCell className="text-sm text-foreground">
-                      {d.rdv.centre.includes("BLS") ? "Espagne" : "France"}
+                      {d.centre.includes("BLS") ? "Espagne" : "France"}
                     </TableCell>
                     <TableCell>
-                      <RdvBadge statut={d.rdv.statut} />
+                      {d.uploadAutorise ? (
+                        <span className="ref text-[var(--ok)]">Autorisé</span>
+                      ) : (
+                        <span className="ref text-[var(--warn)]">Bloqué</span>
+                      )}
                     </TableCell>
                     <TableCell className="px-5">
                       <NiveauBadge level={d.niveau} />

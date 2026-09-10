@@ -69,7 +69,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     docs: [],
     extra: [],
     notes: [
-      "Ce n'est pas une démarche initiée au consulat par le demandeur : c'est le résident en France qui engage la procédure auprès de l'OFII/préfecture (18 mois de séjour régulier, ressources stables, logement adapté). Le visa n'intervient qu'en toute fin de procédure. Hors format « dossier + rendez-vous » : orienter vers un accompagnement dédié ou un service juridique spécialisé.",
+      "Ce n'est pas une démarche initiée au consulat par le demandeur : c'est le résident en France qui engage la procédure auprès de l'OFII/préfecture (18 mois de séjour régulier, ressources stables, logement adapté). Le visa n'intervient qu'en toute fin de procédure. Hors format standard : orienter vers un accompagnement dédié ou un service juridique spécialisé.",
     ],
   },
   t5: {
@@ -333,7 +333,15 @@ export function buildCourtSejour(p: Profile): CaseResult {
     "Pièces reconstituées à partir des résultats officiels de l'assistant France-Visas. Justificatif de séjour légal requis en plus uniquement si le demandeur n'est pas ressortissant de son pays de résidence.",
   );
 
-  return { key: "cs_" + base, title: meta.title, cat: meta.cat, level: meta.level, docs, extra, notes };
+  return {
+    key: "cs_" + base,
+    title: meta.title,
+    cat: meta.cat,
+    level: meta.level,
+    docs,
+    extra,
+    notes,
+  };
 }
 
 export function getFixedCase(key: string): CaseResult | null {
@@ -402,8 +410,16 @@ export const TREE: Record<string, TreeNode> = {
   a3: {
     q: "Quel est le lien avec la personne qui héberge en France ?",
     opts: [
-      { l: "Enfant ou parent/beau-parent d'un citoyen français", n: "q_group", set: { base: "visite_enfant_parent" } },
-      { l: "Petit-enfant d'un citoyen français", n: "q_group", set: { base: "visite_generale", grandchildNote: true } },
+      {
+        l: "Enfant ou parent/beau-parent d'un citoyen français",
+        n: "q_group",
+        set: { base: "visite_enfant_parent" },
+      },
+      {
+        l: "Petit-enfant d'un citoyen français",
+        n: "q_group",
+        set: { base: "visite_generale", grandchildNote: true },
+      },
       { l: "Autre lien familial ou ami", n: "q_group", set: { base: "visite_generale" } },
     ],
   },
@@ -435,7 +451,11 @@ export const TREE: Record<string, TreeNode> = {
     opts: [
       { l: "Salarié(e) ou fonctionnaire", n: "q_visa_hist", set: { prof: "salarie" } },
       { l: "Commerçant(e) / profession libérale", n: "q_visa_hist", set: { prof: "commercant" } },
-      { l: "Agriculteur(rice) / exploitant agricole", n: "q_visa_hist", set: { prof: "agriculteur" } },
+      {
+        l: "Agriculteur(rice) / exploitant agricole",
+        n: "q_visa_hist",
+        set: { prof: "agriculteur" },
+      },
       { l: "Retraité(e)", n: "q_visa_hist", set: { prof: "retraite" } },
       { l: "Étudiant(e)", n: "q_visa_hist", set: { prof: "etudiant" } },
       { l: "Sans profession / autre", n: "q_visa_hist", set: { prof: "sans" } },
@@ -466,7 +486,11 @@ export const TREE: Record<string, TreeNode> = {
   c1: {
     q: "Quelle est la nature de l'activité prévue en France ?",
     opts: [
-      { l: "Déplacement professionnel court (réunions, salon), pas de contrat local", n: "tc1", r: true },
+      {
+        l: "Déplacement professionnel court (réunions, salon), pas de contrat local",
+        n: "tc1",
+        r: true,
+      },
       { l: "Emploi salarié chez un employeur basé en France", n: "c2" },
       { l: "Détachement par l'entreprise marocaine actuelle", n: "tc4", r: true },
       { l: "Travail saisonnier", n: "tc5", r: true },

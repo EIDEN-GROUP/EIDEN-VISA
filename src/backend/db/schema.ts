@@ -1,5 +1,5 @@
-import { pgTable, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
-import type { Piece, Paiement, RendezVous, PackKey, Modalite } from "@/lib/dossier-model";
+import { pgTable, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
+import type { Piece, Paiement, Centre, PackKey, Modalite } from "@/lib/dossier-model";
 import type { Level, Profile } from "@/lib/visa-rules";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
@@ -62,10 +62,11 @@ export const dossiers = pgTable("dossiers", {
   pack: text("pack").$type<PackKey>().notNull().default("base"),
   modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
   etape: integer("etape").notNull().default(1),
-  rdvCentre: text("rdv_centre").notNull(),
-  rdvDate: text("rdv_date"),
-  rdvHeure: text("rdv_heure"),
-  rdvStatut: text("rdv_statut").$type<RendezVous["statut"]>().notNull().default("recherche"),
+  // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS). Eiden ne prend
+  // pas le rendez-vous : c'est juste l'orientation du dossier. Colonne DB : `rdv_centre` (historique).
+  centre: text("rdv_centre").$type<Centre>().notNull(),
+  // Le service ne peut téléverser des documents qu'une fois le dossier autorisé (CEO/Réception).
+  uploadAutorise: boolean("upload_autorise").notNull().default(false),
   pieces: jsonb("pieces").$type<Piece[]>().notNull().default([]),
   paiements: jsonb("paiements").$type<Paiement[]>().notNull().default([]),
   notes: jsonb("notes").$type<string[]>().notNull().default([]),
@@ -87,7 +88,7 @@ export const sessions = pgTable("sessions", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
 
-/** Type de dossier consulaire suivant le centre de dépôt : France/TLScontact ou Espagne/BLS. */
+/** Pièces jointes d'un dossier — PDF France/TLScontact, Espagne/BLS, ou tout autre fichier. */
 export const documents = pgTable("documents", {
   id: text("id").primaryKey(),
   dossierId: text("dossier_id")
@@ -99,15 +100,4 @@ export const documents = pgTable("documents", {
   // Stocké en base64 : volumes modestes (PDF de dossier), évite de gérer un type bytea dédié.
   dataBase64: text("data_base64").notNull(),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-/** Veille des créneaux TLS/BLS — saisie manuelle par le back-office, pas une donnée automatique. */
-export const creneaux = pgTable("creneaux", {
-  id: text("id").primaryKey(),
-  centre: text("centre").notNull(),
-  date: text("date").notNull(),
-  places: integer("places").notNull().default(0),
-  statut: text("statut").$type<"libre" | "reserve" | "ferme">().notNull().default("libre"),
-  dossierId: text("dossier_id").references(() => dossiers.id, { onDelete: "set null" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ETAPES, type Dossier } from "@/lib/dossier-model";
-import { NiveauBadge, RdvBadge } from "@/components/dossier/badges";
+import { NiveauBadge } from "@/components/dossier/badges";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -69,7 +69,9 @@ export function DossiersKanban({
                       <div className="ref mt-0.5 text-muted-foreground">{d.id}</div>
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <NiveauBadge level={d.niveau} />
-                        <RdvBadge statut={d.rdv.statut} />
+                        {!d.uploadAutorise && (
+                          <span className="ref text-[var(--warn)]">Non autorisé</span>
+                        )}
                       </div>
                     </Link>
                     {/* Équivalent clavier au glisser-déposer : déplacer une carte à la souris

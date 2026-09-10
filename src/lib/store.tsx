@@ -5,7 +5,6 @@ import {
   listDossiersPage,
   listAlertesDossiers,
   listDossiersRecents,
-  listDossiersByRdvStatut,
   listDossiersAvecImpaye,
   listDossiersAvecEncaissement,
   getDashboardStats,
@@ -17,7 +16,7 @@ import {
   setEtape as setEtapeFn,
   changerCentre as changerCentreFn,
   setDecision as setDecisionFn,
-  confirmerRdv as confirmerRdvFn,
+  setUploadAutorisation as setUploadAutorisationFn,
   encaisser as encaisserFn,
   changerPack as changerPackFn,
   setModalitePaiement as setModalitePaiementFn,
@@ -31,12 +30,6 @@ import {
   uploadDocument as uploadDocumentFn,
   deleteDocument as deleteDocumentFn,
 } from "@/backend/functions/documents";
-import {
-  listCreneaux as listCreneauxFn,
-  createCreneau as createCreneauFn,
-  updateCreneau as updateCreneauFn,
-  deleteCreneau as deleteCreneauFn,
-} from "@/backend/functions/creneaux";
 import {
   listUsers as listUsersFn,
   createUser as createUserFn,
@@ -99,24 +92,12 @@ const ALERTES_KEY = ["dossiers", "alertes"] as const;
 const RECENTS_KEY = ["dossiers", "recents"] as const;
 const impayeKey = (range: DateRange) => ["dossiers", "impaye", range] as const;
 const encaissementKey = (range: DateRange) => ["dossiers", "encaissement", range] as const;
-const rdvStatutKey = (statut: "recherche" | "confirme" | "depose", range: DateRange) =>
-  ["dossiers", "rdv-statut", statut, range] as const;
 const documentsKey = (dossierId: string) => ["documents", dossierId] as const;
-const CRENEAUX_KEY = ["creneaux"] as const;
 const USERS_KEY = ["ops", "users"] as const;
 const ACTIVITY_KEY = ["ops", "activity"] as const;
 const CURRENT_USER_KEY = ["auth", "current-user"] as const;
 const PAIEMENTS_SUIVI_KEY = ["ops", "paiements-suivi"] as const;
 const ANALYTICS_KEY = ["ops", "analytics"] as const;
-
-export interface Creneau {
-  id: string;
-  centre: string;
-  date: string;
-  places: number;
-  statut: "libre" | "reserve" | "ferme";
-  dossierId: string | null;
-}
 
 export type DocumentType = "france_tls" | "espagne_bls" | "autre";
 
@@ -141,11 +122,6 @@ function useDossierMutations() {
   });
   const reculerMutation = useMutation({
     mutationFn: (id: string) => avancerEtape({ data: { id, direction: "reculer" } }),
-    onSuccess: invalidateAll,
-  });
-  const confirmerRdvMutation = useMutation({
-    mutationFn: (vars: { id: string; date: string; heure: string }) =>
-      confirmerRdvFn({ data: vars }),
     onSuccess: invalidateAll,
   });
   const encaisserMutation = useMutation({
@@ -180,6 +156,11 @@ function useDossierMutations() {
   });
   const desassignerMutation = useMutation({
     mutationFn: (dossierId: string) => unassignDossierFn({ data: { dossierId } }),
+    onSuccess: invalidateAll,
+  });
+  const autoriserUploadMutation = useMutation({
+    mutationFn: (vars: { id: string; autorise: boolean }) =>
+      setUploadAutorisationFn({ data: vars }),
     onSuccess: invalidateAll,
   });
   const ajouterMutation = useMutation({
@@ -232,8 +213,6 @@ function useDossierMutations() {
     togglePiece: (id: string, index: number) => togglePieceMutation.mutateAsync({ id, index }),
     avancer: (id: string) => avancerMutation.mutateAsync(id),
     reculer: (id: string) => reculerMutation.mutateAsync(id),
-    confirmerRdv: (id: string, date: string, heure: string) =>
-      confirmerRdvMutation.mutateAsync({ id, date, heure }),
     encaisser: (id: string, index: number) => encaisserMutation.mutateAsync({ id, index }),
     changerPack: (id: string, pack: PackKey) => changerPackMutation.mutateAsync({ id, pack }),
     changerModalite: (id: string, modalite: Modalite) =>
@@ -242,6 +221,8 @@ function useDossierMutations() {
       changerCentreMutation.mutateAsync({ id, centre }),
     setDecision: (id: string, decision: Decision) =>
       setDecisionMutation.mutateAsync({ id, decision }),
+    setUploadAutorisation: (id: string, autorise: boolean) =>
+      autoriserUploadMutation.mutateAsync({ id, autorise }),
     assigner: (dossierId: string, assigneeUserId: string, note?: string | undefined) =>
       assignerMutation.mutateAsync({ dossierId, assigneeUserId, note }),
     desassigner: (dossierId: string) => desassignerMutation.mutateAsync(dossierId),
@@ -290,19 +271,6 @@ export function useAlertesDossiers() {
 export function useDossiersRecents() {
   const query = useQuery({ queryKey: RECENTS_KEY, queryFn: () => listDossiersRecents() });
   return { dossiers: query.data ?? [], isLoading: query.isLoading };
-}
-
-export function useDossiersByRdvStatut(
-  statut: "recherche" | "confirme" | "depose",
-  range: DateRange = emptyRange,
-) {
-  const query = useQuery({
-    queryKey: rdvStatutKey(statut, range),
-    queryFn: () =>
-      listDossiersByRdvStatut({ data: { statut, dateFrom: range.from, dateTo: range.to } }),
-  });
-  const mutations = useDossierMutations();
-  return { dossiers: query.data ?? [], isLoading: query.isLoading, ...mutations };
 }
 
 export function useDossiersAvecImpaye(range: DateRange = emptyRange) {
@@ -399,34 +367,6 @@ export function useDocuments(dossierId: string) {
       mimeType: string;
       dataBase64: string;
     }) => uploadMutation.mutateAsync(vars),
-    supprimer: (id: string) => deleteMutation.mutateAsync(id),
-  };
-}
-
-/** Veille des créneaux TLS/BLS — saisie manuelle par le back-office, persistée en base. */
-export function useCreneaux() {
-  const queryClient = useQueryClient();
-  const query = useQuery({ queryKey: CRENEAUX_KEY, queryFn: () => listCreneauxFn() });
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: CRENEAUX_KEY });
-
-  const createMutation = useMutation({
-    mutationFn: (vars: Omit<Creneau, "id">) => createCreneauFn({ data: vars }),
-    onSuccess: invalidate,
-  });
-  const updateMutation = useMutation({
-    mutationFn: (vars: Creneau) => updateCreneauFn({ data: vars }),
-    onSuccess: invalidate,
-  });
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteCreneauFn({ data: { id } }),
-    onSuccess: invalidate,
-  });
-
-  return {
-    creneaux: query.data ?? [],
-    isLoading: query.isLoading,
-    ajouter: (c: Omit<Creneau, "id">) => createMutation.mutateAsync(c),
-    modifier: (c: Creneau) => updateMutation.mutateAsync(c),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
   };
 }

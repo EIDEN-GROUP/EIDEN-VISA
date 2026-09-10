@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useDossier } from "@/lib/store";
+import { useDossier, useCurrentUser } from "@/lib/store";
 import {
   alertes,
   completion,
@@ -14,7 +14,12 @@ import {
   type Modalite,
   type Echeance,
 } from "@/lib/dossier-model";
-import { NiveauBadge, RdvBadge, ClotureBadge, DecisionBadge } from "@/components/dossier/badges";
+import {
+  NiveauBadge,
+  ClotureBadge,
+  DecisionBadge,
+  AutorisationBadge,
+} from "@/components/dossier/badges";
 import { DocumentsPanel } from "@/components/dossier/documents-panel";
 import { AssignationCard } from "@/components/dossier/assignation-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,10 +62,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
-import stampTime from "@/assets/decorations/stamp-time.png";
 
 const ECHEANCE_LABEL: Record<Echeance, string> = {
-  acompte: "Acompte, dû à la confirmation du créneau",
+  acompte: "Acompte, dû à l'ouverture du dossier",
   solde: "Solde, dû à la remise du dossier",
   option: "Option à la carte",
 };
@@ -78,18 +82,16 @@ function DossierDetail() {
     togglePiece,
     avancer,
     reculer,
-    confirmerRdv,
     encaisser,
     changerPack,
     changerModalite,
     changerCentre,
     setDecision,
+    setUploadAutorisation,
     updateClient,
     supprimer,
   } = useDossier(id);
-  const [rdvOpen, setRdvOpen] = useState(false);
-  const [date, setDate] = useState("");
-  const [heure, setHeure] = useState("");
+  const { user: me } = useCurrentUser();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -422,22 +424,22 @@ function DossierDetail() {
         </Card>
 
         <div className="space-y-6">
-          {/* Rendez-vous */}
+          {/* Centre de dépôt */}
           <Card className="panel">
             <CardHeader>
-              <CardTitle className="text-base">Rendez-vous</CardTitle>
+              <CardTitle className="text-base">Centre de dépôt</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Pays visé</span>
                 <span className="font-medium text-foreground">
-                  {d.rdv.centre.includes("BLS") ? "Espagne" : "France"}
+                  {d.centre.includes("BLS") ? "Espagne" : "France"}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="shrink-0 text-muted-foreground">Centre</span>
                 <Select
-                  value={d.rdv.centre}
+                  value={d.centre}
                   disabled={cloture}
                   onValueChange={(v) => changerCentre(d.id, v as Centre)}
                 >
@@ -453,21 +455,9 @@ function DossierDetail() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Date</span>
-                <span className="font-medium text-foreground">
-                  {d.rdv.date ? `${d.rdv.date} · ${d.rdv.heure}` : "Non fixée"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Statut</span>
-                <RdvBadge statut={d.rdv.statut} />
-              </div>
-              {d.rdv.statut === "recherche" && !cloture && (
-                <Button size="sm" className="w-full" onClick={() => setRdvOpen(true)}>
-                  Confirmer un créneau
-                </Button>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Le client dépose lui-même son dossier au centre — Eiden ne prend pas le rendez-vous.
+              </p>
             </CardContent>
           </Card>
 
@@ -517,7 +507,7 @@ function DossierDetail() {
                 </Select>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {d.modalitePaiement === "acompte"
-                    ? "20 % à la confirmation du créneau, solde des 80 % à la remise du dossier."
+                    ? "20 % à l'ouverture du dossier, solde des 80 % à la remise du dossier."
                     : "Règlement du pack en une fois, à la remise du dossier."}
                 </p>
               </div>
@@ -566,53 +556,29 @@ function DossierDetail() {
           {/* Assignation */}
           <AssignationCard dossier={d} />
 
-          {/* Documents PDF */}
+          {/* Documents */}
           <Card className="panel">
-            <CardHeader>
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
               <CardTitle className="text-base">Documents</CardTitle>
+              <div className="flex items-center gap-2">
+                <AutorisationBadge autorise={d.uploadAutorise} />
+                {(me?.role === "ceo" || me?.role === "reception") && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setUploadAutorisation(d.id, !d.uploadAutorise)}
+                  >
+                    {d.uploadAutorise ? "Bloquer" : "Autoriser"}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <DocumentsPanel dossierId={d.id} />
+              <DocumentsPanel dossierId={d.id} authorized={d.uploadAutorise} />
             </CardContent>
           </Card>
         </div>
       </div>
-
-      <Dialog open={rdvOpen} onOpenChange={setRdvOpen}>
-        <DialogContent>
-          <DialogHeader className="flex-row items-center gap-3 space-y-0">
-            <img src={stampTime} alt="" className="h-9 w-9" />
-            <DialogTitle>Confirmer le créneau — {d.rdv.centre}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Date</label>
-              <Input
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                placeholder="JJ/MM/AAAA"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Heure</label>
-              <Input value={heure} onChange={(e) => setHeure(e.target.value)} placeholder="HH:MM" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              disabled={!date || !heure}
-              onClick={() => {
-                confirmerRdv(d.id, date, heure);
-                setRdvOpen(false);
-                setDate("");
-                setHeure("");
-              }}
-            >
-              Confirmer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
@@ -673,7 +639,7 @@ function DossierDetail() {
             <AlertDialogTitle>Supprimer ce dossier ?</AlertDialogTitle>
             <AlertDialogDescription>
               Le dossier <b>{d.id}</b> de <b>{d.client.nom}</b> sera définitivement supprimé, avec
-              ses pièces, paiements et rendez-vous. Cette action est irréversible.
+              ses pièces et paiements. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

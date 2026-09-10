@@ -9,7 +9,9 @@ import { getAuthSession } from "@/backend/auth";
 export const login = createServerFn({ method: "POST" })
   .validator(z.object({ email: z.string().email(), password: z.string().min(1) }))
   .handler(async ({ data }) => {
-    const user = await db.query.users.findFirst({ where: eq(users.email, data.email.toLowerCase()) });
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, data.email.toLowerCase()),
+    });
     if (!user) throw new Error("Identifiants incorrects.");
     const valid = await bcrypt.compare(data.password, user.passwordHash);
     if (!valid) throw new Error("Identifiants incorrects.");
@@ -53,5 +55,14 @@ export const requireCeo = createServerOnlyFn(async () => {
   const userId = await requireUserId();
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user || user.role !== "ceo") throw new Error("Accès réservé au CEO.");
+  return user;
+});
+
+/** Autorisations « front » : CEO ou Réception. Sert p.ex. à autoriser l'upload d'un dossier. */
+export const requireCeoOrReception = createServerOnlyFn(async () => {
+  const userId = await requireUserId();
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user || (user.role !== "ceo" && user.role !== "reception"))
+    throw new Error("Action réservée au CEO ou à la Réception.");
   return user;
 });

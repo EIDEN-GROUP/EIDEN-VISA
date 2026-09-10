@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { db } from "@/backend/db/client";
-import { documents as documentsTable } from "@/backend/db/schema";
+import { documents as documentsTable, dossiers as dossiersTable } from "@/backend/db/schema";
 import { requireUserId } from "@/backend/functions/auth";
 
 const documentType = z.enum(["france_tls", "espagne_bls", "autre"]);
@@ -25,7 +25,8 @@ function validatePdfUpload(dataBase64: string): void {
   if (bytes.length > MAX_SIZE_BYTES) throw new Error("Fichier trop volumineux (max 10 Mo).");
   // Un vrai PDF commence par l'en-tête ASCII "%PDF-". On vérifie le contenu, pas seulement
   // l'extension : un fichier renommé en .pdf mais qui n'est pas un PDF est refusé.
-  if (bytes.subarray(0, 5).toString("ascii") !== "%PDF-") throw new Error("Le fichier n'est pas un PDF valide.");
+  if (bytes.subarray(0, 5).toString("ascii") !== "%PDF-")
+    throw new Error("Le fichier n'est pas un PDF valide.");
 }
 
 /** "Autres documents" : n'importe quel type de fichier (photo, scan, tableur...) — seule la
@@ -67,13 +68,25 @@ export const uploadDocument = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireUserId();
-    // Garde serveur : le panneau client n'est pas une sécurité. Les deux emplacements
-    // consulaires (France/TLS, Espagne/BLS) exigent un vrai PDF ; "autre" accepte n'importe
-    // quel type de fichier, seule la taille est vérifiée.
+
+    // Garde d'autorisation : le service ne peut téléverser que sur un dossier autorisé
+    // (CEO ou Réception le débloque). Le bouton désactivé côté client n'est pas une sécurité.
+    const dossier = await db.query.dossiers.findFirst({
+      where: eq(dossiersTable.id, data.dossierId),
+    });
+    if (!dossier) throw new Error("Dossier introuvable.");
+    if (!dossier.uploadAutorise)
+      throw new Error(
+        "Ce dossier n'est pas autorisé au téléversement de documents — un responsable doit d'abord l'autoriser.",
+      );
+
+    // Garde de contenu : les deux emplacements consulaires (France/TLS, Espagne/BLS) exigent
+    // un vrai PDF ; "autre" accepte tout type de fichier, seule la taille est vérifiée.
     if (data.type === "autre") {
       validateAnyUpload(data.dataBase64);
     } else {
-      if (data.mimeType !== "application/pdf") throw new Error("Seuls les fichiers PDF sont acceptés ici.");
+      if (data.mimeType !== "application/pdf")
+        throw new Error("Seuls les fichiers PDF sont acceptés ici.");
       validatePdfUpload(data.dataBase64);
     }
 

@@ -32,7 +32,7 @@ export function EtapeBadge({ etape }: { etape: number }) {
   );
 }
 
-/** Étape 7 atteinte : le cycle Eiden Visa pour ce dossier est terminé (dépôt chez TLS/BLS). */
+/** Étape 7 atteinte : le cycle Eiden Visa pour ce dossier est terminé (dépôt au centre). */
 export function ClotureBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--ok)]">
@@ -62,22 +62,17 @@ export function DecisionBadge({ decision }: { decision: Decision }) {
   );
 }
 
-export function RdvBadge({ statut }: { statut: "recherche" | "confirme" | "depose" }) {
-  const colors = {
-    recherche: "bg-[var(--warn)]",
-    confirme: "bg-[var(--info)]",
-    depose: "bg-[var(--ok)]",
-  } as const;
-  const text = {
-    recherche: "text-[var(--warn)]",
-    confirme: "text-[var(--info)]",
-    depose: "text-muted-foreground",
-  } as const;
-  const labels = { recherche: "En recherche", confirme: "Confirmé", depose: "Déposé" } as const;
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", text[statut])}>
-      <span className={cn("dot", colors[statut])} />
-      {labels[statut]}
+/** Le service peut-il téléverser des documents sur ce dossier ? (autorisé par CEO/Réception) */
+export function AutorisationBadge({ autorise }: { autorise: boolean }) {
+  return autorise ? (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--ok)]">
+      <span className="dot bg-[var(--ok)]" />
+      Upload autorisé
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--warn)]">
+      <span className="dot bg-[var(--warn)]" />
+      Upload bloqué
     </span>
   );
 }

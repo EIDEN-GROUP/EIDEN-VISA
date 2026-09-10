@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useDashboardStats, useAlertesDossiers, useDossiersRecents, useCreneaux, type DateRange } from "@/lib/store";
+import {
+  useDashboardStats,
+  useAlertesDossiers,
+  useDossiersRecents,
+  type DateRange,
+} from "@/lib/store";
 import { alertes, completion } from "@/lib/dossier-model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { NiveauBadge, RdvBadge } from "@/components/dossier/badges";
+import { NiveauBadge } from "@/components/dossier/badges";
 import { DateRangeFilter } from "@/components/filters/date-range-filter";
-import { AlertTriangle, ArrowRight, CalendarClock, Wallet2, FolderOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { AlertTriangle, ArrowRight, ShieldAlert, Wallet2, FolderOpen } from "lucide-react";
 import stampAlerte from "@/assets/decorations/stamp-alerte.png";
 
 export const Route = createFileRoute("/_app/")({
@@ -21,9 +25,11 @@ function Dashboard() {
   // pas sur la table entière. Le filtre de date ne s'applique pas à ce lot borné.
   const { dossiers: actifsRecents } = useAlertesDossiers();
   const { dossiers: recents } = useDossiersRecents();
-  const { creneaux } = useCreneaux();
 
-  const alertesParDossier = actifsRecents.map((d) => ({ d, a: alertes(d) })).filter((x) => x.a.length > 0);
+  const alertesParDossier = actifsRecents
+    .map((d) => ({ d, a: alertes(d) }))
+    .filter((x) => x.a.length > 0);
+  const aAutoriser = actifsRecents.filter((d) => !d.uploadAutorise);
 
   return (
     <div className="space-y-8">
@@ -38,12 +44,18 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 divide-y divide-border border border-border rounded-xl sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-        <Kpi icon={FolderOpen} label="Dossiers actifs" value={stats?.actifs ?? "—"} sub={`${stats?.total ?? "—"} au total`} />
         <Kpi
-          icon={CalendarClock}
-          label="En attente de créneau"
-          value={stats?.enAttenteCreneau ?? "—"}
-          sub="TLScontact / BLS"
+          icon={FolderOpen}
+          label="Dossiers actifs"
+          value={stats?.actifs ?? "—"}
+          sub={`${stats?.total ?? "—"} au total`}
+        />
+        <Kpi
+          icon={ShieldAlert}
+          label="Dossiers à autoriser"
+          value={stats?.aAutoriser ?? "—"}
+          sub="Upload de documents bloqué"
+          tone={stats?.aAutoriser ? "stop" : "ok"}
         />
         <Kpi
           icon={AlertTriangle}
@@ -68,10 +80,17 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="divide-y divide-border p-0">
             {alertesParDossier.length === 0 && (
-              <p className="p-5 text-sm text-muted-foreground">Aucun blocage détecté pour l'instant.</p>
+              <p className="p-5 text-sm text-muted-foreground">
+                Aucun blocage détecté pour l'instant.
+              </p>
             )}
             {alertesParDossier.map(({ d, a }) => (
-              <Link key={d.id} to="/dossiers/$id" params={{ id: d.id }} className="block px-5 py-3.5 hover:bg-accent/40">
+              <Link
+                key={d.id}
+                to="/dossiers/$id"
+                params={{ id: d.id }}
+                className="block px-5 py-3.5 hover:bg-accent/40"
+              >
                 <div className="flex items-center justify-between">
                   <span className="ref text-muted-foreground">{d.id}</span>
                   <span className="text-sm font-medium text-foreground">{d.client.nom}</span>
@@ -91,37 +110,29 @@ function Dashboard() {
 
         <Card className="panel">
           <CardHeader>
-            <CardTitle className="text-base">Veille créneaux</CardTitle>
+            <CardTitle className="text-base">Dossiers à autoriser ({aAutoriser.length})</CardTitle>
           </CardHeader>
           <CardContent className="divide-y divide-border p-0">
-            {creneaux.length === 0 && (
-              <p className="p-5 text-sm text-muted-foreground">Aucun créneau suivi pour l'instant.</p>
+            {aAutoriser.length === 0 && (
+              <p className="p-5 text-sm text-muted-foreground">
+                Tous les dossiers actifs sont autorisés.
+              </p>
             )}
-            {creneaux.map((c) => (
-              <div key={c.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                <div>
-                  <div className="font-medium text-foreground">{c.centre}</div>
-                  <div className="ref text-muted-foreground">{c.date}</div>
+            {aAutoriser.slice(0, 8).map((d) => (
+              <Link
+                key={d.id}
+                to="/dossiers/$id"
+                params={{ id: d.id }}
+                className="flex items-center justify-between px-5 py-3 text-sm hover:bg-accent/40"
+              >
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-foreground">{d.client.nom}</div>
+                  <div className="ref text-muted-foreground">
+                    {d.id} · étape {d.etape}
+                  </div>
                 </div>
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 text-xs font-medium",
-                    c.statut === "libre"
-                      ? "text-[var(--ok)]"
-                      : c.statut === "reserve"
-                        ? "text-[var(--info)]"
-                        : "text-muted-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "dot",
-                      c.statut === "libre" ? "bg-[var(--ok)]" : c.statut === "reserve" ? "bg-[var(--info)]" : "bg-muted-foreground",
-                    )}
-                  />
-                  {c.statut === "libre" ? `${c.places} places` : c.statut === "reserve" ? "Réservé" : "Fermé"}
-                </span>
-              </div>
+                <span className="ref shrink-0 text-[var(--warn)]">Upload bloqué</span>
+              </Link>
             ))}
           </CardContent>
         </Card>
@@ -130,7 +141,10 @@ function Dashboard() {
       <Card className="panel">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Dossiers récents</CardTitle>
-          <Link to="/dossiers" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+          <Link
+            to="/dossiers"
+            className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
             Voir tous les dossiers <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </CardHeader>
@@ -155,7 +169,9 @@ function Dashboard() {
                   <span className="text-xs text-muted-foreground">
                     {c.ok}/{c.total} pièces
                   </span>
-                  <RdvBadge statut={d.rdv.statut} />
+                  {!d.uploadAutorise && (
+                    <span className="ref text-[var(--warn)]">Non autorisé</span>
+                  )}
                   <NiveauBadge level={d.niveau} />
                 </div>
               </Link>

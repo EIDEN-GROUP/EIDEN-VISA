@@ -18,7 +18,6 @@ import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
 import { Route as AppProfilRouteImport } from './routes/_app/profil'
 import { Route as AppQualificationRouteImport } from './routes/_app/qualification'
 import { Route as AppReferentielRouteImport } from './routes/_app/referentiel'
-import { Route as AppRendezVousRouteImport } from './routes/_app/rendez-vous'
 import { Route as AppDossiersIndexRouteImport } from './routes/_app/dossiers/index'
 import { Route as AppDossiersIdRouteImport } from './routes/_app/dossiers/$id'
 import { Route as DossiersIdRecuRouteImport } from './routes/dossiers.$id.recu'
@@ -67,11 +66,6 @@ const AppReferentielRoute = AppReferentielRouteImport.update({
   path: '/referentiel',
   getParentRoute: () => AppRoute,
 } as any)
-const AppRendezVousRoute = AppRendezVousRouteImport.update({
-  id: '/rendez-vous',
-  path: '/rendez-vous',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDossiersIndexRoute = AppDossiersIndexRouteImport.update({
   id: '/dossiers/',
   path: '/dossiers/',
@@ -97,7 +91,6 @@ export interface FileRoutesByFullPath {
   '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
   '/referentiel': typeof AppReferentielRoute
-  '/rendez-vous': typeof AppRendezVousRoute
   '/dossiers/$id': typeof AppDossiersIdRoute
   '/dossiers/$id/recu': typeof DossiersIdRecuRoute
   '/dossiers/': typeof AppDossiersIndexRoute
@@ -110,7 +103,6 @@ export interface FileRoutesByTo {
   '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
   '/referentiel': typeof AppReferentielRoute
-  '/rendez-vous': typeof AppRendezVousRoute
   '/': typeof AppIndexRoute
   '/dossiers/$id': typeof AppDossiersIdRoute
   '/dossiers/$id/recu': typeof DossiersIdRecuRoute
@@ -126,7 +118,6 @@ export interface FileRoutesById {
   '/_app/profil': typeof AppProfilRoute
   '/_app/qualification': typeof AppQualificationRoute
   '/_app/referentiel': typeof AppReferentielRoute
-  '/_app/rendez-vous': typeof AppRendezVousRoute
   '/_app/': typeof AppIndexRoute
   '/_app/dossiers/$id': typeof AppDossiersIdRoute
   '/dossiers/$id/recu': typeof DossiersIdRecuRoute
@@ -143,7 +134,6 @@ export interface FileRouteTypes {
     | '/profil'
     | '/qualification'
     | '/referentiel'
-    | '/rendez-vous'
     | '/dossiers/$id'
     | '/dossiers/$id/recu'
     | '/dossiers/'
@@ -156,7 +146,6 @@ export interface FileRouteTypes {
     | '/profil'
     | '/qualification'
     | '/referentiel'
-    | '/rendez-vous'
     | '/'
     | '/dossiers/$id'
     | '/dossiers/$id/recu'
@@ -171,7 +160,6 @@ export interface FileRouteTypes {
     | '/_app/profil'
     | '/_app/qualification'
     | '/_app/referentiel'
-    | '/_app/rendez-vous'
     | '/_app/'
     | '/_app/dossiers/$id'
     | '/dossiers/$id/recu'
@@ -251,13 +239,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReferentielRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/rendez-vous': {
-      id: '/_app/rendez-vous'
-      path: '/rendez-vous'
-      fullPath: '/rendez-vous'
-      preLoaderRoute: typeof AppRendezVousRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/dossiers/': {
       id: '/_app/dossiers/'
       path: '/dossiers'
@@ -287,7 +268,6 @@ interface AppRouteChildren {
   AppProfilRoute: typeof AppProfilRoute
   AppQualificationRoute: typeof AppQualificationRoute
   AppReferentielRoute: typeof AppReferentielRoute
-  AppRendezVousRoute: typeof AppRendezVousRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDossiersIdRoute: typeof AppDossiersIdRoute
   AppDossiersIndexRoute: typeof AppDossiersIndexRoute
@@ -298,7 +278,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfilRoute: AppProfilRoute,
   AppQualificationRoute: AppQualificationRoute,
   AppReferentielRoute: AppReferentielRoute,
-  AppRendezVousRoute: AppRendezVousRoute,
   AppIndexRoute: AppIndexRoute,
   AppDossiersIdRoute: AppDossiersIdRoute,
   AppDossiersIndexRoute: AppDossiersIndexRoute,

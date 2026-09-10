@@ -32,7 +32,9 @@ export const Route = createFileRoute("/_app/referentiel")({
 });
 
 function Referentiel() {
-  const cas = FIXED_KEYS.map((k) => getFixedCase(k)!).filter((c) => c.docs.length > 0 || c.notes.length > 0);
+  const cas = FIXED_KEYS.map((k) => getFixedCase(k)!).filter(
+    (c) => c.docs.length > 0 || c.notes.length > 0,
+  );
 
   return (
     <div className="space-y-6">
@@ -45,16 +47,28 @@ function Referentiel() {
 
       <Tabs defaultValue="perimetre">
         <TabsList className="h-auto flex-wrap gap-1 bg-transparent p-0">
-          <TabsTrigger value="perimetre" className="rounded-full border border-border data-[state=active]:border-primary">
+          <TabsTrigger
+            value="perimetre"
+            className="rounded-full border border-border data-[state=active]:border-primary"
+          >
             Périmètre
           </TabsTrigger>
-          <TabsTrigger value="parcours" className="rounded-full border border-border data-[state=active]:border-primary">
+          <TabsTrigger
+            value="parcours"
+            className="rounded-full border border-border data-[state=active]:border-primary"
+          >
             Parcours en 7 étapes
           </TabsTrigger>
-          <TabsTrigger value="packs" className="rounded-full border border-border data-[state=active]:border-primary">
+          <TabsTrigger
+            value="packs"
+            className="rounded-full border border-border data-[state=active]:border-primary"
+          >
             Paliers de pack & frais
           </TabsTrigger>
-          <TabsTrigger value="cas" className="rounded-full border border-border data-[state=active]:border-primary">
+          <TabsTrigger
+            value="cas"
+            className="rounded-full border border-border data-[state=active]:border-primary"
+          >
             Cas types ({cas.length})
           </TabsTrigger>
         </TabsList>
@@ -63,7 +77,9 @@ function Referentiel() {
           <Card className="panel">
             <CardHeader>
               <CardTitle className="text-base">Périmètre du service</CardTitle>
-              <CardDescription>Ce que le service prend en charge au lancement, et ce qui est orienté ailleurs.</CardDescription>
+              <CardDescription>
+                Ce que le service prend en charge au lancement, et ce qui est orienté ailleurs.
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {SCOPE.in.map((s) => {
@@ -102,13 +118,17 @@ function Referentiel() {
           <Card className="panel">
             <CardHeader>
               <CardTitle className="text-base">Parcours en 7 étapes</CardTitle>
-              <CardDescription>Ce qui se passe à chaque étape, qui s'en occupe, et ce qui est encaissé.</CardDescription>
+              <CardDescription>
+                Ce qui se passe à chaque étape, qui s'en occupe, et ce qui est encaissé.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {ETAPES.map((e) => (
                   <div key={e.n} className="rounded-xl border border-border p-4">
-                    <div className="ref text-muted-foreground">Étape {e.n} · {e.role}</div>
+                    <div className="ref text-muted-foreground">
+                      Étape {e.n} · {e.role}
+                    </div>
                     <div className="mt-1 text-sm font-semibold text-foreground">{e.label}</div>
                     <p className="mt-1.5 text-xs text-muted-foreground">{e.detail}</p>
                     <p className="ref mt-2 text-foreground">{e.encaissement}</p>
@@ -123,7 +143,9 @@ function Referentiel() {
           <Card className="panel">
             <CardHeader>
               <CardTitle className="text-base">Paliers de pack & frais</CardTitle>
-              <CardDescription>Les trois formules vendues au client, et les frais fixes qui s'y ajoutent.</CardDescription>
+              <CardDescription>
+                Les trois formules vendues au client, et les frais fixes qui s'y ajoutent.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -133,16 +155,17 @@ function Referentiel() {
                     <div className="text-sm font-semibold text-foreground">{PACKS[k].label}</div>
                     <div className="ref mt-1 text-primary">{PACKS[k].prix} MAD</div>
                     <div className="ref text-muted-foreground">
-                      Marge nette {PACKS[k].margeNette !== null ? `${PACKS[k].margeNette} MAD` : "à confirmer (courtier assurance)"}
+                      Marge nette{" "}
+                      {PACKS[k].margeNette !== null
+                        ? `${PACKS[k].margeNette} MAD`
+                        : "à confirmer (courtier assurance)"}
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">{PACKS[k].contenu}</p>
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2">
                 {[
-                  { label: "Rendez-vous TLScontact", value: `${FRAIS.rdvTls} MAD` },
-                  { label: "Rendez-vous BLS Espagne", value: `${FRAIS.rdvBls} MAD` },
                   { label: "Droit de visa adulte", value: FRAIS.droitVisaAdulte },
                   { label: "Droit de visa mineur", value: FRAIS.droitVisaMineur },
                 ].map((f) => (
@@ -160,7 +183,9 @@ function Referentiel() {
           <Card className="panel">
             <CardHeader>
               <CardTitle className="text-base">Cas types ({cas.length})</CardTitle>
-              <CardDescription>Dossiers déjà qualifiés, avec leur checklist et leur niveau de vigilance.</CardDescription>
+              <CardDescription>
+                Dossiers déjà qualifiés, avec leur checklist et leur niveau de vigilance.
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {cas.map((c) => (
@@ -171,7 +196,9 @@ function Referentiel() {
                   </div>
                   <div className="ref mt-1 text-muted-foreground">{c.cat}</div>
                   {c.docs.length > 0 && (
-                    <p className="mt-2 text-xs text-muted-foreground">{c.docs.length} pièce(s) officielle(s) exigée(s)</p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {c.docs.length} pièce(s) officielle(s) exigée(s)
+                    </p>
                   )}
                   {c.notes.map((n, i) => (
                     <p key={i} className="mt-2 text-xs text-foreground/80">

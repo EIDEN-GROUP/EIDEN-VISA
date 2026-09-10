@@ -1,6 +1,7 @@
 /**
- * Modèle opérationnel Eiden Visa : parcours en 7 étapes, paliers de prix,
- * frais reversés aux centres. Chiffres issus de l'étude EV/2026-08.
+ * Modèle opérationnel Eiden Visa : parcours en 7 étapes, paliers de prix.
+ * Eiden monte le dossier et le remet scellé ; le client dépose lui-même au centre.
+ * Chiffres issus de l'étude EV/2026-08.
  */
 
 import {
@@ -24,18 +25,18 @@ export const ETAPES = [
   {
     n: 2,
     key: "creneau",
-    label: "Qualification & recherche de créneau",
+    label: "Qualification & ouverture du dossier",
     detail:
-      "Création de la fiche France-Visas, qualification du type de visa via la Boussole, recherche d'un créneau TLScontact.",
-    encaissement: "309 MAD, encaissés seulement une fois la date confirmée",
+      "Création de la fiche France-Visas et qualification du type de visa via la Boussole. Autorisation du dossier avant de commencer à réunir les pièces.",
+    encaissement: "Acompte selon la modalité choisie",
     role: "Back office",
   },
   {
     n: 3,
     key: "attente",
-    label: "Attente de créneau",
+    label: "Dossier en préparation",
     detail:
-      "Délai hors contrôle d'Eiden. C'est ici que le dossier peut stagner : à surveiller chaque jour.",
+      "Le client réunit ses pièces, l'équipe suit l'avancement au jour le jour. C'est ici que le dossier peut stagner : à surveiller.",
     encaissement: "—",
     role: "Back office",
   },
@@ -62,16 +63,16 @@ export const ETAPES = [
     key: "solde",
     label: "Solde & remise du dossier scellé",
     detail:
-      "Paiement du solde selon le palier. Les frais consulaires restants sont payés par le client en direct chez TLS.",
+      "Paiement du solde selon le palier. Les frais consulaires restants sont payés par le client en direct au centre.",
     encaissement: "Solde du palier choisi",
     role: "Réception",
   },
   {
     n: 7,
     key: "depot",
-    label: "Dépôt chez TLS",
+    label: "Dépôt au centre",
     detail:
-      "Le client se présente au rendez-vous avec un dossier complet. Fin du cycle Eiden Visa.",
+      "Le client dépose lui-même son dossier complet au centre de dépôt (TLScontact ou BLS). Fin du cycle Eiden Visa.",
     encaissement: "Droit de visa payé en direct par le client",
     role: "Client",
   },
@@ -87,7 +88,7 @@ export const PACKS: Record<
     label: "Pack Dossier",
     prix: 700,
     margeNette: 391,
-    contenu: "Qualification, rendez-vous, constitution et contrôle du dossier.",
+    contenu: "Qualification, constitution et contrôle du dossier.",
   },
   voyage: {
     label: "Pack + pré-réservation voyage",
@@ -105,9 +106,7 @@ export const PACKS: Record<
 };
 
 export const FRAIS = {
-  rdvTls: 309,
-  rdvBls: 186,
-  droitVisaAdulte: "≈ 90 € (≈ 950 MAD), payé en direct par le client",
+  droitVisaAdulte: "≈ 90 € (≈ 950 MAD), payé en direct par le client au centre",
   droitVisaMineur: "≈ 45 € (≈ 480 MAD) selon la tranche d'âge",
 };
 
@@ -122,7 +121,7 @@ export interface Piece {
  * Modalité de règlement choisie par le client à l'ouverture du dossier :
  * - `comptant` : il règle le pack en une fois (encaissement au solde, étape 6) ;
  * - `acompte`  : il verse 20 % du prix du pack pour sécuriser l'engagement
- *   (étape 2, une fois le créneau confirmé), le solde des 80 % restant dû à l'étape 6.
+ *   (à l'ouverture du dossier, étape 2), le solde des 80 % restant dû à l'étape 6.
  * Les options à la carte (voyage, assurance) sont toujours facturées à part,
  * hors du calcul des 20 %.
  */
@@ -209,13 +208,6 @@ export const CENTRES = [
 ] as const;
 export type Centre = (typeof CENTRES)[number];
 
-export interface RendezVous {
-  centre: Centre;
-  date: string | null;
-  heure: string | null;
-  statut: "recherche" | "confirme" | "depose";
-}
-
 /** Ce qui se passe après l'étape 7 : la décision du consulat, hors du contrôle d'Eiden. */
 export type Decision = "en_attente" | "approuve" | "refuse";
 export const DECISION_LABEL: Record<Decision, string> = {
@@ -243,7 +235,10 @@ export interface Dossier {
   /** `comptant` par défaut pour les dossiers créés avant l'ajout de la modalité. */
   modalitePaiement: Modalite;
   etape: number;
-  rdv: RendezVous;
+  /** Centre de dépôt visé (le client dépose lui-même — Eiden ne prend pas le rendez-vous). */
+  centre: Centre;
+  /** Le service ne peut téléverser des documents qu'une fois ce dossier autorisé (CEO/Réception). */
+  uploadAutorise: boolean;
   pieces: Piece[];
   paiements: Paiement[];
   notes: string[];
@@ -295,8 +290,8 @@ export function encaisse(d: Dossier) {
 export function alertes(d: Dossier): string[] {
   const out: string[] = [];
   const c = completion(d);
-  if (d.etape >= 3 && d.rdv.statut === "recherche")
-    out.push("Aucun créneau confirmé : le dossier ne peut pas avancer au-delà de l'attente.");
+  if (d.etape >= 2 && !d.uploadAutorise)
+    out.push("Dossier non autorisé : le service ne peut pas téléverser de documents.");
   if (d.etape >= 6 && c.pct < 100)
     out.push(`Solde en cours alors que ${c.total - c.ok} pièce(s) officielle(s) manquent encore.`);
   if (d.caseKey === "tc3" && d.etape < 4)

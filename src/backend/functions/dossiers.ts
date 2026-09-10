@@ -3,7 +3,7 @@ import { z } from "zod";
 import { eq, desc, and, or, ilike, gte, lte, sql, count as sqlCount, type SQL } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { dossiers as dossiersTable } from "@/backend/db/schema";
-import { requireUserId, requireCeo } from "@/backend/functions/auth";
+import { requireUserId, requireCeo, requireCeoOrReception } from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
 import {
   PACKS,
@@ -59,12 +59,8 @@ function rowToDossier(row: DossierRow): Dossier {
     pack: row.pack,
     modalitePaiement: row.modalitePaiement,
     etape: row.etape,
-    rdv: {
-      centre: row.rdvCentre as Dossier["rdv"]["centre"],
-      date: row.rdvDate,
-      heure: row.rdvHeure,
-      statut: row.rdvStatut,
-    },
+    centre: row.centre,
+    uploadAutorise: row.uploadAutorise,
     pieces: row.pieces,
     paiements: row.paiements,
     notes: row.notes,
@@ -121,8 +117,8 @@ export const listDossiersPage = createServerFn({ method: "GET" })
       if (searchCondition) conditions.push(searchCondition);
     }
     if (data.niveau !== "tous") conditions.push(eq(dossiersTable.niveau, data.niveau));
-    if (data.pays === "espagne") conditions.push(ilike(dossiersTable.rdvCentre, "%BLS%"));
-    if (data.pays === "france") conditions.push(sql`${dossiersTable.rdvCentre} not ilike '%BLS%'`);
+    if (data.pays === "espagne") conditions.push(ilike(dossiersTable.centre, "%BLS%"));
+    if (data.pays === "france") conditions.push(sql`${dossiersTable.centre} not ilike '%BLS%'`);
     const where = conditions.length > 0 ? and(...conditions) : sql`true`;
 
     const [rows, totalRows] = await Promise.all([
@@ -159,22 +155,6 @@ export const listDossiersRecents = createServerFn({ method: "GET" }).handler(asy
     .limit(6);
   return rows.map(rowToDossier);
 });
-
-export const listDossiersByRdvStatut = createServerFn({ method: "GET" })
-  .validator(
-    z.object({ statut: z.enum(["recherche", "confirme", "depose"]), ...dateRangeInput.shape }),
-  )
-  .handler(async ({ data }) => {
-    await requireUserId();
-    const where = and(eq(dossiersTable.rdvStatut, data.statut), ...dateRangeConditions(data));
-    const rows = await db
-      .select()
-      .from(dossiersTable)
-      .where(where)
-      .orderBy(desc(dossiersTable.createdAt))
-      .limit(300);
-    return rows.map(rowToDossier);
-  });
 
 /** Dossiers ayant au moins un paiement en attente — pour l'écran Paiements, sans charger la table entière. */
 export const listDossiersAvecImpaye = createServerFn({ method: "GET" })
@@ -219,7 +199,7 @@ export const getDashboardStats = createServerFn({ method: "GET" })
     await requireUserId();
     const range = dateRangeConditions(data);
     const rangeWhere = range.length > 0 ? and(...range) : undefined;
-    const [[totalRow], [actifsRow], [creneauRow], encaisseResult] = await Promise.all([
+    const [[totalRow], [actifsRow], [aAutoriserRow], encaisseResult] = await Promise.all([
       db.select({ n: sqlCount() }).from(dossiersTable).where(rangeWhere),
       db
         .select({ n: sqlCount() })
@@ -228,7 +208,9 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       db
         .select({ n: sqlCount() })
         .from(dossiersTable)
-        .where(and(eq(dossiersTable.rdvStatut, "recherche"), ...range)),
+        .where(
+          and(sql`${dossiersTable.etape} < 7`, eq(dossiersTable.uploadAutorise, false), ...range),
+        ),
       db.execute(sql`
         select coalesce(sum((p->>'montant')::numeric), 0) as total
         from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
@@ -249,7 +231,7 @@ export const getDashboardStats = createServerFn({ method: "GET" })
     return {
       total: Number(totalRow?.n ?? 0),
       actifs: Number(actifsRow?.n ?? 0),
-      enAttenteCreneau: Number(creneauRow?.n ?? 0),
+      aAutoriser: Number(aAutoriserRow?.n ?? 0),
       totalEncaisse,
     };
   });
@@ -345,12 +327,7 @@ const dossierInput = z.object({
   pack: z.enum(["base", "voyage", "global"]),
   modalitePaiement: z.enum(["comptant", "acompte"]).default("comptant"),
   etape: z.number(),
-  rdv: z.object({
-    centre: z.string(),
-    date: z.string().nullable(),
-    heure: z.string().nullable(),
-    statut: z.enum(["recherche", "confirme", "depose"]),
-  }),
+  centre: z.string(),
   pieces: z.array(
     z.object({ label: z.string(), source: z.enum(["officiel", "eiden"]), fourni: z.boolean() }),
   ),
@@ -390,10 +367,7 @@ export const createDossier = createServerFn({ method: "POST" })
       pack: data.pack as PackKey,
       modalitePaiement: data.modalitePaiement as Modalite,
       etape: data.etape,
-      rdvCentre: data.rdv.centre,
-      rdvDate: data.rdv.date,
-      rdvHeure: data.rdv.heure,
-      rdvStatut: data.rdv.statut,
+      centre: data.centre as Dossier["centre"],
       pieces: data.pieces,
       paiements: data.paiements,
       notes: data.notes,
@@ -438,6 +412,7 @@ export const setEtape = createServerFn({ method: "POST" })
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
+/** Le centre de dépôt visé par le client (Eiden ne prend pas le rendez-vous). */
 export const changerCentre = createServerFn({ method: "POST" })
   .validator(
     z.object({
@@ -447,37 +422,26 @@ export const changerCentre = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    // Un rendez-vous confirmé pour un centre n'a plus de sens pour un autre :
-    // changer de centre remet la recherche de créneau à zéro.
-    const centreChanged = row.rdvCentre !== data.centre;
     await db
       .update(dossiersTable)
-      .set({
-        rdvCentre: data.centre,
-        ...(centreChanged && row.rdvStatut !== "recherche"
-          ? { rdvDate: null, rdvHeure: null, rdvStatut: "recherche" as const }
-          : {}),
-      })
+      .set({ centre: data.centre })
       .where(eq(dossiersTable.id, data.id));
   });
 
-export const confirmerRdv = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), date: z.string(), heure: z.string() }))
+/** Autorise (ou bloque) le téléversement de documents sur un dossier — CEO ou Réception. */
+export const setUploadAutorisation = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), autorise: z.boolean() }))
   .handler(async ({ data }) => {
-    await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
+    await requireCeoOrReception();
     await db
       .update(dossiersTable)
-      .set({
-        rdvDate: data.date,
-        rdvHeure: data.heure,
-        rdvStatut: "confirme",
-        etape: Math.max(row.etape, 3),
-      })
+      .set({ uploadAutorise: data.autorise })
       .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "dossier.autorisation",
+      data.autorise ? "Téléversement de documents autorisé." : "Téléversement de documents bloqué.",
+      data.id,
+    );
   });
 
 export const encaisser = createServerFn({ method: "POST" })
