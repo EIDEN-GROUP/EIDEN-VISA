@@ -43,32 +43,38 @@ function Dashboard() {
         <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
-      <div className="grid grid-cols-1 divide-y divide-border border border-border rounded-xl sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi
           icon={FolderOpen}
           label="Dossiers actifs"
           value={stats?.actifs ?? "—"}
           sub={`${stats?.total ?? "—"} au total`}
+          from="#FDBA74"
+          to="#F97316"
         />
         <Kpi
           icon={ShieldAlert}
-          label="Dossiers à autoriser"
+          label="À autoriser"
           value={stats?.aAutoriser ?? "—"}
-          sub="Upload de documents bloqué"
-          tone={stats?.aAutoriser ? "stop" : "ok"}
+          sub="Upload bloqué"
+          from="#34D399"
+          to="#0D9488"
         />
         <Kpi
           icon={AlertTriangle}
           label="Alertes actives"
           value={alertesParDossier.length}
           sub="Dossiers actifs récents"
-          tone={alertesParDossier.length ? "stop" : "ok"}
+          from="#FB7185"
+          to="#E11D48"
         />
         <Kpi
           icon={Wallet2}
           label="Encaissé"
           value={`${(stats?.totalEncaisse ?? 0).toLocaleString("fr-FR")} MAD`}
           sub="Tous dossiers"
+          from="#22D3EE"
+          to="#0284C7"
         />
       </div>
 
@@ -188,31 +194,31 @@ function Kpi({
   label,
   value,
   sub,
-  tone = "default",
+  from,
+  to,
 }: {
   icon: typeof FolderOpen;
   label: string;
   value: string | number;
   sub: string;
-  tone?: "default" | "ok" | "stop";
+  from: string;
+  to: string;
 }) {
   return (
-    <div className="p-5">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <Icon
-          className={
-            tone === "stop"
-              ? "h-4 w-4 shrink-0 text-[var(--stop)]"
-              : tone === "ok"
-                ? "h-4 w-4 shrink-0 text-[var(--ok)]"
-                : "h-4 w-4 shrink-0 text-muted-foreground"
-          }
-          strokeWidth={1.5}
-        />
+    <div
+      className="overflow-hidden rounded-2xl text-white shadow-md"
+      style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+    >
+      <div className="flex items-start justify-between p-5">
+        <div>
+          <div className="num-display text-3xl font-bold leading-none">{value}</div>
+          <div className="mt-1.5 text-sm font-medium text-white/90">{label}</div>
+        </div>
+        <Icon className="h-8 w-8 shrink-0 text-white/70" strokeWidth={1.5} />
       </div>
-      <div className="num-display mt-3 text-3xl text-foreground">{value}</div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>
+      <div className="border-t border-white/20 bg-black/10 px-5 py-2 text-xs font-medium text-white/85">
+        {sub}
+      </div>
     </div>
   );
 }

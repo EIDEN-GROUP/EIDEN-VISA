@@ -11,7 +11,7 @@
  */
 
 @theme inline {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Poppins", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, monospace;
   --font-display: "Fraunces", "Iowan Old Style", ui-serif, Georgia, serif;
 
