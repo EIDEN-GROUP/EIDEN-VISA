@@ -36,10 +36,14 @@ function Paiements() {
   const { dossiers: dossiersEncaisses } = useDossiersAvecEncaissement(range);
 
   const enAttente = dossiersImpaye.flatMap((d) =>
-    d.paiements.map((p, i) => ({ dossier: d, paiement: p, index: i })).filter((l) => !l.paiement.encaisse),
+    d.paiements
+      .map((p, i) => ({ dossier: d, paiement: p, index: i }))
+      .filter((l) => !l.paiement.encaisse),
   );
   const encaisses = dossiersEncaisses.flatMap((d) =>
-    d.paiements.map((p, i) => ({ dossier: d, paiement: p, index: i })).filter((l) => l.paiement.encaisse),
+    d.paiements
+      .map((p, i) => ({ dossier: d, paiement: p, index: i }))
+      .filter((l) => l.paiement.encaisse),
   );
   const totalEncaisse = stats?.totalEncaisse ?? 0;
   const totalAttente = stats?.totalAttente ?? 0;
@@ -59,7 +63,9 @@ function Paiements() {
           <img src={stampEncaissement} alt="" className="h-12 w-12" />
           <div>
             <h1 className="page-title">Paiements</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Encaissements et soldes, tous dossiers confondus.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Encaissements et soldes, tous dossiers confondus.
+            </p>
           </div>
         </div>
         <DateRangeFilter value={range} onChange={setRange} />
@@ -94,7 +100,8 @@ function Paiements() {
               <img src={PACK_ICON[p.key]} alt="" className="mb-2 h-9 w-9" />
               <div className="text-sm font-semibold text-foreground">{p.label}</div>
               <div className="ref mt-1 text-muted-foreground">
-                {p.prix} MAD · marge nette {p.margeNette !== null ? `${p.margeNette} MAD` : "à confirmer (courtier assurance)"}
+                {p.prix} MAD · marge nette{" "}
+                {p.margeNette !== null ? `${p.margeNette} MAD` : "à confirmer (courtier assurance)"}
               </div>
               <p className="mt-2 text-xs text-muted-foreground">{p.contenu}</p>
               <div className="mt-3 text-xs font-medium text-foreground">{p.count} dossier(s)</div>
@@ -105,14 +112,25 @@ function Paiements() {
 
       <Card className="panel">
         <CardHeader>
-          <CardTitle className="text-base">Encaissements en attente ({stats?.nAttente ?? enAttente.length})</CardTitle>
+          <CardTitle className="text-base">
+            Encaissements en attente ({stats?.nAttente ?? enAttente.length})
+          </CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-border p-0">
-          {enAttente.length === 0 && <p className="p-5 text-sm text-muted-foreground">Rien en attente.</p>}
+          {enAttente.length === 0 && (
+            <p className="p-5 text-sm text-muted-foreground">Rien en attente.</p>
+          )}
           {enAttente.map(({ dossier, paiement, index }) => (
-            <div key={`${dossier.id}-${index}`} className="flex items-center justify-between px-5 py-3.5">
+            <div
+              key={`${dossier.id}-${index}`}
+              className="flex items-center justify-between px-5 py-3.5"
+            >
               <div>
-                <Link to="/dossiers/$id" params={{ id: dossier.id }} className="text-sm font-medium text-foreground hover:underline">
+                <Link
+                  to="/dossiers/$id"
+                  params={{ id: dossier.id }}
+                  className="text-sm font-medium text-foreground hover:underline"
+                >
                   {dossier.client.nom}
                 </Link>
                 <div className="ref text-muted-foreground">
@@ -132,16 +150,26 @@ function Paiements() {
 
       <Card className="panel">
         <CardHeader>
-          <CardTitle className="text-base">Historique des encaissements récents ({encaisses.length})</CardTitle>
+          <CardTitle className="text-base">
+            Historique des encaissements récents ({encaisses.length})
+          </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Les {encaisses.length} encaissements les plus récents — {stats?.nEncaisse ?? 0} au total.
+            Les {encaisses.length} encaissements les plus récents — {stats?.nEncaisse ?? 0} au
+            total.
           </p>
         </CardHeader>
         <CardContent className="divide-y divide-border p-0">
           {encaisses.map(({ dossier, paiement, index }) => (
-            <div key={`${dossier.id}-${index}`} className="flex items-center justify-between px-5 py-3 text-sm">
+            <div
+              key={`${dossier.id}-${index}`}
+              className="flex items-center justify-between px-5 py-3 text-sm"
+            >
               <div>
-                <Link to="/dossiers/$id" params={{ id: dossier.id }} className="font-medium text-foreground hover:underline">
+                <Link
+                  to="/dossiers/$id"
+                  params={{ id: dossier.id }}
+                  className="font-medium text-foreground hover:underline"
+                >
                   {dossier.client.nom}
                 </Link>
                 <span className="ml-2 text-xs text-muted-foreground">{paiement.libelle}</span>
