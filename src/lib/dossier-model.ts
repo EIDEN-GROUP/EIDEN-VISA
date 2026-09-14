@@ -201,11 +201,7 @@ export function reglerEcheancier(
   );
 }
 
-export const CENTRES = [
-  "TLScontact Agadir",
-  "TLScontact Casablanca",
-  "BLS Espagne Agadir",
-] as const;
+export const CENTRES = ["TLScontact Agadir", "BLS Espagne Agadir"] as const;
 export type Centre = (typeof CENTRES)[number];
 
 /** Ce qui se passe après l'étape 7 : la décision du consulat, hors du contrôle d'Eiden. */

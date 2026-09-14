@@ -11,15 +11,15 @@
  */
 
 @theme inline {
-  --font-sans: "Poppins", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Quicksand", "Poppins", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, monospace;
-  --font-display: "Fraunces", "Iowan Old Style", ui-serif, Georgia, serif;
+  --font-display: "Quicksand", "Fraunces", "Iowan Old Style", ui-serif, Georgia, serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -59,56 +59,53 @@
 }
 
 :root {
-  --radius: 0.85rem;
+  --radius: 1.25rem;
 
-  /* Papier crème — plan de travail */
-  --background: oklch(0.955 0.014 92);
-  --foreground: oklch(0.26 0.024 145);
-  --card: oklch(0.995 0.003 90);
-  --card-foreground: oklch(0.26 0.024 145);
-  --popover: oklch(0.995 0.003 90);
-  --popover-foreground: oklch(0.26 0.024 145);
+  /* Blanc — plan de travail, cartes distinguées par un filet fin + ombre douce */
+  --background: oklch(0.985 0.002 285);
+  --foreground: oklch(0.24 0.03 280);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.03 280);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.03 280);
 
-  /* Terracotta — encre de cachet, réservée aux actions et étiquettes de statut */
-  --primary: oklch(0.465 0.096 39);
-  --primary-foreground: oklch(0.98 0.008 90);
-  --secondary: oklch(0.925 0.016 90);
-  --secondary-foreground: oklch(0.32 0.026 145);
-  --muted: oklch(0.925 0.016 90);
-  --muted-foreground: oklch(0.53 0.024 130);
-  --accent: oklch(0.912 0.032 45);
-  --accent-foreground: oklch(0.4 0.08 40);
-  --destructive: oklch(0.465 0.096 39);
+  /* Encre marine — action primaire, reprise du panneau illustré du login */
+  --primary: oklch(0.24 0.03 280);
+  --primary-foreground: oklch(0.98 0.005 90);
+  --secondary: oklch(0.89 0.016 288);
+  --secondary-foreground: oklch(0.3 0.03 280);
+  --muted: oklch(0.89 0.016 288);
+  --muted-foreground: oklch(0.52 0.02 280);
+  --accent: oklch(0.87 0.03 295);
+  --accent-foreground: oklch(0.3 0.04 280);
+  --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(0.98 0.008 90);
 
-  --border: oklch(0.885 0.018 88);
-  --input: oklch(0.885 0.018 88);
-  --ring: oklch(0.465 0.096 39);
+  --border: oklch(0.87 0.014 285);
+  --input: oklch(0.87 0.014 285);
+  --ring: oklch(0.24 0.03 280);
 
-  /* Vert forêt — couverture de classeur : bandeau et rail de navigation */
-  --rail: oklch(0.285 0.026 152);
-  --rail-foreground: oklch(0.955 0.012 90);
-  --rail-muted: oklch(0.68 0.024 140);
-  --rail-active: oklch(0.365 0.032 148);
+  /* Marine profond — couverture de classeur : bandeau et rail de navigation */
+  --rail: oklch(0.2 0.045 275);
+  --rail-foreground: oklch(0.96 0.012 280);
+  --rail-muted: oklch(0.62 0.03 270);
+  --rail-active: oklch(0.28 0.05 275);
 
-  --ok: oklch(0.48 0.085 152);
-  --ok-soft: oklch(0.93 0.03 150);
-  --warn: oklch(0.56 0.1 78);
-  --warn-soft: oklch(0.94 0.045 85);
-  --stop: oklch(0.465 0.096 39);
-  --stop-soft: oklch(0.93 0.035 42);
-  --info: oklch(0.47 0.055 215);
-  --info-soft: oklch(0.93 0.024 210);
+  --ok: oklch(0.55 0.11 155);
+  --ok-soft: oklch(0.92 0.035 155);
+  --warn: oklch(0.68 0.14 70);
+  --warn-soft: oklch(0.93 0.05 80);
+  --stop: oklch(0.55 0.18 25);
+  --stop-soft: oklch(0.92 0.045 30);
+  --info: oklch(0.5 0.09 260);
+  --info-soft: oklch(0.92 0.03 270);
 
-  --panel-shadow: none;
+  --panel-shadow: 0 1px 3px oklch(0.2 0.03 280 / 0.08), 0 1px 2px oklch(0.2 0.03 280 / 0.06);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
-    /* Coins vifs partout, y compris sur rounded-full/rounded-xl et les popovers Radix —
-       remplace la piste "smooth" par des angles droits, sur demande explicite. */
-    border-radius: 0 !important;
   }
   body {
     background-color: var(--color-background);
@@ -159,11 +156,12 @@
   text-transform: uppercase;
 }
 
-/* Un panneau, c'est un filet fin, jamais une boîte flottante. */
+/* Un panneau : carte blanche arrondie, légère ombre — écho de la carte de connexion. */
 @utility panel {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
 }
 
 /* Indicateur de statut : un point de couleur + texte neutre, pas un badge plein. */
@@ -193,6 +191,51 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+/* Écran de connexion : seul écran de l'app à déroger au système visuel
+   "registre de dossier", sur demande explicite — coins arrondis, palette
+   lavande/encre et typo ronde façon carte de bienvenue. La spécificité de
+   `.login-rounded *` l'emporte sur la règle `* { !important }` ci-dessus
+   malgré l'!important, car le sélecteur est plus précis. */
+.login-rounded,
+.login-rounded * {
+  border-radius: var(--login-radius, 1.25rem) !important;
+  font-family: "Quicksand", var(--font-sans);
+}
+.login-rounded input,
+.login-rounded button,
+.login-rounded .login-pill {
+  --login-radius: 999px;
+}
+.login-rounded .login-card {
+  --login-radius: 2rem;
+}
+.login-rounded .login-art {
+  --login-radius: 2.5rem;
+}
+.login-rounded .login-mark {
+  --login-radius: 999px;
+}
+.login-rounded .login-display {
+  font-family: "Quicksand", var(--font-sans);
+  font-weight: 600;
+}
+.login-rounded input:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--login-ink, oklch(0.22 0.03 280)) !important;
+}
+.login-rounded .ops-login-input:focus-visible {
+  box-shadow: 0 0 0 2px oklch(0.97 0.008 90 / 0.7) !important;
+}
+.login-rounded {
+  --login-bg: oklch(0.82 0.032 290);
+  --login-card: oklch(0.99 0.003 90);
+  --login-ink: oklch(0.22 0.03 280);
+  --login-muted: oklch(0.52 0.02 280);
+  --login-border: oklch(0.88 0.012 280);
+  --login-dark: oklch(0.24 0.03 280);
+  --login-rail: oklch(0.2 0.045 275);
 }
 
 /* Reçu client : à l'impression, on ne garde que le papier, pas l'écran. */

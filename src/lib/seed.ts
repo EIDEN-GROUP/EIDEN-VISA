@@ -76,7 +76,7 @@ const SEED: SeedInput[] = [
     profile: {},
     pack: "base",
     etape: 2,
-    centre: "TLScontact Casablanca",
+    centre: "TLScontact Agadir",
     fournis: [0, 1],
     paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
     notes: [
@@ -133,7 +133,7 @@ const SEED: SeedInput[] = [
     profile: {},
     pack: "base",
     etape: 1,
-    centre: "TLScontact Casablanca",
+    centre: "TLScontact Agadir",
     fournis: [0, 1],
     paiements: [],
     notes: [

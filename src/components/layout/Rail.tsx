@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { logout } from "@/backend/functions/auth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import sealEiden from "@/assets/decorations/stamp-eiden.png";
+import sealEiden from "@/assets/decorations/logo-eiden.png";
 
 const NAV = [
   { to: "/", label: "Tableau de bord", icon: LayoutDashboard },
@@ -36,7 +36,7 @@ function RailBody({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col text-rail-foreground">
       <div className="flex items-center gap-3 px-6 py-7">
-        <img src={sealEiden} alt="" className="h-9 w-9" />
+        <img src={sealEiden} alt="" className="h-9 w-9 rounded-full bg-white p-0.5" />
         <div>
           <div className="font-display text-base leading-tight font-semibold tracking-tight">
             Eiden Visa
@@ -103,7 +103,7 @@ export function Rail() {
             aria-label="Ouvrir le menu"
           >
             <Menu className="h-5 w-5" />
-            <img src={sealEiden} alt="" className="h-6 w-6" />
+            <img src={sealEiden} alt="" className="h-6 w-6 rounded-full bg-white p-0.5" />
             <span className="font-display text-sm font-semibold">Eiden Visa</span>
           </SheetTrigger>
           <SheetContent

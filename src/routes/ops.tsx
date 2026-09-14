@@ -48,7 +48,8 @@ import {
   Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import sealEiden from "@/assets/decorations/stamp-eiden.png";
+import sealEiden from "@/assets/decorations/logo-eiden.png";
+import opsIcons from "@/assets/decorations/ops-security-icons.png";
 
 const ROLES: { value: Role; label: string }[] = (Object.keys(ROLE_LABEL) as Role[]).map(
   (value) => ({
@@ -112,43 +113,74 @@ function OpsLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-rail px-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-6 text-rail-foreground">
-        <div className="flex items-center gap-3">
-          <img src={sealEiden} alt="" className="h-10 w-10" />
-          <div>
-            <div className="font-display text-lg font-semibold">Eiden Visa</div>
-            <div className="ref text-rail-muted">Accès superadmin</div>
+    <div
+      className="login-rounded flex min-h-screen items-center justify-center p-4"
+      style={{ background: "var(--login-bg)" }}
+    >
+      <div
+        className="ops-login-card login-card relative w-full max-w-sm overflow-hidden border border-white/10 shadow-2xl"
+        style={{ background: "var(--login-rail)" }}
+      >
+        {/* Halo doux derrière le cluster d'icônes */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/4 rounded-full opacity-60 blur-3xl"
+          style={{ background: "oklch(0.4 0.05 275)" }}
+        />
+
+        <div className="relative flex flex-col items-center px-8 pt-10 pb-2 text-center">
+          <img src={opsIcons} alt="" className="w-32 drop-shadow-lg" />
+          <h1
+            className="login-display mt-4 text-2xl tracking-tight"
+            style={{ color: "oklch(0.97 0.008 90)" }}
+          >
+            Accès superadmin
+          </h1>
+          <div className="login-mark mt-2 flex items-center gap-2">
+            <img src={sealEiden} alt="" className="h-5 w-5 rounded-full bg-white p-0.5" />
+            <span className="ref" style={{ color: "var(--rail-muted)" }}>
+              Eiden Visa · Espace Ops
+            </span>
           </div>
         </div>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-rail-muted">Email</label>
+
+        <form onSubmit={onSubmit} className="relative space-y-4 px-8 pt-7 pb-10">
+          <div className="space-y-3">
             <Input
               type="email"
+              placeholder="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoFocus
-              className="border-rail-foreground/15 bg-rail-active/40 text-rail-foreground"
+              className="ops-login-input h-12 border-white/15 bg-white/5 px-5 text-sm text-white placeholder:text-white/40"
             />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-rail-muted">Mot de passe</label>
             <Input
               type="password"
+              placeholder="mot de passe"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border-rail-foreground/15 bg-rail-active/40 text-rail-foreground"
+              className="ops-login-input h-12 border-white/15 bg-white/5 px-5 text-sm text-white placeholder:text-white/40"
             />
           </div>
-        </div>
-        {error && <p className="text-sm text-[var(--stop)]">{error}</p>}
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Connexion…" : "Entrer"}
-        </Button>
-      </form>
+          {error && <p className="text-sm text-[var(--stop)]">{error}</p>}
+          <Button
+            type="submit"
+            disabled={pending}
+            className="h-11 w-full hover:opacity-90"
+            style={{ background: "oklch(0.97 0.008 90)", color: "var(--login-rail)" }}
+          >
+            {pending ? "Connexion…" : "Entrer"}
+          </Button>
+          <p className="pt-1 text-center text-xs" style={{ color: "var(--rail-muted)" }}>
+            Réservé aux comptes CEO — les autres comptes doivent utiliser{" "}
+            <Link to="/login" className="underline hover:text-white">
+              la connexion standard
+            </Link>
+            .
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
@@ -233,7 +265,7 @@ function Ops() {
   const NavBody = ({ onPick }: { onPick?: () => void }) => (
     <div className="flex h-full flex-col text-rail-foreground">
       <div className="hidden items-center gap-3 px-5 py-5 md:flex">
-        <img src={sealEiden} alt="" className="h-8 w-8" />
+        <img src={sealEiden} alt="" className="h-8 w-8 rounded-full bg-white p-0.5" />
         <div>
           <div className="font-display text-base font-semibold leading-none">Eiden Visa</div>
           <div className="ref mt-1 text-rail-muted">Espace Ops</div>
@@ -282,7 +314,7 @@ function Ops() {
       {/* Barre supérieure mobile */}
       <div className="flex items-center justify-between border-b border-border bg-rail px-4 py-3 text-rail-foreground md:hidden">
         <div className="flex items-center gap-2">
-          <img src={sealEiden} alt="" className="h-7 w-7" />
+          <img src={sealEiden} alt="" className="h-7 w-7 rounded-full bg-white p-0.5" />
           <span className="font-display text-sm font-semibold">Espace Ops</span>
         </div>
         <Sheet open={navOpen} onOpenChange={setNavOpen}>

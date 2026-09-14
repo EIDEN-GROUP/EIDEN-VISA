@@ -417,7 +417,7 @@ export const changerCentre = createServerFn({ method: "POST" })
   .validator(
     z.object({
       id: z.string(),
-      centre: z.enum(["TLScontact Agadir", "TLScontact Casablanca", "BLS Espagne Agadir"]),
+      centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
     }),
   )
   .handler(async ({ data }) => {

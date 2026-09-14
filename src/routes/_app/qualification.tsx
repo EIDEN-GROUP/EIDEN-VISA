@@ -294,6 +294,17 @@ function Qualification() {
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
+                  <label className="text-xs font-medium text-muted-foreground">Type de visa</label>
+                  <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
+                    <span className="text-sm font-medium text-foreground">{result.c.title}</span>
+                    <NiveauBadge level={result.c.level} />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Déterminé par la Boussole de qualification ci-dessus. Pour changer de type,
+                    revenez sur la dernière question.
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
                   <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
                   <Input
                     value={nom}

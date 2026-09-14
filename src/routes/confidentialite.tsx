@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import sealEiden from "@/assets/decorations/stamp-eiden.png";
+import sealEiden from "@/assets/decorations/logo-eiden.png";
 
 export const Route = createFileRoute("/confidentialite")({
   component: Confidentialite,
