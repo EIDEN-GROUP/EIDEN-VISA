@@ -120,17 +120,17 @@ export interface Piece {
 /**
  * Modalité de règlement choisie par le client à l'ouverture du dossier :
  * - `comptant` : il règle le pack en une fois (encaissement au solde, étape 6) ;
- * - `acompte`  : il verse 20 % du prix du pack pour sécuriser l'engagement
- *   (à l'ouverture du dossier, étape 2), le solde des 80 % restant dû à l'étape 6.
+ * - `acompte`  : il verse 50 % du prix du pack pour sécuriser l'engagement
+ *   (à l'ouverture du dossier, étape 2), le solde des 50 % restant dû à l'étape 6.
  * Les options à la carte (voyage, assurance) sont toujours facturées à part,
- * hors du calcul des 20 %.
+ * hors du calcul des 50 %.
  */
 export type Modalite = "comptant" | "acompte";
 export const MODALITE_LABEL: Record<Modalite, string> = {
   comptant: "Paiement comptant",
-  acompte: "Acompte 20 % + solde",
+  acompte: "Acompte 50 % + solde",
 };
-export const ACOMPTE_PCT = 0.2;
+export const ACOMPTE_PCT = 0.5;
 
 /** Quand une ligne de paiement est due — la règle métier n'est plus cachée dans le libellé. */
 export type Echeance = "acompte" | "solde" | "option";
@@ -154,14 +154,14 @@ export function planPaiement(pack: PackKey, modalite: Modalite): Paiement[] {
     const acompte = Math.round(prix * ACOMPTE_PCT);
     return [
       {
-        libelle: `Acompte 20 % · ${label}`,
+        libelle: `Acompte 50 % · ${label}`,
         montant: acompte,
         date: null,
         encaisse: false,
         echeance: "acompte",
       },
       {
-        libelle: `Solde 80 % · ${label}`,
+        libelle: `Solde 50 % · ${label}`,
         montant: prix - acompte,
         date: null,
         encaisse: false,
@@ -214,7 +214,17 @@ export const DECISION_LABEL: Record<Decision, string> = {
 
 export interface Dossier {
   id: string;
-  client: { nom: string; telephone: string; ville: string; naissance: string };
+  client: {
+    nom: string;
+    telephone: string;
+    ville: string;
+    naissance: string;
+    /** Dates de séjour envisagées (ISO `AAAA-MM-JJ`), saisies par le client à la qualification.
+     * `null` si non renseignées (dossiers créés avant l'ajout de ces champs, ou dates encore
+     * indécises côté client). */
+    voyageDebut: string | null;
+    voyageFin: string | null;
+  };
   agent: string;
   /** Le VRAI compte qui a ouvert ce dossier — sert à filtrer "Mes dossiers" par utilisateur.
    * `null` pour les dossiers créés avant l'ajout de ce champ. */
@@ -301,7 +311,7 @@ export function alertes(d: Dossier): string[] {
   if (d.modalitePaiement === "acompte" && d.etape >= 2) {
     const acompte = d.paiements.find((p) => p.echeance === "acompte");
     if (acompte && !acompte.encaisse)
-      out.push("Acompte de 20 % non encaissé : l'engagement du client n'est pas sécurisé.");
+      out.push("Acompte de 50 % non encaissé : l'engagement du client n'est pas sécurisé.");
   }
   const impayes = d.paiements.filter((p) => !p.encaisse);
   if (d.etape >= 6 && impayes.length)

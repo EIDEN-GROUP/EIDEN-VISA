@@ -199,11 +199,24 @@ function DossierDetail() {
             </p>
           </div>
         </div>
-        <div className="text-right text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground sm:text-right">
           <div>
             {d.client.telephone} · {d.client.ville}
           </div>
           <div>Né(e) le {d.client.naissance}</div>
+          {d.client.voyageDebut && d.client.voyageFin && (
+            <div>
+              Séjour du {new Date(d.client.voyageDebut).toLocaleDateString("fr-FR")} au{" "}
+              {new Date(d.client.voyageFin).toLocaleDateString("fr-FR")}
+              {" · "}
+              {Math.round(
+                (new Date(d.client.voyageFin).getTime() -
+                  new Date(d.client.voyageDebut).getTime()) /
+                  86_400_000,
+              ) + 1}{" "}
+              jours
+            </div>
+          )}
           <div>
             Ouvert le {d.ouvertLe} par {d.agent}
           </div>
@@ -507,7 +520,7 @@ function DossierDetail() {
                 </Select>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {d.modalitePaiement === "acompte"
-                    ? "20 % à l'ouverture du dossier, solde des 80 % à la remise du dossier."
+                    ? "50 % à l'ouverture du dossier, solde des 50 % à la remise du dossier."
                     : "Règlement du pack en une fois, à la remise du dossier."}
                 </p>
               </div>

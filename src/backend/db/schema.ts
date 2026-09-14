@@ -46,6 +46,10 @@ export const dossiers = pgTable("dossiers", {
   clientTelephone: text("client_telephone").notNull(),
   clientVille: text("client_ville").notNull(),
   clientNaissance: text("client_naissance").notNull(),
+  // Dates de séjour envisagées, saisies à la qualification (ISO AAAA-MM-JJ). Nullables :
+  // le client ne les connaît pas toujours au moment de l'ouverture du dossier.
+  clientVoyageDebut: text("client_voyage_debut"),
+  clientVoyageFin: text("client_voyage_fin"),
   agent: text("agent").notNull(),
   // Le compte réel qui a ouvert le dossier — permet un filtre "Mes dossiers" fiable,
   // contrairement à `agent` qui n'est qu'un texte d'affichage (nom + rôle au moment de la création).

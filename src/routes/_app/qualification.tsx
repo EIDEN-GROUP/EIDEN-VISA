@@ -60,8 +60,19 @@ function Qualification() {
   const [telephone, setTelephone] = useState("");
   const [ville, setVille] = useState("");
   const [naissance, setNaissance] = useState("");
+  const [voyageDebut, setVoyageDebut] = useState("");
+  const [voyageFin, setVoyageFin] = useState("");
   const [centre, setCentre] = useState<Centre>(CENTRES[0]);
   const [modalite, setModalite] = useState<Modalite>("comptant");
+
+  // Nombre de jours du séjour envisagé, bornes incluses (ex. 10→12 = 3 jours). `null` tant
+  // que les deux dates ne sont pas renseignées ou que la fin précède le début.
+  const dureeSejour =
+    voyageDebut && voyageFin
+      ? Math.round(
+          (new Date(voyageFin).getTime() - new Date(voyageDebut).getTime()) / 86_400_000,
+        ) + 1
+      : null;
 
   const node = TREE[nodeKey]!;
 
@@ -111,7 +122,14 @@ function Qualification() {
     const agent = currentUser ? `${ROLE_LABEL[currentUser.role]} · ${currentUser.nom}` : "Accueil";
     const dossier: Dossier = {
       id,
-      client: { nom, telephone, ville, naissance },
+      client: {
+        nom,
+        telephone,
+        ville,
+        naissance,
+        voyageDebut: voyageDebut || null,
+        voyageFin: voyageFin || null,
+      },
       agent,
       // Le serveur dérive le VRAI agentUserId de la session (voir createDossier) — cette
       // valeur client n'est là que pour satisfaire le type, elle est ignorée par le backend.
@@ -130,7 +148,7 @@ function Qualification() {
       uploadAutorise: false,
       pieces,
       // Échéancier dérivé du pack (base par défaut) et de la modalité choisie à l'accueil :
-      // comptant = une ligne de solde, acompte = 20 % + solde 80 %.
+      // comptant = une ligne de solde, acompte = 50 % + solde 50 %.
       paiements: planPaiement("base", modalite),
       notes: result.c.notes,
       decision: "en_attente",
@@ -338,6 +356,41 @@ function Qualification() {
                     placeholder="JJ/MM/AAAA"
                   />
                 </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Départ souhaité
+                  </label>
+                  <Input
+                    type="date"
+                    value={voyageDebut}
+                    onChange={(e) => setVoyageDebut(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Retour souhaité
+                  </label>
+                  <Input
+                    type="date"
+                    value={voyageFin}
+                    min={voyageDebut || undefined}
+                    onChange={(e) => setVoyageFin(e.target.value)}
+                  />
+                </div>
+                {voyageDebut && voyageFin && (
+                  <div className="col-span-2 -mt-1">
+                    {dureeSejour !== null && dureeSejour > 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Séjour envisagé : <span className="font-medium text-foreground">{dureeSejour}</span>{" "}
+                        jour{dureeSejour > 1 ? "s" : ""}.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-[var(--stop)]">
+                        La date de retour doit être postérieure à la date de départ.
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div className="col-span-2">
                   <label className="text-xs font-medium text-muted-foreground">
                     Centre de dépôt
@@ -373,12 +426,16 @@ function Qualification() {
                   </Select>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {modalite === "acompte"
-                      ? "20 % à l'ouverture du dossier, solde des 80 % à la remise du dossier."
+                      ? "50 % à l'ouverture du dossier, solde des 50 % à la remise du dossier."
                       : "Règlement du pack en une fois, à la remise du dossier."}
                   </p>
                 </div>
                 <div className="col-span-2 pt-2">
-                  <Button className="w-full" disabled={!nom} onClick={creerDossier}>
+                  <Button
+                    className="w-full"
+                    disabled={!nom || (dureeSejour !== null && dureeSejour <= 0)}
+                    onClick={creerDossier}
+                  >
                     Créer le dossier
                   </Button>
                 </div>

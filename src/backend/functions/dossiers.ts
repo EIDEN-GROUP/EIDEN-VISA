@@ -46,6 +46,8 @@ function rowToDossier(row: DossierRow): Dossier {
       telephone: row.clientTelephone,
       ville: row.clientVille,
       naissance: row.clientNaissance,
+      voyageDebut: row.clientVoyageDebut,
+      voyageFin: row.clientVoyageFin,
     },
     agent: row.agent,
     agentUserId: row.agentUserId,
@@ -304,6 +306,8 @@ const dossierInput = z.object({
     telephone: z.string(),
     ville: z.string(),
     naissance: z.string(),
+    voyageDebut: z.string().nullable().default(null),
+    voyageFin: z.string().nullable().default(null),
   }),
   agent: z.string(),
   assigneeUserId: z.string().nullable().default(null),
@@ -355,6 +359,8 @@ export const createDossier = createServerFn({ method: "POST" })
       clientTelephone: data.client.telephone,
       clientVille: data.client.ville,
       clientNaissance: data.client.naissance,
+      clientVoyageDebut: data.client.voyageDebut,
+      clientVoyageFin: data.client.voyageFin,
       agent: data.agent,
       agentUserId,
       assigneeUserId: data.assigneeUserId,
@@ -480,7 +486,7 @@ export const changerPack = createServerFn({ method: "POST" })
     await logActivity("paiement.pack", `Pack changé -> ${PACKS[data.pack].label}`, data.id);
   });
 
-/** Le client choisit de régler comptant ou par acompte de 20 % — régénère l'échéancier dû. */
+/** Le client choisit de régler comptant ou par acompte de 50 % — régénère l'échéancier dû. */
 export const setModalitePaiement = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string(), modalite: z.enum(["comptant", "acompte"]) }))
   .handler(async ({ data }) => {

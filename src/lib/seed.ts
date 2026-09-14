@@ -45,19 +45,19 @@ const SEED: SeedInput[] = [
     etape: 6,
     centre: "TLScontact Agadir",
     fournis: "tout",
-    // Cliente en modalité acompte : 20 % versés à la confirmation du créneau, solde des 80 %
+    // Cliente en modalité acompte : 50 % versés à la confirmation du créneau, solde des 50 %
     // dû à la remise du dossier scellé (étape 6). Aucun "frais de rendez-vous" en plus.
     paiements: [
       {
-        libelle: "Acompte 20 % · Pack + pré-réservation voyage",
-        montant: 200,
+        libelle: "Acompte 50 % · Pack + pré-réservation voyage",
+        montant: 500,
         date: "05/09/2026",
         encaisse: true,
         echeance: "acompte",
       },
       {
-        libelle: "Solde 80 % · Pack + pré-réservation voyage",
-        montant: 800,
+        libelle: "Solde 50 % · Pack + pré-réservation voyage",
+        montant: 500,
         date: null,
         encaisse: false,
         echeance: "solde",
@@ -231,7 +231,14 @@ export function buildSeed(): Dossier[] {
     const pieces = piecesFromCase(c, s.fournis === "tout" ? c.docs.map((_, i) => i) : s.fournis);
     return {
       id: s.id,
-      client: { nom: s.nom, telephone: s.telephone, ville: s.ville, naissance: s.naissance },
+      client: {
+        nom: s.nom,
+        telephone: s.telephone,
+        ville: s.ville,
+        naissance: s.naissance,
+        voyageDebut: null,
+        voyageFin: null,
+      },
       agent: s.agent,
       agentUserId: null,
       assigneeUserId: null,
