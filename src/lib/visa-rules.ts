@@ -365,11 +365,19 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c9: {
     title: "Stage salarié",
-    cat: "Long séjour (Visa D) · travail",
-    level: "complexe",
-    docs: [],
+    cat: "Court séjour Schengen (Visa C) · stage",
+    level: "attention",
+    docs: [
+      "Convention de stage signée entre l'employeur étranger, l'entreprise en France et le stagiaire",
+      "Pré-réservation du billet aller-retour (avion, autobus ou bateau)",
+      "Justificatifs de ressources équivalents au SMIC brut mensuel",
+      "Attestation d'accueil (hébergement chez un particulier) ou réservation d'hôtel ou justificatif de location/propriété d'un bien immobilier",
+      "Attestation d'assurance médicale de voyage",
+    ],
     extra: [],
-    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+    notes: [
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — billet aller-retour attendu, donc dossier traité en court séjour.",
+    ],
   },
   c_autre: {
     title: "Projet professionnel hors catégories → à vérifier",
@@ -753,7 +761,6 @@ export const TREE: Record<string, TreeNode> = {
     opts: [
       { l: "Court séjour", n: "q3" },
       { l: "Long séjour", n: "q3" },
-      { l: "Autre", n: "q3" },
     ],
   },
   q3: {
