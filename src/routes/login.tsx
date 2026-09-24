@@ -48,14 +48,20 @@ function LoginPage() {
         <div className="flex flex-col justify-center px-8 py-12 sm:px-14">
           <div className="login-mark mb-10 flex items-center gap-2.5">
             <img src={sealEiden} alt="" className="h-9 w-9 object-contain" />
-            <span className="login-display text-lg tracking-tight" style={{ color: "var(--login-ink)" }}>
+            <span
+              className="login-display text-lg tracking-tight"
+              style={{ color: "var(--login-ink)" }}
+            >
               Eiden Visa
             </span>
           </div>
 
           <form onSubmit={onSubmit} className="w-full max-w-sm space-y-6">
             <div>
-              <h1 className="login-display text-3xl tracking-tight" style={{ color: "var(--login-ink)" }}>
+              <h1
+                className="login-display text-3xl tracking-tight"
+                style={{ color: "var(--login-ink)" }}
+              >
                 Bon retour
               </h1>
               <p className="mt-1 text-sm" style={{ color: "var(--login-muted)" }}>

@@ -21,7 +21,13 @@ function isoDaysAgo(days: number) {
 
 /** Filtre de date partagé — s'applique sur la date d'ouverture réelle du dossier
  * (created_at), pas sur un texte affiché. Réutilisé sur chaque écran qui liste des dossiers. */
-export function DateRangeFilter({ value, onChange }: { value: DateRange; onChange: (v: DateRange) => void }) {
+export function DateRangeFilter({
+  value,
+  onChange,
+}: {
+  value: DateRange;
+  onChange: (v: DateRange) => void;
+}) {
   const activePreset = PRESETS.find((p) => {
     if (p.days === null) return !value.from && !value.to;
     return value.from === isoDaysAgo(p.days) && !value.to;
@@ -34,7 +40,9 @@ export function DateRangeFilter({ value, onChange }: { value: DateRange; onChang
         {PRESETS.map((p) => (
           <button
             key={p.label}
-            onClick={() => onChange(p.days === null ? {} : { from: isoDaysAgo(p.days), to: undefined })}
+            onClick={() =>
+              onChange(p.days === null ? {} : { from: isoDaysAgo(p.days), to: undefined })
+            }
             className={cn(
               "rounded-full px-3 py-1 text-xs font-medium",
               activePreset?.label === p.label
