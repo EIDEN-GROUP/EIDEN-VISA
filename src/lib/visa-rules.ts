@@ -28,14 +28,46 @@ export const LEVEL_LABEL: Record<Level, string> = {
 };
 
 export interface Profile {
-  base?: "tourisme" | "visite_generale" | "visite_enfant_parent" | "famille_ue";
+  base?:
+    | "tourisme"
+    | "visite_generale"
+    | "visite_enfant_parent"
+    | "famille_ue"
+    | "visite_familiale_membre"
+    | "enfant_parent_francais";
   dependent?: boolean;
   minor?: boolean;
   married?: boolean;
   spouseNoJob?: boolean;
   visaHist?: boolean;
   grandchildNote?: boolean;
-  prof?: "salarie" | "commercant" | "agriculteur" | "retraite" | "etudiant" | "sans";
+  prof?:
+    | "salarie"
+    | "fonctionnaire"
+    | "commercant"
+    | "avocat_medical"
+    | "agriculteur"
+    | "retraite"
+    | "etudiant"
+    | "sans";
+  /** Durée du séjour — Branche A (Tourisme), Q7. ≤ 90 jours = court, > 90 = long. */
+  duree?: "court" | "long";
+  /** Q22 — où le demandeur séjourne pendant le voyage. */
+  hebergement?: "hotel" | "personne" | "autre";
+  /** Q35 — qui finance le voyage. */
+  financePar?: "soi_meme" | "garant";
+  /** Q-F3 (questions finales communes) — déclenche les pièces d'état civil. */
+  situationFamiliale?: "celibataire" | "marie" | "divorce" | "veuf" | "autre";
+  /** Étape 1 — Q1 : a déjà obtenu un visa pour la France. */
+  visaAnterieur?: boolean;
+  /** Étape 1 — Q4 : a déjà essuyé un refus de visa Schengen. */
+  refusVisa?: boolean;
+  /** Branche A, Q15 : accompagne/rejoint un membre de famille UE/EEE — ajoute des pièces,
+   * sans remplacer le dossier tourisme (contrairement à la branche « famille UE » historique). */
+  ueEeeFamily?: boolean;
+  /** Réponses en texte libre (noms, dates, adresses...) — sans incidence sur la checklist,
+   * mais nécessaires pour compléter le dossier. Clé = TreeField.key, valeur = saisie brute. */
+  details?: Record<string, string>;
 }
 
 /* ============ CAS À RÉSULTAT FIGÉ ============ */
@@ -189,6 +221,164 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
       "Ce type de dossier relève de Campus France, pas d'Eiden Visa. Une consultation d'orientation payante à 100 MAD peut être proposée pour rediriger correctement, sans construire le dossier.",
     ],
   },
+  a_long: {
+    title: "Tourisme / visite privée · long séjour (> 90 jours)",
+    cat: "Long séjour · installation ou séjour privé prolongé",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: [
+      "⚠ La checklist documentaire de référence (Eiden, à partir des listes visa transmises) ne couvre que le court séjour tourisme (≤ 90 jours). Aucun document n'est ajouté ici tant qu'une source dédiée au long séjour n'est pas fournie — dossier à traiter au cas par cas.",
+    ],
+  },
+  b_long: {
+    title: "Visite familiale · long séjour (> 90 jours)",
+    cat: "Long séjour · installation auprès d'un proche",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: [
+      "⚠ La checklist documentaire de référence ne détaille pas le long séjour familial. Aucun document n'est ajouté ici — dossier à traiter au cas par cas.",
+    ],
+  },
+  b_ue_famille: {
+    title: "Visite familiale · famille d'un ressortissant UE/EEE",
+    cat: "Court séjour Schengen · libre circulation UE/EEE",
+    level: "attention",
+    docs: [
+      "Preuve du lien familial",
+      "Preuve de la nationalité UE/EEE du membre de la famille",
+      "Preuve que le demandeur accompagne ou rejoint ce ressortissant",
+      "Passeport (visa et cachet) valide 3 mois après la date de retour au Maroc",
+      "Formulaire de demande France-Visas rempli, daté et signé + récépissé (Formulaire + RCPC)",
+      "2 photos d'identité sur fond blanc",
+    ],
+    extra: [],
+    notes: [
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet ». Cette liste ne dépend pas de la profession du demandeur — n'ajoutez pas de pièce professionnelle par réflexe.",
+    ],
+  },
+  conjoint_court: {
+    title: "Visite privée · conjoint de Français (court séjour)",
+    cat: "Court séjour Schengen · visite du conjoint français",
+    level: "attention",
+    docs: [
+      "Passeport (visa et cachet) valide 3 mois après la date de retour au Maroc",
+      "Formulaire de demande France-Visas rempli, daté et signé + récépissé (Formulaire + RCPC)",
+      "2 photos d'identité sur fond blanc",
+      "Transcription récente de l'acte de mariage, datée de moins de 6 mois (service-public.fr)",
+      "Preuve de la nationalité française du conjoint",
+      "Livret de famille (si applicable)",
+      "Assurance voyage",
+    ],
+    extra: [],
+    notes: [
+      "Liste courte, sans variante par profession — reprise telle quelle de « eiden_visa_assistant_arbre_complet ». Si le couple souhaite s'installer durablement plutôt que simplement visiter, orienter vers le long séjour conjoint de Français (VLS-TS).",
+    ],
+  },
+  d_refugie: {
+    title: "Rejoindre un conjoint / membre de famille réfugié",
+    cat: "Long séjour · regroupement familial (statut de réfugié)",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: [
+      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche. Aucun document n'est ajouté ici — dossier à traiter au cas par cas, la même logique de questions s'appliquant à la protection subsidiaire et au statut d'apatride.",
+    ],
+  },
+  d_subsidiaire: {
+    title: "Rejoindre un conjoint / membre de famille — protection subsidiaire",
+    cat: "Long séjour · regroupement familial (protection subsidiaire)",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: [
+      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche — même logique que le cas « réfugié ». Aucun document n'est ajouté ici.",
+    ],
+  },
+  d_apatride: {
+    title: "Rejoindre un conjoint / membre de famille apatride",
+    cat: "Long séjour · regroupement familial (statut d'apatride)",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: [
+      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche — même logique que le cas « réfugié ». Aucun document n'est ajouté ici.",
+    ],
+  },
+  c3: {
+    title: "Employé par une entreprise étrangère (hors France)",
+    cat: "Long séjour · travail",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+  },
+  c4: {
+    title: "Employé par une entreprise française",
+    cat: "Long séjour · travail",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+  },
+  c5: {
+    title: "Événement culturel / artistique / scientifique / sportif",
+    cat: "Court séjour · mission ponctuelle",
+    level: "attention",
+    docs: [
+      "Justificatifs liés à l'événement (invitation, programme, contrat)",
+      "Justificatifs du statut professionnel — pour un artiste : carte d'artiste ou attestations",
+      "Relevés bancaires",
+      "Documents d'état civil selon situation",
+      "Hébergement",
+      "Assurance voyage",
+    ],
+    extra: [],
+    notes: [
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — seule sous-branche travail avec un début de détail documentaire hors voyage professionnel.",
+    ],
+  },
+  c6: {
+    title: "Mannequin",
+    cat: "Long séjour · travail",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+  },
+  c7: {
+    title: "Marin",
+    cat: "Long séjour · travail",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+  },
+  c8: {
+    title: "Chercheur",
+    cat: "Long séjour · travail",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+  },
+  c9: {
+    title: "Stage salarié",
+    cat: "Long séjour · travail",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["⚠ Documents spécifiques non détaillés dans la liste documentaire fournie."],
+  },
+  c_autre: {
+    title: "Projet professionnel hors catégories → à vérifier",
+    cat: "Travail · cas non standard",
+    level: "complexe",
+    docs: [],
+    extra: [],
+    notes: ["Motif non couvert par les catégories connues — qualification manuelle nécessaire."],
+  },
 };
 
 /* ============ ASSEMBLAGE DYNAMIQUE (court séjour) ============ */
@@ -207,8 +397,189 @@ function profDoc(prof?: Profile["prof"]): string {
   return "Situation socio-professionnelle : preuve du statut (contrat de travail, certificat de travail, extrait du registre du commerce et des sociétés, certificat de scolarité, justificatif de pension) et tout document démontrant les liens personnels avec le pays de résidence (copie du certificat de mariage, livret de famille)";
 }
 
+/**
+ * Branche A — Tourisme / visite privée, reconstruite pièce par pièce à partir de
+ * « eiden_visa_assistant_arbre_complet ». Chaque bloc ci-dessous correspond
+ * littéralement à un « Si <profession> » de la source ; rien n'est ajouté qui n'y
+ * figure pas.
+ */
+const PASSEPORT_FORMULAIRE = [
+  "Passeport (visa et cachet) valide 3 mois après la date de retour au Maroc",
+  "Formulaire de demande France-Visas rempli, daté et signé + récépissé (Formulaire + RCPC)",
+  "2 photos d'identité sur fond blanc",
+];
+const ASSURANCE_VOYAGE = "Assurance voyage";
+const PRE_RESERVATION_TRANSPORT = "Pré-réservation du transport (avion, bateau ou voiture)";
+
+function hebergementDoc(h?: Profile["hebergement"]): string {
+  if (h === "hotel") return "Réservation d'hôtel";
+  if (h === "autre") return "Certificat de propriété d'un bien résidentiel en France";
+  return "Attestation d'accueil";
+}
+
+/** Pièces d'état civil déclenchées par Q-F3 (situation familiale). */
+function etatCivilDocs(s?: Profile["situationFamiliale"]): string[] {
+  if (s === "marie") return ["Acte de mariage traduit", "Livret de famille (si applicable)"];
+  if (s === "veuf") return ["Acte de décès"];
+  return [];
+}
+
+/** Bloc « Si <profession> » — Branche A, financement = soi-même. */
+function professionDocsTourisme(prof: Profile["prof"]): string[] {
+  switch (prof) {
+    case "fonctionnaire":
+      return [
+        "Attestation de travail / salaire",
+        "Bulletin mensuel (e-services.tgr.gov.ma)",
+        "Attestation de la CNOPS",
+        "3 derniers relevés bancaires",
+      ];
+    case "etudiant":
+      return [
+        "Acte de naissance",
+        "Certificat de scolarité",
+        "Liste des vacances scolaires",
+        "Attestation de prise en charge avec ressources",
+        "Si mineur : autorisation de sortie du territoire signée et légalisée par les deux parents",
+      ];
+    case "avocat_medical":
+      return [
+        "Attestation d'exercice de la profession",
+        "Carte professionnelle",
+        "3 derniers relevés bancaires",
+      ];
+    case "retraite":
+      return ["Attestation de pension", "3 derniers relevés bancaires"];
+    case "agriculteur":
+      return [
+        "Attestation agricole",
+        "Justificatif de propriété ou de location des terres agricoles",
+        "3 derniers relevés bancaires",
+      ];
+    case "sans":
+      return [
+        "Attestation de prise en charge",
+        "Preuve du lien avec le garant (si disponible)",
+        "Justificatifs des ressources du garant",
+        "3 derniers relevés bancaires",
+      ];
+    case "salarie":
+    default:
+      return [
+        "Attestation de travail / salaire",
+        "3 fiches de paie",
+        "Récapitulatif CNSS",
+        "3 derniers relevés bancaires",
+      ];
+  }
+}
+
+const PROF_LABEL: Record<NonNullable<Profile["prof"]>, string> = {
+  salarie: "Salarié(e)",
+  fonctionnaire: "Fonctionnaire",
+  etudiant: "Étudiant(e)",
+  avocat_medical: "Avocat / profession médicale",
+  retraite: "Retraité(e)",
+  agriculteur: "Agriculteur(rice)",
+  sans: "Sans profession",
+  commercant: "Commerçant(e) / profession libérale",
+};
+
+function buildTourisme(p: Profile): CaseResult {
+  if (p.duree === "long") return { key: "a_long", ...FIXED["a_long"]! };
+
+  const docs: string[] = [...PASSEPORT_FORMULAIRE, PRE_RESERVATION_TRANSPORT];
+
+  if (p.financePar === "garant") {
+    docs.push(
+      "Attestation de prise en charge",
+      "Preuve du lien avec le garant (si disponible)",
+      "Justificatifs des ressources du garant",
+      "3 derniers relevés bancaires",
+    );
+  } else {
+    docs.push(...professionDocsTourisme(p.prof));
+  }
+
+  docs.push(...etatCivilDocs(p.situationFamiliale));
+  docs.push("Justificatifs des biens personnels");
+  docs.push(hebergementDoc(p.hebergement));
+  docs.push(ASSURANCE_VOYAGE);
+
+  if (p.ueEeeFamily) {
+    docs.push(
+      "Preuve du lien familial avec le ressortissant UE/EEE accompagné ou rejoint",
+      "Preuve de la nationalité UE/EEE de ce ressortissant",
+      "Preuve que le demandeur l'accompagne ou le rejoint",
+    );
+  }
+
+  const notes: string[] = [
+    "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — source unique pour cette branche.",
+  ];
+  if (p.visaHist)
+    notes.push("Visa Schengen dans les 59 derniers mois : joindre la copie de l'ancien visa.");
+
+  return {
+    key: "a_tourisme",
+    title:
+      p.financePar === "garant"
+        ? "Visa touriste classique · pris en charge par un garant"
+        : `Visa touriste classique · ${PROF_LABEL[p.prof ?? "salarie"]}`,
+    cat: "Court séjour Schengen · tourisme",
+    level: "standard",
+    docs,
+    extra: [],
+    notes,
+  };
+}
+
+/**
+ * Branche B — Visite familiale (hors conjoint de Français et hors UE/EEE, qui ont
+ * chacun leur propre résultat fixe). Couvre B-FAMILLE et B-ENFANT/PARENT DE
+ * FRANÇAIS : mêmes pièces professionnelles que le tourisme (le docx source répète
+ * un bloc identique), avec en plus la preuve du lien familial.
+ */
+function buildVisiteFamiliale(p: Profile): CaseResult {
+  const enfantParent = p.base === "enfant_parent_francais";
+
+  const docs: string[] = [...PASSEPORT_FORMULAIRE];
+  if (enfantParent) {
+    docs.push(
+      "Justificatif de lien de parenté avec le ressortissant français ou le conjoint (copie intégrale des documents d'état civil)",
+      "Preuve de la nationalité française",
+    );
+  } else {
+    docs.push("Justificatif de lien de parenté avec la personne de l'attestation d'accueil");
+  }
+  docs.push(PRE_RESERVATION_TRANSPORT);
+  docs.push(...professionDocsTourisme(p.prof));
+  docs.push(...etatCivilDocs(p.situationFamiliale));
+  docs.push("Justificatifs des biens personnels");
+  docs.push(hebergementDoc(p.hebergement));
+  docs.push(ASSURANCE_VOYAGE);
+
+  return {
+    key: enfantParent ? "b_enfant_parent" : "b_famille",
+    title: enfantParent
+      ? `Visite familiale · enfant/parent de Français · ${PROF_LABEL[p.prof ?? "salarie"]}`
+      : `Visite familiale · ${PROF_LABEL[p.prof ?? "salarie"]}`,
+    cat: "Court séjour Schengen · visite familiale",
+    level: "attention",
+    docs,
+    extra: [],
+    notes: [
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — source unique pour cette branche.",
+    ],
+  };
+}
+
 export function buildCourtSejour(p: Profile): CaseResult {
   const base = p.base ?? "tourisme";
+
+  if (base === "tourisme") return buildTourisme(p);
+  if (base === "visite_familiale_membre" || base === "enfant_parent_francais")
+    return buildVisiteFamiliale(p);
 
   if (base === "famille_ue") {
     const docs = [
@@ -239,11 +610,6 @@ export function buildCourtSejour(p: Profile): CaseResult {
   }
 
   const META = {
-    tourisme: {
-      title: "Visa touriste classique",
-      cat: "Court séjour Schengen · tourisme",
-      level: "standard" as Level,
-    },
     visite_generale: {
       title: "Visite familiale généraliste",
       cat: "Court séjour Schengen · visite privée",
@@ -272,10 +638,6 @@ export function buildCourtSejour(p: Profile): CaseResult {
     );
     docs.push("Preuve de la nationalité française du membre de la famille");
   }
-  if (base === "tourisme")
-    docs.push(
-      "Réservation (voyage) : confirmation d'un voyage organisé, ou tout document décrivant le programme prévu",
-    );
   docs.push("Réservation (billet aller-retour) : pré-réservation de vol via l'agence partenaire");
   if (p.minor) {
     docs.push("Mineur : acte de naissance ou copie du livret de famille");
@@ -286,11 +648,7 @@ export function buildCourtSejour(p: Profile): CaseResult {
   }
   docs.push(profDoc(p.prof));
   docs.push("Fonds : relevés bancaires, bulletins de salaire, relevés de pension");
-  if (base === "tourisme")
-    docs.push(
-      "Hébergement : réservation d'hôtel, ou justificatifs de ressources suffisantes (120 €/jour), ou contrat de location/titre de propriété ; si hébergement chez un particulier : justificatif de logement (Cerfa = attestation d'accueil)",
-    );
-  else docs.push("Hébergement : preuve d'hébergement (attestation d'accueil)");
+  docs.push("Hébergement : preuve d'hébergement (attestation d'accueil)");
   docs.push("Certificat d'assurance voyage");
 
   if (p.married) {
@@ -359,142 +717,463 @@ export interface TreeOption {
   set?: Profile;
   r?: boolean;
 }
+/** Un champ de saisie libre (nom, date, adresse...) — sans incidence sur la checklist. */
+export interface TreeField {
+  key: string;
+  label: string;
+  placeholder?: string;
+  type?: "text" | "date";
+}
 export interface TreeNode {
   q: string;
   help?: string;
-  opts: TreeOption[];
+  /** Nœud à choix (boutons) — mutuellement exclusif avec `fields`. */
+  opts?: TreeOption[];
+  /** Nœud de saisie libre — un ou plusieurs champs texte, validés en un seul « Continuer ». */
+  fields?: TreeField[];
+  /** Nœud suivant après validation des `fields`. "DYNAMIC" ou une clé de cas figé sont acceptés
+   * si `fieldsResult` est vrai. */
+  next?: string;
+  /** Si vrai, `next` pointe vers un résultat (DYNAMIC ou cas figé) plutôt qu'un autre nœud. */
+  fieldsResult?: boolean;
 }
 
 export const TREE: Record<string, TreeNode> = {
+  /* ============ ÉTAPE 1 — ANTÉCÉDENTS DE VISA ============ */
   start: {
-    q: "Quel est le motif principal du séjour ?",
-    help: "Question posée telle quelle au client à l'accueil. Le motif déclaré conditionne toute la suite du dossier.",
+    q: "Avez-vous déjà obtenu un visa pour la France ?",
+    help: "Étape 1 — Antécédents de visa.",
     opts: [
-      { l: "Tourisme / visite privée", n: "a0" },
-      { l: "Rejoindre un proche pour vivre en France", n: "b1" },
+      { l: "Oui", n: "q2", set: { visaAnterieur: true } },
+      { l: "Non", n: "q4" },
+    ],
+  },
+  q2: {
+    q: "Quel type de visa avez-vous obtenu ?",
+    opts: [
+      { l: "Court séjour", n: "q3" },
+      { l: "Long séjour", n: "q3" },
+      { l: "Autre", n: "q3" },
+    ],
+  },
+  q3: {
+    q: "Quand avez-vous obtenu votre dernier visa ?",
+    fields: [{ key: "q3_date_dernier_visa", label: "Date d'obtention", type: "date" }],
+    next: "q4",
+  },
+  q4: {
+    q: "Avez-vous déjà eu un refus de visa pour la France ou un autre pays Schengen ?",
+    opts: [
+      { l: "Oui", n: "q5", set: { refusVisa: true } },
+      { l: "Non", n: "motif" },
+    ],
+  },
+  q5: {
+    q: "Précisez le refus.",
+    fields: [
+      { key: "q5_pays", label: "Pays du refus" },
+      { key: "q5_date", label: "Date du refus", type: "date" },
+      { key: "q5_motif", label: "Motif du refus (si connu)" },
+      { key: "q5_type_visa", label: "Type de visa demandé" },
+    ],
+    next: "motif",
+  },
+
+  /* ============ ÉTAPE 2 — MOTIF DU VOYAGE ============ */
+  motif: {
+    q: "Quel est le motif principal du séjour ?",
+    help: "Le motif déclaré conditionne toute la suite du dossier.",
+    opts: [
+      { l: "Tourisme / visite privée", n: "a_duree" },
+      { l: "Visite familiale", n: "b_duree" },
       { l: "Travail", n: "c1" },
+      { l: "Mariage / conjoint", n: "d_duree" },
       { l: "Raisons de santé", n: "dout", r: true },
       { l: "Études", n: "eout", r: true },
     ],
   },
-  a0: {
-    q: "Le demandeur accompagne-t-il ou rejoint-il un membre de sa famille ressortissant d'un pays de l'UE/EEE ou de la Confédération suisse (hors France) ?",
-    help: "Inclut aussi le membre de la famille d'un citoyen britannique bénéficiaire de l'accord de retrait. Ce cas suit le droit européen : liste de pièces plus courte.",
+
+  /* ============ BRANCHE A — TOURISME / VISITE PRIVÉE ============ */
+  a_duree: {
+    q: "Quelle est la durée prévue du séjour ?",
     opts: [
-      { l: "Oui", n: "a0b", set: { base: "famille_ue" } },
-      { l: "Non", n: "a1" },
-    ],
-  },
-  a0b: {
-    q: "Le demandeur est-il à la charge de ce ressortissant UE/EEE/Suisse ?",
-    help: "Enfant de plus de 21 ans, ascendant, ou membre du foyer.",
-    opts: [
-      { l: "Oui", n: "DYNAMIC", set: { dependent: true }, r: true },
-      { l: "Non", n: "DYNAMIC", r: true },
-    ],
-  },
-  a1: {
-    q: "Le demandeur a-t-il de la famille proche en France (parent, conjoint, enfant, frère/sœur) ?",
-    opts: [
-      { l: "Non", n: "q_group", set: { base: "tourisme" } },
-      { l: "Oui", n: "a2" },
-    ],
-  },
-  a2: {
-    q: "Le séjour est-il une simple visite avec retour prévu, ou une installation ?",
-    opts: [
-      { l: "Simple visite, retour prévu", n: "a3" },
-      { l: "Souhaite s'installer durablement", n: "b1" },
-    ],
-  },
-  a3: {
-    q: "Quel est le lien avec la personne qui héberge en France ?",
-    opts: [
+      { l: "≤ 90 jours (court séjour)", n: "a_residence", set: { base: "tourisme" } },
       {
-        l: "Enfant ou parent/beau-parent d'un citoyen français",
-        n: "q_group",
-        set: { base: "visite_enfant_parent" },
+        l: "> 90 jours (long séjour)",
+        n: "DYNAMIC",
+        set: { base: "tourisme", duree: "long" },
+        r: true,
       },
-      {
-        l: "Petit-enfant d'un citoyen français",
-        n: "q_group",
-        set: { base: "visite_generale", grandchildNote: true },
-      },
-      { l: "Autre lien familial ou ami", n: "q_group", set: { base: "visite_generale" } },
     ],
   },
-  q_group: {
-    q: "Qui voyage dans le cadre de ce dossier ?",
+  a_residence: {
+    q: "Résidez-vous actuellement dans un pays autre que votre nationalité ?",
     opts: [
-      { l: "Une personne seule", n: "q_civil" },
-      { l: "Un couple sans enfant", n: "q_civil" },
-      { l: "Une famille avec au moins un mineur", n: "q_civil", set: { minor: true } },
-      { l: "Un groupe ou autre configuration", n: "q_civil" },
+      { l: "Oui", n: "a_residence_fields" },
+      { l: "Non", n: "a_ue" },
     ],
   },
-  q_civil: {
-    q: "Le demandeur est-il marié(e) ou célibataire ?",
+  a_residence_fields: {
+    q: "Titre de séjour.",
+    fields: [
+      { key: "a_residence_numero", label: "Numéro d'autorisation de séjour / document équivalent" },
+      { key: "a_residence_validite", label: "Date de validité du titre de séjour", type: "date" },
+    ],
+    next: "a_ue",
+  },
+  a_ue: {
+    q: "Voyagez-vous avec ou rejoignez-vous un membre de votre famille ressortissant français, de l'UE ou de l'EEE ?",
+    help: "Si oui, des pièces supplémentaires (lien familial, nationalité, preuve d'accompagnement) s'ajoutent à la checklist tourisme — elles ne la remplacent pas.",
     opts: [
-      { l: "Marié(e)", n: "q_conjoint_prof", set: { married: true } },
-      { l: "Célibataire", n: "q_prof" },
+      { l: "Oui", n: "a_ue_fields", set: { ueEeeFamily: true } },
+      { l: "Non", n: "a_hebergement" },
     ],
   },
-  q_conjoint_prof: {
-    q: "Le conjoint (en France ou au Maroc) a-t-il une profession ?",
+  a_ue_fields: {
+    q: "Membre de la famille UE/EEE.",
+    fields: [
+      { key: "a_ue_nom", label: "Nom" },
+      { key: "a_ue_prenom", label: "Prénom" },
+      { key: "a_ue_lien", label: "Lien familial" },
+      { key: "a_ue_numero", label: "Numéro du document de voyage / CIN" },
+      { key: "a_ue_naissance", label: "Date de naissance", type: "date" },
+      { key: "a_ue_nationalite", label: "Nationalité" },
+    ],
+    next: "a_hebergement",
+  },
+  a_hebergement: {
+    q: "Où allez-vous séjourner pendant votre voyage ?",
     opts: [
-      { l: "Oui, il/elle travaille", n: "q_prof" },
-      { l: "Non, sans profession", n: "q_prof", set: { spouseNoJob: true } },
+      { l: "Hôtel / hébergement touristique", n: "a_hotel_fields", set: { hebergement: "hotel" } },
+      { l: "Chez une personne", n: "a_personne_qui", set: { hebergement: "personne" } },
+      { l: "Autre (logement personnel)", n: "a_financement", set: { hebergement: "autre" } },
     ],
   },
-  q_prof: {
-    q: "Quelle est la situation professionnelle du demandeur ?",
+  a_hotel_fields: {
+    q: "Hôtel.",
+    fields: [
+      { key: "a_hotel_nom", label: "Nom de l'hôtel" },
+      { key: "a_hotel_adresse", label: "Adresse" },
+      { key: "a_hotel_cp_ville", label: "Code postal / ville" },
+      { key: "a_hotel_dates", label: "Dates de réservation" },
+    ],
+    next: "a_hotel_confirmee",
+  },
+  a_hotel_confirmee: {
+    q: "Avez-vous une réservation confirmée ?",
     opts: [
-      { l: "Salarié(e) ou fonctionnaire", n: "q_visa_hist", set: { prof: "salarie" } },
-      { l: "Commerçant(e) / profession libérale", n: "q_visa_hist", set: { prof: "commercant" } },
-      {
-        l: "Agriculteur(rice) / exploitant agricole",
-        n: "q_visa_hist",
-        set: { prof: "agriculteur" },
-      },
-      { l: "Retraité(e)", n: "q_visa_hist", set: { prof: "retraite" } },
-      { l: "Étudiant(e)", n: "q_visa_hist", set: { prof: "etudiant" } },
-      { l: "Sans profession / autre", n: "q_visa_hist", set: { prof: "sans" } },
+      { l: "Oui", n: "a_financement" },
+      { l: "Non", n: "a_financement" },
+    ],
+  },
+  a_personne_qui: {
+    q: "Chez qui allez-vous séjourner ?",
+    opts: [
+      { l: "Famille", n: "a_personne_fields" },
+      { l: "Ami(e)", n: "a_personne_fields" },
+      { l: "Connaissance", n: "a_personne_fields" },
+      { l: "Autre", n: "a_personne_fields" },
+    ],
+  },
+  a_personne_fields: {
+    q: "Personne hébergeante.",
+    fields: [
+      { key: "a_personne_nom", label: "Nom" },
+      { key: "a_personne_lien", label: "Quel est votre lien avec cette personne ?" },
+      { key: "a_personne_adresse", label: "Adresse" },
+      { key: "a_personne_coordonnees", label: "Téléphone / e-mail" },
+    ],
+    next: "a_personne_nationalite",
+  },
+  a_personne_nationalite: {
+    q: "Cette personne est-elle de nationalité française ?",
+    opts: [
+      { l: "Oui", n: "a_financement" },
+      { l: "Non", n: "a_personne_fields2" },
+    ],
+  },
+  a_personne_fields2: {
+    q: "Nationalité / statut de la personne hébergeante.",
+    fields: [{ key: "a_personne_nat_statut", label: "Nationalité / statut" }],
+    next: "a_financement",
+  },
+  a_financement: {
+    q: "Qui finance le voyage ?",
+    opts: [
+      { l: "Moi-même", n: "a_profession" },
+      { l: "Une autre personne / garant", n: "a_garant_fields", set: { financePar: "garant" } },
+    ],
+  },
+  a_garant_fields: {
+    q: "Personne qui finance le voyage.",
+    fields: [
+      { key: "a_garant_nom", label: "Nom de la personne" },
+      { key: "a_garant_lien", label: "Quel est votre lien avec cette personne ?" },
+      { key: "a_garant_pays", label: "Dans quel pays réside-t-elle ?" },
+    ],
+    next: "a_garant_frais",
+  },
+  a_garant_frais: {
+    q: "Quels frais prend-elle en charge ?",
+    opts: [
+      { l: "Transport", n: "situation" },
+      { l: "Hébergement", n: "situation" },
+      { l: "Nourriture", n: "situation" },
+      { l: "Tous les frais", n: "situation" },
+      { l: "Autre", n: "situation" },
+    ],
+  },
+  a_profession: {
+    q: "Quelle est votre situation professionnelle ?",
+    opts: [
+      { l: "Salarié(e)", n: "situation", set: { prof: "salarie" } },
+      { l: "Fonctionnaire", n: "situation", set: { prof: "fonctionnaire" } },
+      { l: "Étudiant(e)", n: "situation", set: { prof: "etudiant" } },
+      { l: "Avocat / profession médicale", n: "situation", set: { prof: "avocat_medical" } },
+      { l: "Retraité(e)", n: "situation", set: { prof: "retraite" } },
+      { l: "Agriculteur(rice)", n: "situation", set: { prof: "agriculteur" } },
+      { l: "Sans profession", n: "situation", set: { prof: "sans" } },
+    ],
+  },
+
+  /* ============ Questions finales communes (partagées entre branches) ============ */
+  situation: {
+    q: "Quelle est votre situation familiale ?",
+    help: "Questions finales communes (Q-F3) — déclenche les pièces d'état civil si applicable.",
+    opts: [
+      { l: "Célibataire", n: "q_visa_hist", set: { situationFamiliale: "celibataire" } },
+      { l: "Marié(e)", n: "q_visa_hist", set: { situationFamiliale: "marie" } },
+      { l: "Divorcé(e)", n: "q_visa_hist", set: { situationFamiliale: "divorce" } },
+      { l: "Veuf / veuve", n: "q_visa_hist", set: { situationFamiliale: "veuf" } },
+      { l: "Autre", n: "q_visa_hist", set: { situationFamiliale: "autre" } },
     ],
   },
   q_visa_hist: {
-    q: "A-t-il voyagé avec un visa Schengen durant les 59 derniers mois ?",
+    q: "Avez-vous déjà voyagé avec un visa Schengen durant les 59 derniers mois ?",
+    help: "Questions finales communes (Q-F1).",
     opts: [
       { l: "Oui", n: "DYNAMIC", set: { visaHist: true }, r: true },
       { l: "Non", n: "DYNAMIC", r: true },
     ],
   },
-  b1: {
-    q: "Quel est le lien avec la personne en France ?",
+
+  /* ============ BRANCHE B — VISITE FAMILIALE ============ */
+  b_duree: {
+    q: "Quelle est la durée du séjour ?",
     opts: [
-      { l: "Époux / épouse (marié)", n: "b2" },
-      { l: "Parent ou enfant à charge", n: "t5", r: true },
-      { l: "Autre lien (frère/sœur, oncle...)", n: "t5", r: true },
+      { l: "≤ 90 jours (court séjour)", n: "b_motif" },
+      { l: "> 90 jours (long séjour)", n: "b_long", r: true },
     ],
   },
-  b2: {
-    q: "Le conjoint en France a-t-il la nationalité française ?",
+  b_motif: {
+    q: "Quel est le motif familial précis ?",
     opts: [
-      { l: "Oui", n: "t3", r: true },
-      { l: "Non, c'est un résident étranger", n: "t4", r: true },
+      { l: "Visite familiale (parent, enfant, frère/sœur, autre)", n: "b_qui" },
+      {
+        l: "Visite d'un enfant/parent de nationalité française ou de son conjoint",
+        n: "b_enfant_lien",
+        set: { base: "enfant_parent_francais" },
+      },
+      { l: "Visite privée du conjoint de Français", n: "b_conjoint" },
+      { l: "Famille d'un ressortissant UE/EEE", n: "b_ue_fields1" },
     ],
   },
-  c1: {
-    q: "Quelle est la nature de l'activité prévue en France ?",
+  b_qui: {
+    q: "Qui allez-vous visiter ?",
+    opts: [
+      { l: "Parent", n: "b_famille_fields" },
+      { l: "Enfant", n: "b_famille_fields" },
+      { l: "Frère / sœur", n: "b_famille_fields" },
+      { l: "Conjoint", n: "b_famille_fields" },
+      { l: "Autre membre de famille", n: "b_famille_fields" },
+    ],
+  },
+  b_famille_fields: {
+    q: "Personne visitée.",
+    fields: [
+      { key: "b_famille_nom", label: "Nom" },
+      { key: "b_famille_naissance", label: "Date de naissance", type: "date" },
+      { key: "b_famille_nationalite", label: "Nationalité" },
+      { key: "b_famille_adresse", label: "Adresse" },
+      { key: "b_famille_coordonnees", label: "Téléphone / e-mail" },
+    ],
+    next: "b_hebergement",
+  },
+  b_hebergement: {
+    q: "Allez-vous séjourner chez cette personne ?",
     opts: [
       {
-        l: "Déplacement professionnel court (réunions, salon), pas de contrat local",
-        n: "tc1",
-        r: true,
+        l: "Oui",
+        n: "b_profession",
+        set: { base: "visite_familiale_membre", hebergement: "personne" },
       },
-      { l: "Emploi salarié chez un employeur basé en France", n: "c2" },
-      { l: "Détachement par l'entreprise marocaine actuelle", n: "tc4", r: true },
-      { l: "Travail saisonnier", n: "tc5", r: true },
+      { l: "Non — hôtel ou autre hébergement", n: "b_profession", set: { hebergement: "hotel" } },
     ],
+  },
+  b_profession: {
+    q: "Quelle est votre situation professionnelle ?",
+    help: "Questions finales communes (Q-F2).",
+    opts: [
+      { l: "Salarié(e)", n: "situation", set: { prof: "salarie" } },
+      { l: "Fonctionnaire", n: "situation", set: { prof: "fonctionnaire" } },
+      { l: "Avocat / profession médicale", n: "situation", set: { prof: "avocat_medical" } },
+      { l: "Retraité(e)", n: "situation", set: { prof: "retraite" } },
+      { l: "Agriculteur(rice)", n: "situation", set: { prof: "agriculteur" } },
+      { l: "Sans profession", n: "situation", set: { prof: "sans" } },
+    ],
+  },
+
+  b_enfant_lien: {
+    q: "Quel est votre lien ?",
+    opts: [
+      { l: "Enfant d'un ressortissant français", n: "b_enfant_fields" },
+      { l: "Parent d'un ressortissant français", n: "b_enfant_fields" },
+      { l: "Enfant du conjoint d'un ressortissant français", n: "b_enfant_fields" },
+      { l: "Parent du conjoint d'un ressortissant français", n: "b_enfant_fields" },
+    ],
+  },
+  b_enfant_fields: {
+    q: "Membre de famille français.",
+    fields: [
+      { key: "b_enfant_nom", label: "Nom" },
+      { key: "b_enfant_naissance", label: "Date de naissance", type: "date" },
+      { key: "b_enfant_adresse", label: "Adresse" },
+    ],
+    next: "b_enfant_nationalite",
+  },
+  b_enfant_nationalite: {
+    q: "Cette personne est-elle de nationalité française ?",
+    opts: [
+      { l: "Oui", n: "b_hebergement" },
+      { l: "Non — vérifier la catégorie familiale concernée", n: "b_hebergement" },
+    ],
+  },
+
+  b_conjoint: {
+    q: "Êtes-vous marié(e) à un ressortissant français ?",
+    opts: [
+      { l: "Oui", n: "b_conjoint_fields1" },
+      { l: "Non — retour vers les autres motifs familiaux", n: "b_motif" },
+    ],
+  },
+  b_conjoint_fields1: {
+    q: "Conjoint.",
+    fields: [
+      { key: "b_conjoint_nom", label: "Nom du conjoint" },
+      { key: "b_conjoint_naissance", label: "Date de naissance", type: "date" },
+      { key: "b_conjoint_mariage_date_lieu", label: "Date et lieu du mariage" },
+    ],
+    next: "b_conjoint_maroc",
+  },
+  b_conjoint_maroc: {
+    q: "Le mariage a-t-il été célébré au Maroc ?",
+    opts: [
+      { l: "Oui", n: "b_conjoint_transcrit" },
+      { l: "Non", n: "b_conjoint_pays_fields" },
+    ],
+  },
+  b_conjoint_transcrit: {
+    q: "Le mariage a-t-il été transcrit dans les registres français ?",
+    opts: [
+      { l: "Oui", n: "b_conjoint_reside" },
+      { l: "Non", n: "b_conjoint_reside" },
+      { l: "En cours", n: "b_conjoint_reside" },
+    ],
+  },
+  b_conjoint_pays_fields: {
+    q: "Lieu du mariage.",
+    fields: [{ key: "b_conjoint_pays_mariage", label: "Dans quel pays le mariage a-t-il été célébré ?" }],
+    next: "b_conjoint_reside",
+  },
+  b_conjoint_reside: {
+    q: "Votre conjoint réside-t-il actuellement en France ?",
+    opts: [
+      { l: "Oui", n: "b_conjoint_adresse_fields" },
+      { l: "Non", n: "b_conjoint_pays2_fields" },
+    ],
+  },
+  b_conjoint_adresse_fields: {
+    q: "Résidence du conjoint en France.",
+    fields: [{ key: "b_conjoint_adresse", label: "Adresse" }],
+    next: "b_conjoint_projet",
+  },
+  b_conjoint_pays2_fields: {
+    q: "Résidence du conjoint.",
+    fields: [{ key: "b_conjoint_pays_residence", label: "Pays de résidence" }],
+    next: "b_conjoint_projet",
+  },
+  b_conjoint_projet: {
+    q: "S'agit-il d'une visite temporaire ou d'une installation ?",
+    opts: [
+      { l: "Visite temporaire (retour prévu)", n: "conjoint_court", r: true },
+      { l: "Installation durable en France", n: "t3", r: true },
+    ],
+  },
+
+  b_ue_fields1: {
+    q: "Membre de la famille UE/EEE.",
+    fields: [
+      { key: "b_ue_nationalite", label: "Nationalité (vérifier UE/EEE)" },
+      { key: "b_ue_nom", label: "Nom" },
+      { key: "b_ue_naissance", label: "Date de naissance", type: "date" },
+      { key: "b_ue_lien", label: "Quel est votre lien ?" },
+      { key: "b_ue_numero", label: "Numéro de la pièce d'identité / document de voyage" },
+    ],
+    next: "b_ue_reside",
+  },
+  b_ue_reside: {
+    q: "Réside-t-il en France ?",
+    opts: [
+      { l: "Oui", n: "b_ue_adresse_fields" },
+      { l: "Non", n: "b_ue_pays_fields" },
+    ],
+  },
+  b_ue_adresse_fields: {
+    q: "Résidence en France.",
+    fields: [{ key: "b_ue_adresse", label: "Adresse" }],
+    next: "b_ue_voyage",
+  },
+  b_ue_pays_fields: {
+    q: "Pays de résidence.",
+    fields: [{ key: "b_ue_pays", label: "Pays" }],
+    next: "b_ue_voyage",
+  },
+  b_ue_voyage: {
+    q: "Voyagez-vous avec lui ou le rejoignez-vous ?",
+    opts: [
+      { l: "Avec lui", n: "b_ue_famille", r: true },
+      { l: "Je le rejoins", n: "b_ue_famille", r: true },
+    ],
+  },
+
+  /* ============ BRANCHE C — TRAVAIL ============ */
+  c1: {
+    q: "Quel est votre projet professionnel en France ?",
+    opts: [
+      { l: "Embauche (emploi salarié chez un employeur en France)", n: "c_embauche_fields" },
+      { l: "Détachement par l'entreprise marocaine actuelle", n: "c_detachement_fields" },
+      { l: "Employé par une entreprise étrangère (hors France)", n: "c3_fields" },
+      { l: "Employé par une entreprise française", n: "c4_fields" },
+      { l: "Événement culturel / artistique / scientifique / sportif", n: "c5_fields" },
+      { l: "Mannequin", n: "c6_fields" },
+      { l: "Marin", n: "c7_fields" },
+      { l: "Chercheur", n: "c8_fields" },
+      { l: "Stage salarié", n: "c9_fields" },
+      { l: "Voyage professionnel / déplacement d'affaires", n: "c10_fields" },
+      { l: "Autre", n: "c_autre", r: true },
+    ],
+  },
+  c_embauche_fields: {
+    q: "Emploi en France.",
+    fields: [
+      { key: "c_embauche_employeur", label: "Nom de l'employeur en France" },
+      { key: "c_embauche_poste", label: "Poste" },
+      { key: "c_embauche_ville", label: "Ville" },
+      { key: "c_embauche_debut", label: "Date de début du contrat", type: "date" },
+      { key: "c_embauche_duree", label: "Durée du contrat" },
+      { key: "c_embauche_salaire", label: "Salaire" },
+    ],
+    next: "c2",
   },
   c2: {
     q: "Diplôme d'au moins Bac+3 ET salaire annuel brut prévu ≥ ~39 582 € (seuil 2026) ?",
@@ -502,6 +1181,268 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Oui", n: "tc2", r: true },
       { l: "Non", n: "tc3", r: true },
     ],
+  },
+  c_detachement_fields: {
+    q: "Détachement.",
+    fields: [
+      { key: "c_det_employeur_actuel", label: "Employeur actuel" },
+      { key: "c_det_pays", label: "Pays" },
+      { key: "c_det_anciennete", label: "Depuis combien de temps travaillez-vous avec cette entreprise ?" },
+      { key: "c_det_entreprise_fr", label: "Entreprise française d'accueil" },
+      { key: "c_det_poste", label: "Poste en France" },
+      { key: "c_det_duree", label: "Durée du détachement" },
+    ],
+    next: "tc4",
+    fieldsResult: true,
+  },
+  c3_fields: {
+    q: "Employeur.",
+    fields: [
+      { key: "c3_employeur", label: "Nom / nationalité / adresse de l'employeur" },
+      { key: "c3_poste", label: "Poste" },
+      { key: "c3_lieu", label: "Lieu de travail en France" },
+      { key: "c3_duree", label: "Durée" },
+      { key: "c3_salaire", label: "Salaire" },
+    ],
+    next: "c3",
+    fieldsResult: true,
+  },
+  c4_fields: {
+    q: "Employeur.",
+    fields: [
+      { key: "c4_employeur", label: "Nom / adresse de l'employeur" },
+      { key: "c4_poste", label: "Poste" },
+      { key: "c4_lieu", label: "Lieu" },
+      { key: "c4_duree", label: "Durée" },
+      { key: "c4_salaire", label: "Salaire" },
+    ],
+    next: "c4",
+    fieldsResult: true,
+  },
+  c5_fields: {
+    q: "Événement.",
+    fields: [
+      { key: "c5_evenement", label: "Quel événement ?" },
+      { key: "c5_role", label: "Quel est votre rôle ?" },
+      { key: "c5_organisateur", label: "Organisateur" },
+      { key: "c5_ou_quand", label: "Où et quand ?" },
+    ],
+    next: "c5",
+    fieldsResult: true,
+  },
+  c6_fields: {
+    q: "Mission mannequin.",
+    fields: [
+      { key: "c6_agence", label: "Agence (nom / contact, si applicable)" },
+      { key: "c6_client", label: "Client / employeur en France" },
+      { key: "c6_nature", label: "Nature de la mission" },
+      { key: "c6_duree", label: "Durée" },
+    ],
+    next: "c6",
+    fieldsResult: true,
+  },
+  c7_fields: {
+    q: "Mission en mer.",
+    fields: [
+      { key: "c7_compagnie", label: "Compagnie maritime" },
+      { key: "c7_navire", label: "Navire" },
+      { key: "c7_port", label: "Port français" },
+      { key: "c7_date", label: "Date d'embarquement", type: "date" },
+      { key: "c7_duree", label: "Durée de la mission" },
+    ],
+    next: "c7",
+    fieldsResult: true,
+  },
+  c8_fields: {
+    q: "Recherche.",
+    fields: [
+      { key: "c8_organisme", label: "Organisme de recherche" },
+      { key: "c8_ville", label: "Ville" },
+      { key: "c8_domaine", label: "Domaine de recherche" },
+      { key: "c8_objet", label: "Objet de la recherche" },
+      { key: "c8_duree", label: "Durée" },
+    ],
+    next: "c8",
+    fieldsResult: true,
+  },
+  c9_fields: {
+    q: "Stage.",
+    fields: [
+      { key: "c9_entreprise", label: "Entreprise / organisme" },
+      { key: "c9_domaine", label: "Domaine" },
+      { key: "c9_duree", label: "Durée" },
+      { key: "c9_dates", label: "Dates du stage" },
+    ],
+    next: "c9",
+    fieldsResult: true,
+  },
+  c10_fields: {
+    q: "Déplacement professionnel.",
+    fields: [
+      { key: "c10_entreprise", label: "Entreprise / organisme concerné" },
+      { key: "c10_ville", label: "Ville" },
+      { key: "c10_dates", label: "Dates" },
+    ],
+    next: "tc1",
+    fieldsResult: true,
+  },
+
+  /* ============ BRANCHE D — MARIAGE / CONJOINT ============ */
+  d_duree: {
+    q: "Quelle est la durée prévue du séjour ?",
+    opts: [
+      { l: "≤ 90 jours (court séjour)", n: "d_court" },
+      { l: "> 90 jours (long séjour)", n: "d_long" },
+    ],
+  },
+  d_long: {
+    q: "Quel est votre projet en France ?",
+    opts: [
+      { l: "Installation familiale ou privée", n: "d_install_fields" },
+      { l: "Rejoindre un conjoint français", n: "d_conjoint_fields1" },
+      { l: "Rejoindre un conjoint / membre de famille réfugié", n: "d_refugie_fields" },
+      {
+        l: "Rejoindre un conjoint / membre de famille — protection subsidiaire",
+        n: "d_subsidiaire_fields",
+      },
+      { l: "Rejoindre un conjoint / membre de famille apatride", n: "d_apatride_fields" },
+    ],
+  },
+  d_install_fields: {
+    q: "Personne rejointe.",
+    fields: [
+      { key: "d_install_qui", label: "Qui souhaitez-vous rejoindre ?" },
+      { key: "d_install_lien", label: "Quel est votre lien ?" },
+      { key: "d_install_nationalite", label: "Nationalité" },
+      { key: "d_install_statut", label: "Situation en France" },
+      { key: "d_install_adresse", label: "Adresse" },
+      { key: "d_install_duree", label: "Depuis combien de temps réside-t-il/elle en France ?" },
+    ],
+    next: "t4",
+    fieldsResult: true,
+  },
+  d_conjoint_fields1: {
+    q: "Conjoint.",
+    fields: [
+      { key: "d_conjoint_nom", label: "Nom du conjoint" },
+      { key: "d_conjoint_naissance", label: "Date de naissance", type: "date" },
+      { key: "d_conjoint_mariage_date_lieu", label: "Date et lieu du mariage" },
+    ],
+    next: "d_conjoint_maroc",
+  },
+  d_conjoint_maroc: {
+    q: "Le mariage a-t-il été célébré au Maroc ?",
+    opts: [
+      { l: "Oui", n: "d_conjoint_transcrit" },
+      { l: "Non", n: "d_conjoint_pays_fields" },
+    ],
+  },
+  d_conjoint_transcrit: {
+    q: "Le mariage est-il transcrit dans les registres français ?",
+    opts: [
+      { l: "Oui", n: "d_conjoint_reside" },
+      { l: "Non", n: "d_conjoint_reside" },
+      { l: "En cours", n: "d_conjoint_reside" },
+    ],
+  },
+  d_conjoint_pays_fields: {
+    q: "Lieu du mariage.",
+    fields: [{ key: "d_conjoint_pays_mariage", label: "Dans quel pays le mariage a-t-il été célébré ?" }],
+    next: "d_conjoint_reside",
+  },
+  d_conjoint_reside: {
+    q: "Où réside actuellement votre conjoint ?",
+    opts: [
+      { l: "France", n: "d_conjoint_adresse_fields" },
+      { l: "Autre pays", n: "d_conjoint_pays2_fields" },
+    ],
+  },
+  d_conjoint_adresse_fields: {
+    q: "Résidence du conjoint en France.",
+    fields: [{ key: "d_conjoint_adresse", label: "Adresse" }],
+    next: "d_conjoint_ensemble",
+  },
+  d_conjoint_pays2_fields: {
+    q: "Résidence du conjoint.",
+    fields: [{ key: "d_conjoint_pays_residence", label: "Pays" }],
+    next: "d_conjoint_ensemble",
+  },
+  d_conjoint_ensemble: {
+    q: "Avez-vous déjà vécu ensemble ?",
+    opts: [
+      { l: "Oui", n: "d_conjoint_vecu_fields" },
+      { l: "Non", n: "d_conjoint_enfants" },
+    ],
+  },
+  d_conjoint_vecu_fields: {
+    q: "Vie commune.",
+    fields: [{ key: "d_conjoint_vecu_lieu_periode", label: "Lieu et période" }],
+    next: "d_conjoint_enfants",
+  },
+  d_conjoint_enfants: {
+    q: "Avez-vous des enfants ensemble ?",
+    opts: [
+      { l: "Oui — informations enfants", n: "t3", r: true },
+      { l: "Non", n: "t3", r: true },
+    ],
+  },
+  d_refugie_fields: {
+    q: "Personne rejointe (réfugié).",
+    fields: [
+      { key: "d_refugie_nom", label: "Nom de la personne" },
+      { key: "d_refugie_naissance", label: "Date de naissance", type: "date" },
+      { key: "d_refugie_lien", label: "Quel est votre lien ?" },
+      { key: "d_refugie_document", label: "Numéro de résidence / document" },
+      { key: "d_refugie_adresse", label: "Adresse" },
+    ],
+    next: "d_refugie",
+    fieldsResult: true,
+  },
+  d_subsidiaire_fields: {
+    q: "Personne rejointe (protection subsidiaire).",
+    fields: [
+      { key: "d_subsidiaire_nom", label: "Nom de la personne" },
+      { key: "d_subsidiaire_lien", label: "Quel est votre lien ?" },
+      { key: "d_subsidiaire_document", label: "Numéro de résidence / document" },
+      { key: "d_subsidiaire_adresse", label: "Adresse" },
+    ],
+    next: "d_subsidiaire",
+    fieldsResult: true,
+  },
+  d_apatride_fields: {
+    q: "Personne rejointe (apatride).",
+    fields: [
+      { key: "d_apatride_nom", label: "Nom de la personne" },
+      { key: "d_apatride_lien", label: "Quel est votre lien ?" },
+      { key: "d_apatride_document", label: "Numéro de résidence / document" },
+      { key: "d_apatride_adresse", label: "Adresse" },
+    ],
+    next: "d_apatride",
+    fieldsResult: true,
+  },
+  d_court: {
+    q: "Êtes-vous marié(e) à un ressortissant français ?",
+    help: "Le court séjour « mariage/conjoint » rejoint la même checklist que la visite familiale lorsque le lien n'est pas un conjoint français.",
+    opts: [
+      { l: "Oui", n: "d_court_conjoint_fields" },
+      {
+        l: "Non — visite familiale / visite privée",
+        n: "b_qui",
+        set: { base: "visite_familiale_membre" },
+      },
+    ],
+  },
+  d_court_conjoint_fields: {
+    q: "Conjoint.",
+    fields: [
+      { key: "d_court_nom", label: "Nom du conjoint" },
+      { key: "d_court_nationalite", label: "Nationalité" },
+      { key: "d_court_lien", label: "Quel est votre lien ?" },
+      { key: "d_court_residence", label: "Résidence du conjoint" },
+      { key: "d_court_dates", label: "Dates du séjour" },
+    ],
+    next: "conjoint_court",
+    fieldsResult: true,
   },
 };
 

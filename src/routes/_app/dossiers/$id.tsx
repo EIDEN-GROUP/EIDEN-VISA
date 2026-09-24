@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDossier, useCurrentUser } from "@/lib/store";
+import { joursEntre, moisEntre } from "@/lib/date-calc";
 import {
   alertes,
   completion,
@@ -137,6 +138,7 @@ function DossierDetail() {
 
   async function saveEdit() {
     await updateClient(d!.id, {
+      ...d!.client,
       nom: editNom.trim(),
       telephone: editTelephone.trim(),
       ville: editVille.trim(),
@@ -209,12 +211,8 @@ function DossierDetail() {
               Séjour du {new Date(d.client.voyageDebut).toLocaleDateString("fr-FR")} au{" "}
               {new Date(d.client.voyageFin).toLocaleDateString("fr-FR")}
               {" · "}
-              {Math.round(
-                (new Date(d.client.voyageFin).getTime() -
-                  new Date(d.client.voyageDebut).getTime()) /
-                  86_400_000,
-              ) + 1}{" "}
-              jours
+              {moisEntre(d.client.voyageDebut, d.client.voyageFin)} mois (
+              {joursEntre(d.client.voyageDebut, d.client.voyageFin)} jours)
             </div>
           )}
           <div>
@@ -426,7 +424,7 @@ function DossierDetail() {
                 </div>
                 <ul className="space-y-1">
                   {d.notes.map((n, i) => (
-                    <li key={i} className="text-xs text-foreground/80">
+                    <li key={i} className="whitespace-pre-line text-xs text-foreground/80">
                       {n}
                     </li>
                   ))}

@@ -17,6 +17,7 @@ import {
   type Modalite,
 } from "@/lib/dossier-model";
 import { useDossiers, useCurrentUser, ROLE_LABEL } from "@/lib/store";
+import { joursEntre, moisEntre } from "@/lib/date-calc";
 import { NiveauBadge } from "@/components/dossier/badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,11 +41,43 @@ export const Route = createFileRoute("/_app/qualification")({
 
 type Step = { nodeKey: string; label: string };
 
-const FAMILY_BASES: Profile["base"][] = ["visite_generale", "visite_enfant_parent", "famille_ue"];
-const FAMILY_CASE_KEYS = ["t3", "t4", "t5"];
+const FAMILY_BASES: Profile["base"][] = [
+  "visite_generale",
+  "visite_enfant_parent",
+  "famille_ue",
+  "visite_familiale_membre",
+  "enfant_parent_francais",
+];
+const FAMILY_CASE_KEYS = [
+  "t3",
+  "t4",
+  "t5",
+  "b_famille",
+  "b_enfant_parent",
+  "b_ue_famille",
+  "b_long",
+  "conjoint_court",
+  "d_refugie",
+  "d_subsidiaire",
+  "d_apatride",
+];
 
 function familyRelated(caseKey: string, profile: Profile) {
   return FAMILY_CASE_KEYS.includes(caseKey) || FAMILY_BASES.includes(profile.base);
+}
+
+// Étiquette de chaque champ libre (Q5, Q16-21, Q38-41...), pour reformer une note lisible
+// à partir de `profile.details` (key -> label), sans dupliquer le texte dans le TREE.
+const FIELD_LABELS: Record<string, string> = Object.fromEntries(
+  Object.values(TREE).flatMap((n) => n.fields?.map((f) => [f.key, f.label] as const) ?? []),
+);
+
+function detailsNote(details: Profile["details"]): string | null {
+  if (!details || Object.keys(details).length === 0) return null;
+  const lines = Object.entries(details)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${FIELD_LABELS[k] ?? k} : ${v}`);
+  return lines.length ? `Informations complémentaires saisies :\n${lines.join("\n")}` : null;
 }
 
 function Qualification() {
@@ -65,32 +98,54 @@ function Qualification() {
   const [centre, setCentre] = useState<Centre>(CENTRES[0]);
   const [modalite, setModalite] = useState<Modalite>("comptant");
 
-  // Nombre de jours du séjour envisagé, bornes incluses (ex. 10→12 = 3 jours). `null` tant
-  // que les deux dates ne sont pas renseignées ou que la fin précède le début.
-  const dureeSejour =
-    voyageDebut && voyageFin
-      ? Math.round(
-          (new Date(voyageFin).getTime() - new Date(voyageDebut).getTime()) / 86_400_000,
-        ) + 1
-      : null;
+  // Nombre de jours du séjour envisagé — jour de fin exclu (méthode calculconversion.com
+  // validée par l'équipe : 21→25 mars = 4 jours, pas 5). `null` tant que les deux dates ne
+  // sont pas renseignées.
+  const dureeSejour = voyageDebut && voyageFin ? joursEntre(voyageDebut, voyageFin) : null;
 
   const node = TREE[nodeKey]!;
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
 
-  function choose(opt: (typeof node.opts)[number]) {
+  function goToResult(key: string, nextProfile: Profile) {
+    const caseKey = key === "DYNAMIC" ? "DYNAMIC" : key;
+    const c =
+      caseKey === "DYNAMIC"
+        ? buildCourtSejour(nextProfile)
+        : (getFixedCase(caseKey) ?? buildCourtSejour(nextProfile));
+    setResult({ caseKey, c });
+  }
+
+  function choose(opt: NonNullable<(typeof node)["opts"]>[number]) {
     const nextProfile = { ...profile, ...(opt.set ?? {}) };
     setProfile(nextProfile);
     setHistory((h) => [...h, { nodeKey, label: opt.l }]);
 
     if (opt.r) {
-      const caseKey = opt.n === "DYNAMIC" ? "DYNAMIC" : opt.n;
-      const c =
-        caseKey === "DYNAMIC"
-          ? buildCourtSejour(nextProfile)
-          : (getFixedCase(caseKey) ?? buildCourtSejour(nextProfile));
-      setResult({ caseKey, c });
+      goToResult(opt.n, nextProfile);
       return;
     }
     setNodeKey(opt.n);
+  }
+
+  function submitFields() {
+    if (!node.fields || !node.next) return;
+    const nextProfile: Profile = {
+      ...profile,
+      details: { ...profile.details, ...fieldValues },
+    };
+    setProfile(nextProfile);
+    const label = node.fields
+      .map((f) => fieldValues[f.key])
+      .filter(Boolean)
+      .join(" · ");
+    setHistory((h) => [...h, { nodeKey, label: label || "Renseigné" }]);
+    setFieldValues({});
+
+    if (node.fieldsResult) {
+      goToResult(node.next, nextProfile);
+      return;
+    }
+    setNodeKey(node.next);
   }
 
   function reset() {
@@ -98,6 +153,7 @@ function Qualification() {
     setProfile({});
     setHistory([]);
     setResult(null);
+    setFieldValues({});
     setCentre(CENTRES[0]);
     setModalite("comptant");
   }
@@ -107,6 +163,7 @@ function Qualification() {
     const prev = history[history.length - 1]!;
     setHistory((h) => h.slice(0, -1));
     setNodeKey(prev.nodeKey);
+    setFieldValues({});
     setResult(null);
   }
 
@@ -150,7 +207,7 @@ function Qualification() {
       // Échéancier dérivé du pack (base par défaut) et de la modalité choisie à l'accueil :
       // comptant = une ligne de solde, acompte = 50 % + solde 50 %.
       paiements: planPaiement("base", modalite),
-      notes: result.c.notes,
+      notes: [...result.c.notes, ...(detailsNote(profile.details) ? [detailsNote(profile.details)!] : [])],
       decision: "en_attente",
       decisionDate: null,
     };
@@ -197,15 +254,40 @@ function Qualification() {
             {node.help && <p className="pt-1 text-sm text-muted-foreground">{node.help}</p>}
           </CardHeader>
           <CardContent className="space-y-2">
-            {node.opts.map((opt, i) => (
-              <button
-                key={i}
-                onClick={() => choose(opt)}
-                className="block w-full rounded-xl border border-border px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent"
-              >
-                {opt.l}
-              </button>
-            ))}
+            {node.fields ? (
+              <>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {node.fields.map((f) => (
+                    <div key={f.key} className={node.fields!.length === 1 ? "sm:col-span-2" : ""}>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {f.label}
+                      </label>
+                      <Input
+                        type={f.type === "date" ? "date" : "text"}
+                        placeholder={f.placeholder}
+                        value={fieldValues[f.key] ?? ""}
+                        onChange={(e) =>
+                          setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={submitFields} className="mt-2 w-full">
+                  Continuer
+                </Button>
+              </>
+            ) : (
+              node.opts!.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => choose(opt)}
+                  className="block w-full rounded-xl border border-border px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent"
+                >
+                  {opt.l}
+                </button>
+              ))
+            )}
             {history.length > 0 && (
               <Button variant="ghost" size="sm" onClick={retour} className="mt-2">
                 <ArrowLeft className="h-3.5 w-3.5" /> Question précédente
@@ -381,8 +463,11 @@ function Qualification() {
                   <div className="col-span-2 -mt-1">
                     {dureeSejour !== null && dureeSejour > 0 ? (
                       <p className="text-xs text-muted-foreground">
-                        Séjour envisagé : <span className="font-medium text-foreground">{dureeSejour}</span>{" "}
-                        jour{dureeSejour > 1 ? "s" : ""}.
+                        Séjour envisagé :{" "}
+                        <span className="font-medium text-foreground">
+                          {moisEntre(voyageDebut, voyageFin)} mois
+                        </span>{" "}
+                        ({dureeSejour} jour{dureeSejour > 1 ? "s" : ""}).
                       </p>
                     ) : (
                       <p className="text-xs text-[var(--stop)]">

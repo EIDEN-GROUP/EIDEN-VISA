@@ -314,7 +314,16 @@ const dossierInput = z.object({
   ouvertLe: z.string(),
   caseKey: z.string(),
   profile: z.object({
-    base: z.enum(["tourisme", "visite_generale", "visite_enfant_parent", "famille_ue"]).optional(),
+    base: z
+      .enum([
+        "tourisme",
+        "visite_generale",
+        "visite_enfant_parent",
+        "famille_ue",
+        "visite_familiale_membre",
+        "enfant_parent_francais",
+      ])
+      .optional(),
     dependent: z.boolean().optional(),
     minor: z.boolean().optional(),
     married: z.boolean().optional(),
@@ -322,8 +331,25 @@ const dossierInput = z.object({
     visaHist: z.boolean().optional(),
     grandchildNote: z.boolean().optional(),
     prof: z
-      .enum(["salarie", "commercant", "agriculteur", "retraite", "etudiant", "sans"])
+      .enum([
+        "salarie",
+        "fonctionnaire",
+        "commercant",
+        "avocat_medical",
+        "agriculteur",
+        "retraite",
+        "etudiant",
+        "sans",
+      ])
       .optional(),
+    duree: z.enum(["court", "long"]).optional(),
+    hebergement: z.enum(["hotel", "personne", "autre"]).optional(),
+    financePar: z.enum(["soi_meme", "garant"]).optional(),
+    situationFamiliale: z.enum(["celibataire", "marie", "divorce", "veuf", "autre"]).optional(),
+    visaAnterieur: z.boolean().optional(),
+    refusVisa: z.boolean().optional(),
+    ueEeeFamily: z.boolean().optional(),
+    details: z.record(z.string()).optional(),
   }),
   titre: z.string(),
   categorie: z.string(),

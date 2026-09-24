@@ -1,0 +1,1204 @@
+<title>Boussole Visa</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --paper:#faf7f1;
+    --ink:#1e2233;
+    --ink-soft:#5b5e6d;
+    --line:#e4dfd3;
+    --line-soft:#ede9de;
+    --card:#ffffff;
+    --accent:#b3552a;
+    --accent-soft:#f4e4d8;
+    --a:#a3781f;
+    --a-soft:#f4ecd8;
+    --b:#2b7a68;
+    --b-soft:#dcefe9;
+    --c:#3f4d8c;
+    --c-soft:#e2e5f5;
+    --d:#9c3f66;
+    --d-soft:#f5e0e9;
+    --ok:#2b7a4e;
+    --warn:#a3781f;
+    --shadow: 0 1px 2px rgba(30,34,51,.06), 0 8px 24px -12px rgba(30,34,51,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14151c;
+      --ink:#ece7da;
+      --ink-soft:#a7a49a;
+      --line:#2b2c36;
+      --line-soft:#22232c;
+      --card:#1b1c25;
+      --accent:#e08a57;
+      --accent-soft:#3a2c22;
+      --a:#d8b458;
+      --a-soft:#332c1a;
+      --b:#5cbfa8;
+      --b-soft:#1a3129;
+      --c:#8891d6;
+      --c-soft:#252a49;
+      --d:#dd88ab;
+      --d-soft:#3a2430;
+      --ok:#5fbf85;
+      --warn:#d8b458;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#14151c;
+    --ink:#ece7da;
+    --ink-soft:#a7a49a;
+    --line:#2b2c36;
+    --line-soft:#22232c;
+    --card:#1b1c25;
+    --accent:#e08a57;
+    --accent-soft:#3a2c22;
+    --a:#d8b458;
+    --a-soft:#332c1a;
+    --b:#5cbfa8;
+    --b-soft:#1a3129;
+    --c:#8891d6;
+    --c-soft:#252a49;
+    --d:#dd88ab;
+    --d-soft:#3a2430;
+    --ok:#5fbf85;
+    --warn:#d8b458;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',ui-sans-serif,system-ui,sans-serif;
+    margin:0;
+    padding:0 20px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Spectral',Georgia,serif;
+    text-wrap:balance;
+    font-weight:600;
+    margin:0;
+  }
+  .layout{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:220px minmax(0,1fr);
+    gap:40px;
+    padding-block:36px 80px;
+  }
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.toc{position:static !important;}
+  }
+
+  /* ---- header ---- */
+  .masthead{
+    grid-column:1/-1;
+    padding-bottom:28px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:4px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',ui-monospace,monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:10px;
+  }
+  .masthead h1{font-size:clamp(28px,4vw,40px); line-height:1.08;}
+  .masthead p{
+    margin:12px 0 0;
+    max-width:64ch;
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1.6;
+  }
+
+  /* ---- toc ---- */
+  nav.toc{
+    position:sticky;
+    top:24px;
+    align-self:start;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    font-size:13px;
+  }
+  nav.toc .toc-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  nav.toc a{
+    color:var(--ink-soft);
+    text-decoration:none;
+    padding:7px 10px;
+    border-radius:7px;
+    border-left:2px solid transparent;
+  }
+  nav.toc a:hover{background:var(--line-soft); color:var(--ink);}
+  nav.toc a.branch-a{border-left-color:var(--a);}
+  nav.toc a.branch-b{border-left-color:var(--b);}
+  nav.toc a.branch-c{border-left-color:var(--c);}
+  nav.toc a.branch-d{border-left-color:var(--d);}
+
+  main{min-width:0;}
+
+  /* ---- overview diagram ---- */
+  figure.overview{
+    margin:0 0 40px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 20px 14px;
+    box-shadow:var(--shadow);
+  }
+  figure.overview svg{width:100%; height:auto; display:block;}
+  figure.overview figcaption{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+  .diagram-text{font-family:'Inter',sans-serif; fill:currentColor;}
+
+  /* ---- section blocks ---- */
+  section.etape{
+    margin-bottom:46px;
+    scroll-margin-top:20px;
+  }
+  section.etape > .etape-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .etape-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    color:var(--card);
+    background:var(--ink);
+    padding:3px 8px;
+    border-radius:5px;
+  }
+  section.etape h2{font-size:21px;}
+  section.etape > p.lede{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    margin:6px 0 18px;
+    max-width:70ch;
+  }
+
+  /* ---- branch accordions ---- */
+  details.branch{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    margin-bottom:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  details.branch[open] > summary{border-bottom:1px solid var(--line);}
+  details.branch > summary{
+    list-style:none;
+    cursor:pointer;
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-family:'Spectral',serif;
+    font-size:17px;
+    font-weight:600;
+  }
+  details.branch > summary::-webkit-details-marker{display:none;}
+  details.branch > summary::before{
+    content:"›";
+    display:inline-flex;
+    transform:rotate(0deg);
+    transition:transform .15s ease;
+    color:var(--ink-soft);
+    font-family:'Inter',sans-serif;
+    font-size:18px;
+  }
+  details.branch[open] > summary::before{transform:rotate(90deg);}
+  .branch-chip{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    padding:2px 7px;
+    border-radius:5px;
+    font-weight:700;
+  }
+  .chip-a{background:var(--a-soft); color:var(--a);}
+  .chip-b{background:var(--b-soft); color:var(--b);}
+  .chip-c{background:var(--c-soft); color:var(--c);}
+  .chip-d{background:var(--d-soft); color:var(--d);}
+  .branch-sub{
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-left:auto;
+  }
+  .branch-body{padding:18px 20px 22px;}
+  .subflow{
+    margin:18px 0 4px;
+    padding:14px 16px 6px;
+    border:1px dashed var(--line);
+    border-radius:10px;
+  }
+  .subflow > .subflow-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+    display:block;
+  }
+
+  /* ---- question card ---- */
+  .qnode{
+    display:grid;
+    grid-template-columns:56px minmax(0,1fr);
+    gap:12px;
+    padding:11px 0;
+    border-top:1px solid var(--line-soft);
+  }
+  .qnode:first-of-type{border-top:none;}
+  .qid{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    padding-top:2px;
+  }
+  .qtext{
+    font-size:14.5px;
+    line-height:1.5;
+  }
+  .qhelp{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:3px;
+    line-height:1.5;
+  }
+  .opts{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+  }
+  .opt{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:12px;
+    background:var(--line-soft);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:3px 10px 3px 10px;
+    color:var(--ink);
+  }
+  .opt .to{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--accent);
+  }
+  .to-inline{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--accent);
+    margin-left:6px;
+  }
+  .fields{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+  }
+  .field{
+    font-size:12px;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:2px 8px;
+  }
+  .qnote{
+    font-size:12px;
+    color:var(--warn);
+    margin-top:6px;
+  }
+  .qnote.end{color:var(--ok); font-family:'JetBrains Mono',monospace; letter-spacing:.04em;}
+
+  /* ---- final rules callout ---- */
+  .callout{
+    background:var(--accent-soft);
+    border:1px solid var(--accent);
+    border-radius:14px;
+    padding:20px 22px;
+    margin-top:8px;
+  }
+  .callout h3{font-size:16px; margin-bottom:10px; color:var(--ink);}
+  .callout ol, .callout ul{margin:0; padding-left:20px; font-size:13.5px; line-height:1.7;}
+  .callout p.result{
+    margin:14px 0 0;
+    padding-top:14px;
+    border-top:1px solid var(--accent);
+    font-size:13.5px;
+    font-style:italic;
+  }
+
+  .trace{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    margin:10px 0 18px;
+  }
+  .trace .step{
+    display:flex; align-items:center; gap:10px;
+    padding:5px 0;
+  }
+  .trace .step .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;}
+  .trace .step .arrow-down{color:var(--ink-soft);}
+  .trace-title{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; margin-bottom:8px;}
+
+  /* ---- document checklist cards ---- */
+  .doc-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+    gap:12px;
+  }
+  .doc-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    scroll-margin-top:20px;
+  }
+  .doc-card h4{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    margin:0 0 8px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .doc-card ul{
+    margin:0;
+    padding-left:18px;
+    font-size:12.5px;
+    line-height:1.65;
+    color:var(--ink);
+  }
+  .doc-card ul li::marker{color:var(--ink-soft);}
+  .doc-card .cond{color:var(--ink-soft); font-style:italic;}
+  .doc-motif{
+    margin:34px 0 14px;
+    padding-bottom:8px;
+    border-bottom:2px solid var(--line);
+  }
+  .doc-motif h3{font-size:19px;}
+  .doc-motif p{font-size:13px; color:var(--ink-soft); margin:6px 0 0;}
+
+  .doclink{
+    margin-top:14px;
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    background:var(--b-soft);
+    border:1px solid var(--b);
+    border-radius:9px;
+    padding:9px 12px;
+    font-size:12.5px;
+    color:var(--ink);
+  }
+  .doclink.gap{background:var(--warn) 0; background:var(--d-soft); border-color:var(--d);}
+  .doclink a{color:inherit; font-weight:600; text-decoration:underline;}
+  .doclink .icon{flex:none; font-size:14px; line-height:1.4;}
+
+  footer.credit{
+    grid-column:1/-1;
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+</style>
+
+<div class="layout">
+  <header class="masthead">
+    <div class="eyebrow">Eiden Visa · Document de travail</div>
+    <h1>Boussole — arbre décisionnel du questionnaire</h1>
+    <p>Vue de compréhension de la nouvelle structure de qualification transmise (questions, branches, checklist documentaire conditionnelle). Rien n'est encore implémenté — ce document sert à valider l'arbre avant construction. Chaque nœud affiche son identifiant, la question posée, et où mène chaque réponse.</p>
+  </header>
+
+  <nav class="toc">
+    <span class="toc-label">Sommaire</span>
+    <a href="#etape1">Étape 1 — Antécédents</a>
+    <a href="#etape2">Étape 2 — Motif</a>
+    <a href="#branche-a" class="branch-a">Branche A — Tourisme</a>
+    <a href="#branche-b" class="branch-b">Branche B — Visite familiale</a>
+    <a href="#branche-c" class="branch-c">Branche C — Travail</a>
+    <a href="#branche-d" class="branch-d">Branche D — Mariage / conjoint</a>
+    <a href="#etape-finale">Étape finale — Communes</a>
+    <a href="#pieces">Pièces — réf. docx</a>
+    <a href="#logique">Logique du système</a>
+  </nav>
+
+  <main>
+
+    <!-- OVERVIEW DIAGRAM -->
+    <figure class="overview">
+      <svg viewBox="0 0 1000 300" role="img" aria-label="Vue d'ensemble: étape 1 antécédents de visa, puis étape 2 motif du voyage se divise en quatre branches (tourisme, visite familiale, travail, mariage), chaque branche se sépare en court séjour ou long séjour, puis toutes convergent vers l'étape finale des questions communes.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g class="diagram-text" font-size="12.5">
+          <!-- step 1 -->
+          <rect x="20" y="115" width="150" height="46" rx="9" fill="none" stroke="currentColor" opacity="0.5"/>
+          <text x="95" y="134" text-anchor="middle" font-weight="600">Étape 1</text>
+          <text x="95" y="150" text-anchor="middle" font-size="11" opacity="0.7">Antécédents de visa</text>
+
+          <line x1="170" y1="138" x2="212" y2="138" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+
+          <!-- step 2 -->
+          <rect x="215" y="115" width="140" height="46" rx="9" fill="none" stroke="currentColor" opacity="0.5"/>
+          <text x="285" y="134" text-anchor="middle" font-weight="600">Étape 2</text>
+          <text x="285" y="150" text-anchor="middle" font-size="11" opacity="0.7">Motif du voyage</text>
+
+          <line x1="355" y1="138" x2="392" y2="138" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+
+          <!-- 4 branches -->
+          <g>
+            <rect x="395" y="20" width="150" height="44" rx="9" fill="var(--a-soft)" stroke="var(--a)"/>
+            <text x="470" y="38" text-anchor="middle" font-weight="700" fill="var(--a)">Branche A</text>
+            <text x="470" y="53" text-anchor="middle" font-size="10.5" fill="var(--a)">Tourisme / visite privée</text>
+          </g>
+          <g>
+            <rect x="395" y="92" width="150" height="44" rx="9" fill="var(--b-soft)" stroke="var(--b)"/>
+            <text x="470" y="110" text-anchor="middle" font-weight="700" fill="var(--b)">Branche B</text>
+            <text x="470" y="125" text-anchor="middle" font-size="10.5" fill="var(--b)">Visite familiale</text>
+          </g>
+          <g>
+            <rect x="395" y="164" width="150" height="44" rx="9" fill="var(--c-soft)" stroke="var(--c)"/>
+            <text x="470" y="182" text-anchor="middle" font-weight="700" fill="var(--c)">Branche C</text>
+            <text x="470" y="197" text-anchor="middle" font-size="10.5" fill="var(--c)">Travail</text>
+          </g>
+          <g>
+            <rect x="395" y="236" width="150" height="44" rx="9" fill="var(--d-soft)" stroke="var(--d)"/>
+            <text x="470" y="254" text-anchor="middle" font-weight="700" fill="var(--d)">Branche D</text>
+            <text x="470" y="269" text-anchor="middle" font-size="10.5" fill="var(--d)">Mariage / conjoint</text>
+          </g>
+
+          <line x1="285" y1="161" x2="285" y2="258" stroke="currentColor" opacity="0.3"/>
+          <line x1="285" y1="42"  x2="393" y2="42"  stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+          <line x1="285" y1="114" x2="393" y2="114" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+          <line x1="285" y1="186" x2="393" y2="186" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+          <line x1="285" y1="258" x2="393" y2="258" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+
+          <!-- court/long split hint -->
+          <text x="618" y="140" text-anchor="middle" font-size="10.5" opacity="0.65">chaque branche se sépare en</text>
+          <text x="618" y="154" text-anchor="middle" font-size="10.5" opacity="0.65">≤ 90 jours (court séjour)</text>
+          <text x="618" y="168" text-anchor="middle" font-size="10.5" opacity="0.65">&gt; 90 jours (long séjour)</text>
+
+          <line x1="545" y1="42" x2="545" y2="270" stroke="currentColor" opacity="0.25"/>
+          <line x1="545" y1="150" x2="700" y2="150" stroke="currentColor" opacity="0.5" marker-end="url(#arrow)"/>
+
+          <!-- final step -->
+          <rect x="705" y="115" width="170" height="70" rx="9" fill="var(--ink)" opacity="0.06"/>
+          <rect x="705" y="115" width="170" height="70" rx="9" fill="none" stroke="currentColor" opacity="0.6"/>
+          <text x="790" y="140" text-anchor="middle" font-weight="600">Étape finale</text>
+          <text x="790" y="156" text-anchor="middle" font-size="10.5" opacity="0.7">Questions communes</text>
+          <text x="790" y="172" text-anchor="middle" font-size="10.5" opacity="0.7">→ checklist personnalisée</text>
+
+          <line x1="875" y1="150" x2="912" y2="150" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+          <text x="955" y="145" text-anchor="middle" font-size="10.5" font-weight="600">Résultat</text>
+          <text x="955" y="160" text-anchor="middle" font-size="10" opacity="0.7">documents</text>
+          <text x="955" y="172" text-anchor="middle" font-size="10" opacity="0.7">+ vérifs</text>
+        </g>
+      </svg>
+      <figcaption>Le moteur n'affiche jamais toutes les questions en même temps : une réponse ouvre la question suivante, en masque d'autres, ou clôt la branche — voir « Logique du système » en bas de page.</figcaption>
+    </figure>
+
+    <!-- ETAPE 1 -->
+    <section class="etape" id="etape1">
+      <div class="etape-head">
+        <span class="etape-tag">ÉTAPE 1</span>
+        <h2>Antécédents de visa</h2>
+      </div>
+      <div class="branch-body" style="background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow);" id="q-etape1"></div>
+    </section>
+
+    <!-- ETAPE 2 -->
+    <section class="etape" id="etape2">
+      <div class="etape-head">
+        <span class="etape-tag">ÉTAPE 2</span>
+        <h2>Motif du voyage</h2>
+      </div>
+      <div class="branch-body" style="background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow);" id="q-etape2"></div>
+    </section>
+
+    <!-- BRANCHE A -->
+    <section class="etape" id="branche-a">
+      <div class="etape-head">
+        <span class="branch-chip chip-a">BRANCHE A</span>
+        <h2>Tourisme / visite privée</h2>
+      </div>
+      <details class="branch" open>
+        <summary><span class="branch-chip chip-a">A1</span> Durée du séjour <span class="branch-sub">Q7</span></summary>
+        <div class="branch-body" id="q-a-duree"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-a">A</span> Court séjour ≤ 90 jours <span class="branch-sub">Q8 → Q41</span></summary>
+        <div class="branch-body" id="q-a-court"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-a">A-LONG</span> Long séjour &gt; 90 jours <span class="branch-sub">Q-L1 → Q-L4</span></summary>
+        <div class="branch-body" id="q-a-long"></div>
+      </details>
+    </section>
+
+    <!-- BRANCHE B -->
+    <section class="etape" id="branche-b">
+      <div class="etape-head">
+        <span class="branch-chip chip-b">BRANCHE B</span>
+        <h2>Visite familiale</h2>
+      </div>
+      <details class="branch" open>
+        <summary><span class="branch-chip chip-b">B1</span> Durée du séjour <span class="branch-sub">Q7B</span></summary>
+        <div class="branch-body" id="q-b-duree"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-b">B</span> Court séjour — motif précis <span class="branch-sub">Q8B</span></summary>
+        <div class="branch-body" id="q-b-court"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-b">B-FAMILLE</span> Visite familiale <span class="branch-sub">Q9B → Q16B</span></summary>
+        <div class="branch-body" id="q-b-famille"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-b">B-ENFANT/PARENT</span> Enfant ou parent de Français <span class="branch-sub">Q9B-2 → Q13B-2</span></summary>
+        <div class="branch-body" id="q-b-enfant"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-b">B-CONJOINT</span> Conjoint de Français <span class="branch-sub">Q9B-3 → Q17B-3</span></summary>
+        <div class="branch-body" id="q-b-conjoint"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-b">B-UE/EEE</span> Famille d'un ressortissant UE/EEE <span class="branch-sub">Q9B-4 → Q15B-4</span></summary>
+        <div class="branch-body" id="q-b-ue"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-b">B-LONG</span> Visite familiale &gt; 90 jours <span class="branch-sub">Q-LB1 → Q-LB8</span></summary>
+        <div class="branch-body" id="q-b-long"></div>
+      </details>
+    </section>
+
+    <!-- BRANCHE C -->
+    <section class="etape" id="branche-c">
+      <div class="etape-head">
+        <span class="branch-chip chip-c">BRANCHE C</span>
+        <h2>Travail</h2>
+      </div>
+      <details class="branch" open>
+        <summary><span class="branch-chip chip-c">C</span> Projet professionnel <span class="branch-sub">Q7C — 10 branches, chacune isolée</span></summary>
+        <div class="branch-body" id="q-c-root"></div>
+      </details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C1</span> Embauche</summary><div class="branch-body" id="q-c1"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C2</span> Détachement</summary><div class="branch-body" id="q-c2"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C3</span> Employé au service d'un étranger</summary><div class="branch-body" id="q-c3"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C4</span> Employé au service d'un Français</summary><div class="branch-body" id="q-c4"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C5</span> Manifestation culturelle / artistique</summary><div class="branch-body" id="q-c5"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C6</span> Mannequin</summary><div class="branch-body" id="q-c6"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C7</span> Marin</summary><div class="branch-body" id="q-c7"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C8</span> Chercheur</summary><div class="branch-body" id="q-c8"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C9</span> Stage salarié</summary><div class="branch-body" id="q-c9"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-c">C10</span> Voyage professionnel</summary><div class="branch-body" id="q-c10"></div></details>
+    </section>
+
+    <!-- BRANCHE D -->
+    <section class="etape" id="branche-d">
+      <div class="etape-head">
+        <span class="branch-chip chip-d">BRANCHE D</span>
+        <h2>Mariage / conjoint</h2>
+      </div>
+      <details class="branch" open>
+        <summary><span class="branch-chip chip-d">D1</span> Type de séjour <span class="branch-sub">Q7D</span></summary>
+        <div class="branch-body" id="q-d-duree"></div>
+      </details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-d">D-LONG</span> Long séjour — projet en France <span class="branch-sub">Q8D — 5 branches</span></summary>
+        <div class="branch-body" id="q-d-long-root"></div>
+      </details>
+      <details class="branch"><summary><span class="branch-chip chip-d">D-LONG</span> Installation familiale / privée</summary><div class="branch-body" id="q-d-install"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-d">D-LONG</span> Conjoint de Français</summary><div class="branch-body" id="q-d-conjoint"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-d">D-LONG</span> Conjoint / famille d'un réfugié</summary><div class="branch-body" id="q-d-refugie"></div></details>
+      <details class="branch"><summary><span class="branch-chip chip-d">D-LONG</span> Protection subsidiaire / apatride</summary><div class="branch-body" id="q-d-subsidiaire"></div></details>
+      <details class="branch">
+        <summary><span class="branch-chip chip-d">D-COURT</span> Court séjour <span class="branch-sub">Q-D26 → Q-D35</span></summary>
+        <div class="branch-body" id="q-d-court"></div>
+      </details>
+    </section>
+
+    <!-- ETAPE FINALE -->
+    <section class="etape" id="etape-finale">
+      <div class="etape-head">
+        <span class="etape-tag">ÉTAPE FINALE</span>
+        <h2>Questions communes</h2>
+      </div>
+      <p class="lede">Posées après la branche choisie — le système ne redemande que ce qui manque encore.</p>
+      <div class="branch-body" style="background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow);" id="q-finale"></div>
+    </section>
+
+    <!-- PIECES -->
+    <section class="etape" id="pieces">
+      <div class="etape-head">
+        <span class="etape-tag">RÉF. DOCX</span>
+        <h2>Pièces à fournir</h2>
+      </div>
+      <p class="lede">Reprise fidèle de « liste de visa Oualid-P.docx ». Passeport valide 3 mois après la date de retour au Maroc, formulaire et RCPC, et assurance de voyage sont exigés dans tous les cas ci-dessous — non répétés à chaque carte pour la lisibilité, sauf mention contraire. <span class="cond">*selon le cas</span> marque les pièces conditionnelles (acte de mariage/décès, livret de famille, acte de naissance).</p>
+
+      <div class="doc-motif" id="doc-tourisme">
+        <h3>Tourisme</h3>
+        <p>7 variantes selon la profession du demandeur.</p>
+      </div>
+      <div class="doc-grid" id="doc-grid-tourisme"></div>
+
+      <div class="doc-motif" id="doc-visite-familiale">
+        <h3>Visite familiale</h3>
+        <p>Tous les membres de la famille sauf parents et enfants. 6 variantes (pas d'« Étudiant » dans ce motif).</p>
+      </div>
+      <div class="doc-grid" id="doc-grid-visite-familiale"></div>
+
+      <div class="doc-motif" id="doc-enfant-parent">
+        <h3>Visite familiale — enfant ou parent étranger de Français</h3>
+        <p>Le demandeur est l'enfant/parent d'un ressortissant français, ou de son conjoint. 5 variantes.</p>
+      </div>
+      <div class="doc-grid" id="doc-grid-enfant-parent"></div>
+
+      <div class="doc-motif" id="doc-conjoint-francais">
+        <h3>Visite familiale — conjoint de Français</h3>
+        <p>Liste courte, aucune variante par profession.</p>
+      </div>
+      <div class="doc-grid" id="doc-grid-conjoint-francais"></div>
+
+      <div class="callout" style="margin-top:28px;">
+        <h3>Correspondance avec l'arbre — ce qui manque</h3>
+        <ul>
+          <li><strong>Branche A (Tourisme)</strong> : Q36 ne propose que 5 choix (Salaire / Activité indépendante / Retraite / Épargne / Autre) — il en faut 7 pour matcher le docx (ajouter Fonctionnaire Etat, Étudiant, Avocat/profession médicale, Agriculture comme choix distincts).</li>
+          <li><strong>Branche B — Visite familiale &amp; Enfant/parent de Français</strong> : aucune des deux ne demande la profession du demandeur. Sans cette question, impossible d'attacher automatiquement la bonne checklist.</li>
+          <li><strong>Branche B — Conjoint de Français</strong> : correspondance directe et propre avec le docx.</li>
+          <li><strong>Branche B — UE/EEE</strong>, <strong>A-LONG</strong>, <strong>B-LONG</strong>, <strong>Branche C (Travail)</strong>, <strong>D-LONG</strong> : non couverts par ce document — checklists à définir séparément (reprendre le référentiel actuel ou attendre une source dédiée).</li>
+          <li><strong>D-COURT</strong> recoupe Branche B selon la réponse à Q-D27, sans que l'arbre l'indique — à fusionner pour éviter deux chemins vers le même résultat.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- LOGIQUE -->
+    <section class="etape" id="logique">
+      <div class="etape-head">
+        <span class="etape-tag">LOGIQUE</span>
+        <h2>Logique du système</h2>
+      </div>
+      <p class="lede">Le système ne doit jamais afficher toutes les questions en même temps — il fonctionne comme un arbre conditionnel, pas un questionnaire fixe.</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;" id="traces-grid"></div>
+
+      <div class="callout">
+        <h3>Règle importante</h3>
+        <p style="font-size:13px; color:var(--ink-soft); margin:0 0 10px;">Une réponse doit pouvoir :</p>
+        <ol>
+          <li>Afficher une nouvelle question</li>
+          <li>Masquer une question devenue inutile</li>
+          <li>Diriger vers une autre branche</li>
+          <li>Terminer une branche</li>
+          <li>Déclencher automatiquement les documents nécessaires</li>
+          <li>Marquer certains documents comme « à vérifier » lorsque la situation nécessite une validation humaine</li>
+        </ol>
+        <p class="result">Résultat final attendu : un questionnaire personnalisé + une checklist documentaire personnalisée — jamais une liste générale de documents.</p>
+      </div>
+    </section>
+
+    <footer class="credit">Document de travail — vue de compréhension uniquement, aucune implémentation associée. Contenu repris fidèlement de la trame transmise.</footer>
+  </main>
+</div>
+
+<script>
+/* ---------- tiny renderer ---------- */
+function q(id, text, opts){
+  const el = document.createElement('div');
+  el.className = 'qnode';
+  const o = opts || {};
+  let html = `<div class="qid">${id}</div><div>`;
+  html += `<div class="qtext">${text}</div>`;
+  if (o.help) html += `<div class="qhelp">${o.help}</div>`;
+  if (o.fields && o.fields.length){
+    html += `<div class="fields">` + o.fields.map(f => `<span class="field">${f}</span>`).join('') + `</div>`;
+  }
+  if (o.options && o.options.length){
+    html += `<div class="opts">` + o.options.map(op => `<span class="opt">${op[0]}${op[1] ? `<span class="to">→ ${op[1]}</span>`:''}</span>`).join('') + `</div>`;
+  }
+  if (o.to) html += `<span class="to-inline">→ ${o.to}</span>`;
+  if (o.note) html += `<div class="qnote">${o.note}</div>`;
+  if (o.end) html += `<div class="qnote end">■ FIN — ${o.end}</div>`;
+  html += `</div>`;
+  el.innerHTML = html;
+  return el;
+}
+function render(targetId, nodes){
+  const target = document.getElementById(targetId);
+  nodes.forEach(n => target.appendChild(q(n.id, n.text, n)));
+}
+function subflow(targetId, label, nodes){
+  const target = document.getElementById(targetId);
+  const wrap = document.createElement('div');
+  wrap.className = 'subflow';
+  wrap.innerHTML = `<span class="subflow-label">${label}</span>`;
+  nodes.forEach(n => wrap.appendChild(q(n.id, n.text, n)));
+  target.appendChild(wrap);
+}
+function docLink(targetId, href, label, gap){
+  const target = document.getElementById(targetId);
+  const el = document.createElement('div');
+  el.className = 'doclink' + (gap ? ' gap' : '');
+  el.innerHTML = gap
+    ? `<span class="icon">⚠</span><span>${label}</span>`
+    : `<span class="icon">📎</span><span>Pièces à fournir : <a href="#${href}">${label}</a></span>`;
+  target.appendChild(el);
+}
+
+/* ---------- ÉTAPE 1 ---------- */
+render('q-etape1', [
+  {id:'Q1', text:"Avez-vous déjà obtenu un visa pour la France ?", options:[["Oui","Q2"],["Non","Q4"]]},
+  {id:'Q2', text:"Quel type de visa avez-vous obtenu ?", options:[["Court séjour","Q3"],["Long séjour","Q3"],["Autre","Q3"]]},
+  {id:'Q3', text:"Quand avez-vous obtenu votre dernier visa ?", to:'Q4'},
+  {id:'Q4', text:"Avez-vous déjà eu un refus de visa pour la France ou un autre pays Schengen ?", options:[["Oui","Q5"],["Non","Q6"]]},
+  {id:'Q5', text:"Précisez le refus.", fields:["Pays","Date du refus","Motif du refus, si connu","Type de visa demandé"], to:'Q6'},
+]);
+
+/* ---------- ÉTAPE 2 ---------- */
+render('q-etape2', [
+  {id:'Q6', text:"Quel est le motif principal de votre séjour en France ?", options:[
+    ["Tourisme / visite privée","Branche A"],
+    ["Visite familiale","Branche B"],
+    ["Travail","Branche C"],
+    ["Mariage / conjoint","Branche D"],
+  ]},
+]);
+
+/* ---------- BRANCHE A ---------- */
+render('q-a-duree', [
+  {id:'Q7', text:"Combien de temps souhaitez-vous séjourner en France ?", options:[
+    ["≤ 90 jours","Court séjour · Q8"],["> 90 jours","A-LONG"],
+  ]},
+]);
+render('q-a-court', [
+  {id:'Q8', text:"Quelle est la raison précise de votre voyage ?", options:[["Tourisme",""],["Vacances",""],["Visite privée",""],["Autre",""]], to:'Q9'},
+  {id:'Q9', text:"Avez-vous déjà réservé votre voyage ?", options:[["Oui","Q10"],["Non","Q11"]]},
+  {id:'Q10', text:"Quelles sont vos dates prévues de voyage ?", fields:["Date d'arrivée","Date de départ"], to:'Q11'},
+  {id:'Q11', text:"Dans quel pays allez-vous passer la majeure partie de votre séjour ?", options:[["France","Q12"],["Autre pays Schengen","questions pays visités → Q12"]]},
+  {id:'Q12', text:"Résidez-vous actuellement dans un pays autre que celui de votre nationalité ?", options:[["Oui","Q13"],["Non","Q15"]]},
+  {id:'Q13', text:"Quel est votre numéro d'autorisation de séjour ou document équivalent ?", to:'Q14'},
+  {id:'Q14', text:"Jusqu'à quelle date votre titre de séjour est-il valable ?", to:'Q15'},
+  {id:'Q15', text:"Voyagez-vous avec ou rejoignez-vous un membre de votre famille ressortissant français, de l'UE ou de l'EEE ?", options:[["Oui","Q16"],["Non","Q22"]]},
+  {id:'Q16', text:"Quel est son nom ?", to:'Q17'},
+  {id:'Q17', text:"Quel est son prénom ?", to:'Q18'},
+  {id:'Q18', text:"Quel est votre lien de parenté avec cette personne ?", to:'Q19'},
+  {id:'Q19', text:"Quel est son numéro de document de voyage ou numéro de CIN ?", to:'Q20'},
+  {id:'Q20', text:"Quelle est sa date de naissance ?", to:'Q21'},
+  {id:'Q21', text:"Quelle est sa nationalité ?", to:'Q22'},
+]);
+subflow('q-a-court', 'Hébergement', [
+  {id:'Q22', text:"Où allez-vous séjourner pendant votre séjour en France ?", options:[
+    ["Hôtel / hébergement touristique","Q23"],["Chez une personne","Q28"],["Autre","Q34"],
+  ]},
+]);
+subflow('q-a-court', 'Si hôtel', [
+  {id:'Q23', text:"Quel est le nom de l'hôtel / établissement ?", to:'Q24'},
+  {id:'Q24', text:"Quelle est son adresse ?", to:'Q25'},
+  {id:'Q25', text:"Code postal et ville ?", to:'Q26'},
+  {id:'Q26', text:"Quelles sont les dates de séjour dans cet établissement ?", to:'Q27'},
+  {id:'Q27', text:"Avez-vous une réservation ?", options:[["Oui","numéro → Q35"],["Non","Q35"]]},
+]);
+subflow('q-a-court', 'Si hébergement chez une personne', [
+  {id:'Q28', text:"Qui vous héberge ?", options:[["Famille",""],["Ami(e)",""],["Connaissance",""],["Autre",""]], to:'Q29'},
+  {id:'Q29', text:"Nom et prénom de la personne qui vous héberge ?", to:'Q30'},
+  {id:'Q30', text:"Quelle est votre relation avec cette personne ?", to:'Q31'},
+  {id:'Q31', text:"Quelle est son adresse complète en France ?", to:'Q32'},
+  {id:'Q32', text:"Téléphone et e-mail ?", to:'Q33'},
+  {id:'Q33', text:"Cette personne est-elle de nationalité française ?", options:[["Oui","Q35"],["Non","Q34"]]},
+  {id:'Q34', text:"Précisez sa nationalité et, si applicable, son statut de séjour en France.", to:'Q35'},
+]);
+subflow('q-a-court', 'Financement', [
+  {id:'Q35', text:"Qui prendra en charge financièrement votre séjour ?", options:[["Moi-même","Q36"],["Une autre personne / garant","Q38"]]},
+  {id:'Q36', text:"Quelle est votre principale source de revenus ?", options:[["Salaire",""],["Activité indépendante",""],["Retraite",""],["Épargne",""],["Autre",""]], to:'Q37'},
+  {id:'Q37', text:"Quels justificatifs financiers pouvez-vous fournir ?", end:'Branche A'},
+  {id:'Q38', text:"Qui prend en charge votre séjour ?", to:'Q39'},
+  {id:'Q39', text:"Quel est votre lien avec cette personne ?", to:'Q40'},
+  {id:'Q40', text:"Dans quel pays réside-t-elle ?", to:'Q41'},
+  {id:'Q41', text:"Quels frais prend-elle en charge ?", options:[["Transport",""],["Hébergement",""],["Nourriture",""],["Tous les frais",""],["Autre",""]], end:'Branche A'},
+]);
+docLink('q-a-court', 'doc-tourisme', 'Tourisme — checklist par profession (7 variantes)');
+docLink('q-a-court', '', "Écart : Q36 ne distingue que Salaire / Activité indépendante / Retraite / Épargne / Autre — le docx a 7 profils (Salarié, Fonctionnaire Etat, Étudiant, Avocat/médical, Retraité, Agriculture, Sans profession). Pour attacher la bonne checklist automatiquement, Q36 doit être reformulée pour matcher exactement ces 7 profils.", true);
+render('q-a-long', [
+  {id:'Q-L1', text:"Quel est le motif précis de votre séjour de plus de 90 jours ?", options:[["Installation / séjour privé",""],["Famille",""],["Autre motif long séjour",""]], note:"→ ouvre les questions spécifiques au motif sélectionné"},
+  {id:'Q-L2', text:"Où allez-vous résider en France ?", fields:["Adresse complète"]},
+  {id:'Q-L3', text:"Qui vous héberge ?", options:[["Vous-même",""],["Famille",""],["Autre personne",""]], note:"→ questions adaptées"},
+  {id:'Q-L4', text:"Comment allez-vous financer votre séjour ?", options:[["Vous-même",""],["Garant",""],["Autre",""]], end:'Branche A-LONG'},
+]);
+docLink('q-a-long', '', "Non couvert par le docx : le document ne traite que le court séjour (≤ 90 jours). Aucune checklist de référence pour le long séjour tourisme/installation.", true);
+
+/* ---------- BRANCHE B ---------- */
+render('q-b-duree', [
+  {id:'Q7B', text:"Combien de temps souhaitez-vous séjourner en France ?", options:[["≤ 90 jours","Court séjour · Q8B"],["> 90 jours","B-LONG"]]},
+]);
+render('q-b-court', [
+  {id:'Q8B', text:"Quel est le motif précis de votre séjour familial ?", options:[
+    ["Visite familiale","B-FAMILLE"],
+    ["Enfant / parent d'un Français ou de son conjoint","B-ENFANT/PARENT"],
+    ["Visite privée — conjoint de Français","B-CONJOINT"],
+    ["Visite privée — famille d'un ressortissant UE/EEE","B-UE/EEE"],
+  ]},
+]);
+render('q-b-famille', [
+  {id:'Q9B', text:"Qui souhaitez-vous visiter en France ?", options:[["Parent",""],["Enfant",""],["Frère / sœur",""],["Conjoint",""],["Autre membre",""]], to:'Q10B'},
+  {id:'Q10B', text:"Nom et prénom de la personne visitée ?", to:'Q11B'},
+  {id:'Q11B', text:"Quelle est sa date de naissance ?", to:'Q12B'},
+  {id:'Q12B', text:"Quelle est sa nationalité ?", to:'Q13B'},
+  {id:'Q13B', text:"Quel est votre lien avec cette personne ?", to:'Q14B'},
+  {id:'Q14B', text:"Quelle est son adresse en France ?", to:'Q15B'},
+  {id:'Q15B', text:"Téléphone et e-mail ?", to:'Q16B'},
+  {id:'Q16B', text:"Allez-vous séjourner chez cette personne ?", options:[["Oui","hébergement → financement"],["Non","hôtel/autre → financement"]], end:'B-FAMILLE'},
+]);
+docLink('q-b-famille', 'doc-visite-familiale', 'Visite familiale — checklist par profession (6 variantes)');
+docLink('q-b-famille', '', "Écart : cette branche ne demande jamais la profession du demandeur, alors que les 6 variantes du docx en dépendent entièrement. Il manque une question équivalente à Q36 (Branche A) ici.", true);
+render('q-b-enfant', [
+  {id:'Q9B-2', text:"Êtes-vous :", options:[["Enfant d'un ressortissant français",""],["Parent d'un ressortissant français",""],["Enfant du conjoint d'un ressortissant français",""],["Parent du conjoint d'un ressortissant français",""]], to:'Q10B-2'},
+  {id:'Q10B-2', text:"Nom et prénom du membre de famille français ?", to:'Q11B-2'},
+  {id:'Q11B-2', text:"Date de naissance ?", to:'Q12B-2'},
+  {id:'Q12B-2', text:"Adresse en France ?", to:'Q13B-2'},
+  {id:'Q13B-2', text:"Nationalité française ?", options:[["Oui","continuer"],["Non","vérifier la catégorie sélectionnée"]], end:'lien familial + séjour + hébergement + financement'},
+]);
+docLink('q-b-enfant', 'doc-enfant-parent', "Visite familiale/enfants ou parents étrangers de français — checklist par profession (5 variantes)");
+docLink('q-b-enfant', '', "Même écart : la profession n'est pas demandée ici non plus.", true);
+render('q-b-conjoint', [
+  {id:'Q9B-3', text:"Êtes-vous marié(e) à un ressortissant français ?", options:[["Oui","Q10B-3"],["Non","retour vers les autres motifs"]]},
+  {id:'Q10B-3', text:"Nom et prénom de votre conjoint ?", to:'Q11B-3'},
+  {id:'Q11B-3', text:"Date de naissance ?", to:'Q12B-3'},
+  {id:'Q12B-3', text:"Date et lieu du mariage ?", to:'Q13B-3'},
+  {id:'Q13B-3', text:"Le mariage a-t-il été célébré au Maroc ?", options:[["Oui","Q14B-3"],["Non","Q15B-3"]]},
+  {id:'Q14B-3', text:"Le mariage a-t-il été transcrit dans les registres français ?", options:[["Oui",""],["Non",""],["En cours",""]], to:'Q16B-3'},
+  {id:'Q15B-3', text:"Où le mariage a-t-il été célébré ?", to:'Q16B-3'},
+  {id:'Q16B-3', text:"Votre conjoint réside-t-il actuellement en France ?", options:[["Oui","adresse → Q17B-3"],["Non","pays de résidence → Q17B-3"]]},
+  {id:'Q17B-3', text:"S'agit-il d'une visite temporaire ou d'une installation en France ?", options:[["Visite temporaire","reste en court séjour"],["Installation","→ Branche D long séjour"]]},
+]);
+docLink('q-b-conjoint', 'doc-conjoint-francais', "Visite familiale/Conjoint de français — liste courte, pas de variante par profession");
+render('q-b-ue', [
+  {id:'Q9B-4', text:"Quelle est la nationalité du membre de votre famille ?", note:"vérifier UE / EEE", to:'Q10B-4'},
+  {id:'Q10B-4', text:"Nom et prénom ?", to:'Q11B-4'},
+  {id:'Q11B-4', text:"Date de naissance ?", to:'Q12B-4'},
+  {id:'Q12B-4', text:"Quel est votre lien de parenté ?", to:'Q13B-4'},
+  {id:'Q13B-4', text:"Numéro de sa carte d'identité ou document de voyage ?", to:'Q14B-4'},
+  {id:'Q14B-4', text:"Réside-t-il en France ?", options:[["Oui","adresse"],["Non","pays de résidence"]], to:'Q15B-4'},
+  {id:'Q15B-4', text:"Voyagez-vous avec cette personne ou allez-vous la rejoindre ?", options:[["Avec elle",""],["Je la rejoins",""]], end:'séjour / hébergement / financement'},
+]);
+docLink('q-b-ue', '', "Non couvert par le docx : base légale différente (libre circulation UE/EEE), traitée à part dans l'app actuelle (famille_ue) — aucune checklist docx à mapper ici.", true);
+render('q-b-long', [
+  {id:'Q-LB1', text:"Quel est votre lien avec la personne que vous souhaitez rejoindre ?", options:[["Conjoint",""],["Enfant",""],["Parent",""],["Autre lien familial",""]], note:"la réponse détermine la catégorie de long séjour"},
+  {id:'Q-LB2', text:"Nom et prénom de la personne rejointe ?"},
+  {id:'Q-LB3', text:"Nationalité ?"},
+  {id:'Q-LB4', text:"Situation en France ?"},
+  {id:'Q-LB5', text:"Adresse en France ?"},
+  {id:'Q-LB6', text:"Depuis quand réside-t-elle en France ?"},
+  {id:'Q-LB7', text:"Souhaitez-vous vous installer durablement en France ?", options:[["Oui",""],["Non",""]]},
+  {id:'Q-LB8', text:"Avez-vous des enfants qui voyagent avec vous ?", options:[["Oui","infos enfants"],["Non","continuer"]], end:'Branche B-LONG'},
+]);
+docLink('q-b-long', '', "Non couvert par le docx (court séjour uniquement).", true);
+
+/* ---------- BRANCHE C ---------- */
+render('q-c-root', [
+  {id:'Q7C', text:"Quel est votre projet professionnel en France ?", options:[
+    ["Embauche","C1"],["Détachement de salarié","C2"],["Employé au service d'un étranger","C3"],
+    ["Employé au service d'un Français","C4"],["Manifestation culturelle / artistique","C5"],
+    ["Mannequin","C6"],["Marin","C7"],["Chercheur","C8"],["Stage salarié","C9"],["Voyage professionnel","C10"],["Autre",""],
+  ], note:"chaque choix ouvre uniquement sa branche — les 9 autres restent masquées"},
+]);
+docLink('q-c-root', '', "Toute la Branche C (Travail, 10 sous-branches) n'est pas couverte par le docx — le document de référence ne traite que Tourisme et Visite familiale. Checklist actuelle du référentiel existant (visa-rules.ts) à conserver en attendant une source dédiée au travail.", true);
+render('q-c1', [
+  {id:'Q-C1', text:"Quel est le nom de votre employeur en France ?", to:'Q-C2'},
+  {id:'Q-C2', text:"Quel poste allez-vous occuper ?", to:'Q-C3'},
+  {id:'Q-C3', text:"Dans quelle ville allez-vous travailler ?", to:'Q-C4'},
+  {id:'Q-C4', text:"Quel est le type de contrat ?", options:[["CDI",""],["CDD",""],["Autre",""]], to:'Q-C5'},
+  {id:'Q-C5', text:"Quelle est la date prévue de début du contrat ?", to:'Q-C6'},
+  {id:'Q-C6', text:"Quelle est la durée du contrat ?", to:'Q-C7'},
+  {id:'Q-C7', text:"Quel sera votre salaire ?", to:'Q-C8'},
+  {id:'Q-C8', text:"Disposez-vous d'une autorisation de travail ?", options:[["Oui","infos autorisation"],["Non","marquer « à vérifier »"]], end:'C1'},
+]);
+render('q-c2', [
+  {id:'Q-C9', text:"Êtes-vous actuellement salarié(e) d'une entreprise hors de France ?", options:[["Oui","Q-C10"],["Non","vérifier branche"]]},
+  {id:'Q-C10', text:"Nom de votre employeur actuel ?", to:'Q-C11'},
+  {id:'Q-C11', text:"Dans quel pays est-il établi ?", to:'Q-C12'},
+  {id:'Q-C12', text:"Depuis combien de temps travaillez-vous pour cette entreprise ?", to:'Q-C13'},
+  {id:'Q-C13', text:"Quelle entreprise allez-vous rejoindre en France ?", to:'Q-C14'},
+  {id:'Q-C14', text:"Quel poste occuperez-vous en France ?", to:'Q-C15'},
+  {id:'Q-C15', text:"Quelle sera la durée du détachement ?", to:'Q-C16'},
+  {id:'Q-C16', text:"Qui continuera à vous rémunérer ?", end:'C2'},
+]);
+render('q-c3', [
+  {id:'Q-C17', text:"Qui est votre employeur ?", fields:["Nom","Nationalité","Adresse"]},
+  {id:'Q-C18', text:"Quel emploi allez-vous exercer ?", to:'Q-C19'},
+  {id:'Q-C19', text:"Où allez-vous exercer cet emploi en France ?", to:'Q-C20'},
+  {id:'Q-C20', text:"Quelle sera la durée de l'emploi ?", to:'Q-C21'},
+  {id:'Q-C21', text:"Quel sera votre salaire ?", end:'C3'},
+]);
+render('q-c4', [
+  {id:'Q-C22', text:"Qui est votre employeur français ?", fields:["Nom","Adresse"]},
+  {id:'Q-C23', text:"Quel emploi allez-vous exercer ?", to:'Q-C24'},
+  {id:'Q-C24', text:"Où allez-vous travailler ?", to:'Q-C25'},
+  {id:'Q-C25', text:"Quelle sera la durée de l'emploi ?", to:'Q-C26'},
+  {id:'Q-C26', text:"Quel sera votre salaire ?", end:'C4'},
+]);
+render('q-c5', [
+  {id:'Q-C27', text:"Quel est l'événement ?", to:'Q-C28'},
+  {id:'Q-C28', text:"Quel sera votre rôle ?", to:'Q-C29'},
+  {id:'Q-C29', text:"Qui organise l'événement ?", to:'Q-C30'},
+  {id:'Q-C30', text:"Où et quand aura-t-il lieu ?", to:'Q-C31'},
+  {id:'Q-C31', text:"Serez-vous rémunéré(e) ?", options:[["Oui","montant + organisateur"],["Non","continuer"]], end:'C5'},
+]);
+render('q-c6', [
+  {id:'Q-C32', text:"Travaillez-vous avec une agence ?", options:[["Oui","nom + coordonnées"],["Non","continuer"]], to:'Q-C33'},
+  {id:'Q-C33', text:"Quel est le client / employeur en France ?", to:'Q-C34'},
+  {id:'Q-C34', text:"Quelle est la nature de la mission ?", to:'Q-C35'},
+  {id:'Q-C35', text:"Quelle est la durée de la mission ?", end:'C6'},
+]);
+render('q-c7', [
+  {id:'Q-C36', text:"Quelle est la compagnie maritime ?", to:'Q-C37'},
+  {id:'Q-C37', text:"Quel est le nom du navire ?", to:'Q-C38'},
+  {id:'Q-C38', text:"Quel est le port d'embarquement en France ?", to:'Q-C39'},
+  {id:'Q-C39', text:"Quelle est la date prévue d'embarquement ?", to:'Q-C40'},
+  {id:'Q-C40', text:"Quelle sera la durée de votre mission ?", end:'C7'},
+]);
+render('q-c8', [
+  {id:'Q-C41', text:"Quel organisme de recherche allez-vous rejoindre ?", to:'Q-C42'},
+  {id:'Q-C42', text:"Dans quelle ville se trouve l'organisme ?", to:'Q-C43'},
+  {id:'Q-C43', text:"Quel est votre domaine de recherche ?", to:'Q-C44'},
+  {id:'Q-C44', text:"Quel est l'objet de votre recherche ?", to:'Q-C45'},
+  {id:'Q-C45', text:"Quelle est la durée prévue de votre séjour ?", to:'Q-C46'},
+  {id:'Q-C46', text:"Disposez-vous d'une convention d'accueil ?", options:[["Oui","infos"],["Non","marquer « à vérifier »"]], end:'C8'},
+]);
+render('q-c9', [
+  {id:'Q-C47', text:"Dans quelle entreprise / organisation allez-vous effectuer votre stage ?", to:'Q-C48'},
+  {id:'Q-C48', text:"Dans quel domaine ?", to:'Q-C49'},
+  {id:'Q-C49', text:"Quelle est la durée du stage ?", to:'Q-C50'},
+  {id:'Q-C50', text:"Quelles sont les dates du stage ?", to:'Q-C51'},
+  {id:'Q-C51', text:"Le stage est-il rémunéré ?", options:[["Oui","montant"],["Non","continuer"]], to:'Q-C52'},
+  {id:'Q-C52', text:"Disposez-vous d'une convention de stage ?", options:[["Oui",""],["Non",""]], end:'C9'},
+]);
+render('q-c10', [
+  {id:'Q-C53', text:"Quel est le motif de votre déplacement professionnel ?", options:[["Réunion",""],["Formation",""],["Conférence",""],["Salon",""],["Mission",""],["Négociation",""],["Autre",""]], to:'Q-C54'},
+  {id:'Q-C54', text:"Quelle entreprise / organisation allez-vous visiter ?", to:'Q-C55'},
+  {id:'Q-C55', text:"Dans quelle ville ?", to:'Q-C56'},
+  {id:'Q-C56', text:"Quelles sont les dates du déplacement ?", to:'Q-C57'},
+  {id:'Q-C57', text:"Qui prend en charge les frais du voyage ?", options:[["Employeur",""],["Vous-même",""],["Entreprise en France",""],["Autre",""]], end:'C10'},
+]);
+
+/* ---------- BRANCHE D ---------- */
+render('q-d-duree', [
+  {id:'Q7D', text:"Combien de temps souhaitez-vous séjourner en France ?", options:[["≤ 90 jours","D-COURT"],["> 90 jours","D-LONG"]]},
+]);
+render('q-d-long-root', [
+  {id:'Q8D', text:"Quel est votre projet en France ?", options:[
+    ["Installation familiale ou privée",""],
+    ["Rejoindre son conjoint français",""],
+    ["Rejoindre son conjoint / membre de famille réfugié",""],
+    ["Rejoindre son conjoint / membre de famille — protection subsidiaire",""],
+    ["Rejoindre son conjoint / membre de famille apatride",""],
+  ], note:"la réponse ouvre la branche correspondante"},
+]);
+docLink('q-d-long-root', '', "Toute la Branche D-LONG n'est pas couverte par le docx (document = court séjour uniquement). Attention : ne pas confondre avec « Visite familiale/Conjoint de français » du docx, qui est un court séjour de visite — D-LONG Conjoint est une installation durable (VLS-TS), une procédure différente.", true);
+render('q-d-install', [
+  {id:'Q-D1', text:"Qui souhaitez-vous rejoindre en France ?", to:'Q-D2'},
+  {id:'Q-D2', text:"Quel est votre lien avec cette personne ?", to:'Q-D3'},
+  {id:'Q-D3', text:"Quelle est sa nationalité ?", to:'Q-D4'},
+  {id:'Q-D4', text:"Quel est son statut en France ?", to:'Q-D5'},
+  {id:'Q-D5', text:"Où réside cette personne ?", to:'Q-D6'},
+  {id:'Q-D6', text:"Depuis combien de temps réside-t-elle en France ?", to:'Q-D7'},
+  {id:'Q-D7', text:"Souhaitez-vous vous installer durablement en France ?", options:[["Oui",""],["Non",""]], to:'Q-D8'},
+  {id:'Q-D8', text:"Des enfants vous accompagnent-ils ?", options:[["Oui","infos enfants"],["Non","FIN"]], end:'Installation familiale / privée'},
+]);
+render('q-d-conjoint', [
+  {id:'Q-D9', text:"Êtes-vous marié(e) à un ressortissant français ?", options:[["Oui","Q-D10"],["Non","retour à Q8D"]]},
+  {id:'Q-D10', text:"Nom et prénom du conjoint français ?", to:'Q-D11'},
+  {id:'Q-D11', text:"Date de naissance du conjoint ?", to:'Q-D12'},
+  {id:'Q-D12', text:"Date et lieu du mariage ?", to:'Q-D13'},
+  {id:'Q-D13', text:"Le mariage a-t-il été célébré au Maroc ?", options:[["Oui","Q-D14"],["Non","Q-D15"]]},
+  {id:'Q-D14', text:"Le mariage a-t-il été transcrit dans les registres français ?", options:[["Oui",""],["Non",""],["En cours",""]], to:'Q-D16'},
+  {id:'Q-D15', text:"Dans quel pays le mariage a-t-il été célébré ?", to:'Q-D16'},
+  {id:'Q-D16', text:"Où votre conjoint réside-t-il actuellement en France ?", fields:["Adresse complète"], to:'Q-D17'},
+  {id:'Q-D17', text:"Avez-vous déjà vécu ensemble ?", options:[["Oui","où / période"],["Non","continuer"]], to:'Q-D18'},
+  {id:'Q-D18', text:"Avez-vous des enfants ensemble ?", options:[["Oui","infos enfants"],["Non","FIN"]], end:'Conjoint de Français'},
+]);
+render('q-d-refugie', [
+  {id:'Q-D19', text:"Quel est le nom et prénom de la personne que vous rejoignez ?", to:'Q-D20'},
+  {id:'Q-D20', text:"Quelle est sa date de naissance ?", to:'Q-D21'},
+  {id:'Q-D21', text:"Quel est votre lien avec cette personne ?", to:'Q-D22'},
+  {id:'Q-D22', text:"Quel est son statut en France ?", note:"Réfugié", to:'Q-D23'},
+  {id:'Q-D23', text:"Quel est son numéro de document de séjour / document pertinent ?", to:'Q-D24'},
+  {id:'Q-D24', text:"Quelle est son adresse en France ?", to:'Q-D25'},
+  {id:'Q-D25', text:"Des enfants vous accompagnent-ils ?", options:[["Oui","infos enfants"],["Non","FIN"]], end:'Conjoint / famille d’un réfugié'},
+]);
+render('q-d-subsidiaire', [
+  {id:'Protection subsidiaire', text:"Même logique que « réfugié ».", fields:["Identité de la personne rejointe","Lien familial","Statut","Document","Adresse en France","Enfants accompagnants"], end:'Protection subsidiaire'},
+  {id:'Apatride', text:"Même logique.", fields:["Identité","Lien familial","Statut d'apatride","Document","Adresse en France","Enfants"], end:'Apatride'},
+]);
+render('q-d-court', [
+  {id:'Q-D26', text:"Quel est votre projet ?", options:[["Visiter votre conjoint",""],["Visiter un membre de votre famille",""],["Visite privée",""]], to:'Q-D27'},
+  {id:'Q-D27', text:"Êtes-vous marié(e) à un ressortissant français ?", options:[["Oui","branche conjoint français"],["Non","branche famille / privé"]]},
+  {id:'Q-D28', text:"Nom et prénom du conjoint / membre de famille ?", to:'Q-D29'},
+  {id:'Q-D29', text:"Nationalité ?", to:'Q-D30'},
+  {id:'Q-D30', text:"Quel est votre lien avec cette personne ?", to:'Q-D31'},
+  {id:'Q-D31', text:"Où réside-t-elle ?", fields:["Adresse"], to:'Q-D32'},
+  {id:'Q-D32', text:"Quelles sont vos dates prévues de séjour ?", to:'Q-D33'},
+  {id:'Q-D33', text:"Voyagez-vous avec des enfants ?", options:[["Oui","infos enfants"],["Non","Q-D34"]]},
+  {id:'Q-D34', text:"Où allez-vous séjourner ?", options:[["Chez conjoint / famille","infos hébergement"],["Hôtel","infos hôtel"],["Autre","précisions"]], to:'Q-D35'},
+  {id:'Q-D35', text:"Qui finance votre séjour ?", options:[["Moi-même","situation financière"],["Conjoint / famille","identité + prise en charge"],["Autre garant","identité + prise en charge"]], end:'D-COURT'},
+]);
+docLink('q-d-court', 'doc-conjoint-francais', "Si Q-D27 = Oui (marié à un Français) → Visite familiale/Conjoint de français (liste courte)");
+docLink('q-d-court', '', "Si Q-D27 = Non, cette branche recoupe en fait Branche B (Visite familiale / Enfant-parent de Français) sans le dire — deux chemins de l'arbre mènent au même docx. À fusionner ou clarifier avant construction.", true);
+
+/* ---------- ÉTAPE FINALE ---------- */
+render('q-finale', [
+  {id:'Q-F1', text:"Avez-vous déjà voyagé dans l'espace Schengen ?", options:[["Oui","pays + dates"],["Non","continuer"]]},
+  {id:'Q-F2', text:"Avez-vous actuellement un emploi / une activité professionnelle ?", options:[["Oui","employeur / activité / fonction"],["Non","situation actuelle"]]},
+  {id:'Q-F3', text:"Quelle est votre situation familiale ?", options:[["Célibataire",""],["Marié(e)",""],["Divorcé(e)",""],["Veuf / veuve",""],["Autre",""]]},
+  {id:'Q-F4', text:"Avez-vous des personnes à charge ?", options:[["Oui","nombre + lien"],["Non","continuer"]]},
+  {id:'Q-F5', text:"Avez-vous des enfants ?", options:[["Oui","nombre + âge + accompagnement éventuel"],["Non","continuer"]]},
+  {id:'Q-F6', text:"Avez-vous déjà fait l'objet d'un refus de visa ou d'une interdiction de séjour ?", options:[["Oui","détails"],["Non","continuer"]]},
+  {id:'Q-F7', text:"Avez-vous les moyens financiers nécessaires pour votre séjour ?", options:[["Oui","justificatifs disponibles"],["Non","garant / prise en charge"]]},
+  {id:'Q-F8', text:"Quelle est votre date prévue de départ ?", fields:["Date"]},
+  {id:'Q-F9', text:"Quelle est votre date prévue de retour / fin de séjour ?", fields:["Date"]},
+]);
+
+/* ---------- pièces (réf. docx) ---------- */
+const COMMUN = ["Passeport (visa et cachet) valide 3 mois après la date de retour au Maroc", "Formulaire et RCPC", "2 photos d'identité sur fond blanc"];
+const COND = ["<span class=\"cond\">Acte de mariage traduit / acte de décès*</span>", "<span class=\"cond\">Livret de famille*</span>", "<span class=\"cond\">Acte de naissance*</span>", "Bien personnelles (+)"];
+const ASSURANCE = "Assurance de voyage";
+
+function docCard(gridId, title, docs){
+  const grid = document.getElementById(gridId);
+  const card = document.createElement('div');
+  card.className = 'doc-card';
+  card.innerHTML = `<h4>${title}</h4><ul>${docs.map(d => `<li>${d}</li>`).join('')}</ul>`;
+  grid.appendChild(card);
+}
+
+/* TOURISME — 7 variantes */
+docCard('doc-grid-tourisme', 'Salarié', [...COMMUN,
+  "Pré-réservation billet avion / bateau / car","Attestation de travail et de salaire","3 dernières bulletins de paie","Récap CNSS (application CNSS)","3 derniers relevés bancaires",
+  ...COND, "Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+docCard('doc-grid-tourisme', 'Fonctionnaire Etat', [...COMMUN,
+  "Pré-réservation billet avion / bateau / car","Attestation de travail / salaire","Bulletin mensuel (e-services.tgr.gov.ma)","Attestation de la CNOPS","3 derniers relevés bancaires",
+  ...COND, "Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+docCard('doc-grid-tourisme', 'Étudiant', [...COMMUN,
+  "Acte de naissance","Si mineur : autorisation de quitter le territoire signée et légalisée par les deux parents","Certificat de scolarité","Liste de vacances scolaires","Attestation de prise en charge avec ressources",
+  "Pré-réservation billet avion / bateau / car","Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+docCard('doc-grid-tourisme', 'Avocat et professions médicales', [...COMMUN,
+  "Pré-réservation billet avion / bateau / car","Attestation d'exercice de la profession","Carte professionnelle","3 derniers relevés bancaires",
+  ...COND, "Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+docCard('doc-grid-tourisme', 'Retraité', [...COMMUN,
+  "Pré-réservation billet avion / bateau / car","Attestation de pension","3 derniers relevés bancaires",
+  ...COND, "Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+docCard('doc-grid-tourisme', 'Agriculture', [...COMMUN,
+  "Pré-réservation billet avion / bateau / car","Attestation agricole","Justificatif de location ou propriété du terrain agricole","3 derniers relevés bancaires",
+  ...COND, "Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+docCard('doc-grid-tourisme', 'Sans profession', [...COMMUN,
+  "Pré-réservation billet avion / bateau / car","Attestation de prise en charge — avec le lien si disponible","Ressources de la personne qui prend en charge","3 derniers relevés bancaires",
+  ...COND, "Réservation hôtel / attestation d'accueil / certificat de propriété d'un bien d'habitation en France", ASSURANCE]);
+
+/* VISITE FAMILIALE — 6 variantes (pas d'étudiant) */
+docCard('doc-grid-visite-familiale', 'Salarié', [...COMMUN,
+  "Justificatif de lien de parenté avec la personne de l'attestation d'accueil","Pré-réservation billet avion / bateau / car","Attestation de travail et de salaire","3 dernières bulletins de paie","Récap CNSS","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-visite-familiale', 'Fonctionnaire Etat', [...COMMUN,
+  "Justificatif de lien de parenté avec la personne de l'attestation d'accueil","Pré-réservation billet avion / bateau / car","Attestation de travail / salaire","Bulletin mensuel (e-services.tgr.gov.ma)","Attestation de la CNOPS","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-visite-familiale', 'Avocat et professions médicales', [...COMMUN,
+  "Justificatif de lien de parenté avec la personne de l'attestation d'accueil","Pré-réservation billet avion / bateau / car","Attestation d'exercice de la profession","Carte professionnelle","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-visite-familiale', 'Retraité', [...COMMUN,
+  "Justificatif de lien de parenté avec la personne de l'attestation d'accueil","Pré-réservation billet avion / bateau / car","Attestation de pension","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-visite-familiale', 'Agriculture', [...COMMUN,
+  "Justificatif de lien de parenté avec la personne de l'attestation d'accueil","Pré-réservation billet avion / bateau / car","Attestation agricole","Justificatif de location ou propriété du terrain agricole","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-visite-familiale', 'Sans profession', [...COMMUN,
+  "Justificatif de lien de parenté avec la personne de l'attestation d'accueil","Pré-réservation billet avion / bateau / car","Attestation de prise en charge — avec le lien si disponible","Ressources de la personne qui prend en charge","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+
+/* ENFANT/PARENT ÉTRANGER DE FRANÇAIS — 5 variantes */
+const LIEN_FR = "Justificatif de lien de parenté avec le ressortissant français ou le conjoint (copie intégrale des documents d'état civil)";
+const NAT_FR = "Preuve de nationalité française";
+docCard('doc-grid-enfant-parent', 'Sans profession', [...COMMUN,
+  LIEN_FR, NAT_FR, "Pré-réservation billet avion / bateau / car","Attestation de prise en charge — avec le lien si disponible","Ressources de la personne qui prend en charge","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-enfant-parent', 'Retraité', [...COMMUN,
+  LIEN_FR, NAT_FR, "Pré-réservation billet avion / bateau / car","Attestation de pension","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-enfant-parent', 'Salarié', [...COMMUN,
+  LIEN_FR, NAT_FR, "Pré-réservation billet avion / bateau / car","Attestation de travail et de salaire","3 dernières bulletins de paie","Récap CNSS","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-enfant-parent', 'Fonctionnaire Etat', [...COMMUN,
+  LIEN_FR, NAT_FR, "Pré-réservation billet avion / bateau / car","Attestation de travail / salaire","Bulletin mensuel (e-services.tgr.gov.ma)","Attestation de la CNOPS","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+docCard('doc-grid-enfant-parent', 'Avocat et professions médicales', [...COMMUN,
+  LIEN_FR, NAT_FR, "Pré-réservation billet avion / bateau / car","Attestation d'exercice de la profession","Carte professionnelle","3 derniers relevés bancaires",
+  ...COND, "Attestation d'accueil", ASSURANCE]);
+
+/* CONJOINT DE FRANÇAIS — liste courte, pas de variante */
+docCard('doc-grid-conjoint-francais', 'Toutes situations', [...COMMUN,
+  "Transcription d'acte de mariage récente, datée de moins de 6 mois (service-public.fr)","Justificatif de nationalité française du conjoint","Livret de famille (+)", ASSURANCE]);
+
+/* ---------- traces ---------- */
+const traces = document.getElementById('traces-grid');
+function traceCard(title, steps){
+  const div = document.createElement('div');
+  div.style.cssText = 'background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow);';
+  div.innerHTML = `<div class="trace-title">${title}</div>` +
+    `<div class="trace">` +
+    steps.map((s,i) => `<div class="step"><span class="dot"></span>${s}</div>` + (i<steps.length-1 ? `<div class="step arrow-down">↓</div>` : '')).join('') +
+    `</div>`;
+  traces.appendChild(div);
+}
+traceCard('Exemple 1 — Tourisme, court séjour', [
+  'Q6 : Motif = Tourisme',
+  'Q7 : Durée = moins de 90 jours',
+  'Q8 : Hébergement = Hôtel',
+  '→ questions hôtel uniquement',
+  'Q35 : Financement = Moi-même',
+  '→ questions financières personnelles uniquement',
+  'Fin de la branche',
+]);
+traceCard('Exemple 2 — Visite familiale, long séjour', [
+  'Motif = Visite familiale',
+  'Durée = plus de 90 jours',
+  'Lien = Conjoint',
+  '→ questions conjoint / installation',
+  '→ questions long séjour',
+]);
+</script>
