@@ -75,7 +75,7 @@ export interface Profile {
 const FIXED: Record<string, Omit<CaseResult, "key">> = {
   t3: {
     title: "VLS-TS « vie privée et familiale » · conjoint de Français",
-    cat: "Long séjour · installation durable",
+    cat: "Long séjour (Visa D) · installation durable",
     level: "complexe",
     docs: [
       "Passeport valide",
@@ -116,7 +116,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   tc1: {
     title: "Visa court séjour Affaires",
-    cat: "Court séjour Schengen · déplacement professionnel",
+    cat: "Court séjour Schengen (Visa C) · déplacement professionnel",
     level: "standard",
     docs: [
       "Formulaire de demande France-Visas rempli, daté et signé + récépissé",
@@ -140,7 +140,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   tc2: {
     title: "Passeport Talent · salarié qualifié",
-    cat: "Long séjour · emploi qualifié",
+    cat: "Long séjour (Visa D) · emploi qualifié",
     level: "attention",
     docs: [
       "Passeport valide",
@@ -157,7 +157,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   tc3: {
     title: "VLS-TS Salarié classique",
-    cat: "Long séjour · emploi salarié",
+    cat: "Long séjour (Visa D) · emploi salarié",
     level: "attention",
     docs: [
       "Passeport valide",
@@ -173,7 +173,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   tc4: {
     title: "Salarié détaché / en mission",
-    cat: "Long séjour · détachement",
+    cat: "Long séjour (Visa D) · détachement",
     level: "attention",
     docs: [
       "Passeport valide",
@@ -190,7 +190,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   tc5: {
     title: "Travailleur saisonnier",
-    cat: "Long séjour · emploi saisonnier",
+    cat: "Long séjour (Visa D) · emploi saisonnier",
     level: "attention",
     docs: [
       "Passeport valide",
@@ -222,8 +222,8 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
   },
   a_long: {
-    title: "Tourisme / visite privée · long séjour (> 90 jours)",
-    cat: "Long séjour · installation ou séjour privé prolongé",
+    title: "Tourisme / visite privée · long séjour (Visa D, > 90 jours)",
+    cat: "Long séjour (Visa D) · installation ou séjour privé prolongé",
     level: "complexe",
     docs: [],
     extra: [],
@@ -232,8 +232,8 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
   },
   b_long: {
-    title: "Visite familiale · long séjour (> 90 jours)",
-    cat: "Long séjour · installation auprès d'un proche",
+    title: "Visite familiale · long séjour (Visa D, > 90 jours)",
+    cat: "Long séjour (Visa D) · installation auprès d'un proche",
     level: "complexe",
     docs: [],
     extra: [],
@@ -243,7 +243,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   b_ue_famille: {
     title: "Visite familiale · famille d'un ressortissant UE/EEE",
-    cat: "Court séjour Schengen · libre circulation UE/EEE",
+    cat: "Court séjour Schengen (Visa C) · libre circulation UE/EEE",
     level: "attention",
     docs: [
       "Preuve du lien familial",
@@ -259,8 +259,8 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
   },
   conjoint_court: {
-    title: "Visite privée · conjoint de Français (court séjour)",
-    cat: "Court séjour Schengen · visite du conjoint français",
+    title: "Visite privée · conjoint de Français (Visa C)",
+    cat: "Court séjour Schengen (Visa C) · visite du conjoint français",
     level: "attention",
     docs: [
       "Passeport (visa et cachet) valide 3 mois après la date de retour au Maroc",
@@ -278,7 +278,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   d_refugie: {
     title: "Rejoindre un conjoint / membre de famille réfugié",
-    cat: "Long séjour · regroupement familial (statut de réfugié)",
+    cat: "Long séjour (Visa D) · regroupement familial (statut de réfugié)",
     level: "complexe",
     docs: [],
     extra: [],
@@ -288,7 +288,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   d_subsidiaire: {
     title: "Rejoindre un conjoint / membre de famille — protection subsidiaire",
-    cat: "Long séjour · regroupement familial (protection subsidiaire)",
+    cat: "Long séjour (Visa D) · regroupement familial (protection subsidiaire)",
     level: "complexe",
     docs: [],
     extra: [],
@@ -298,7 +298,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   d_apatride: {
     title: "Rejoindre un conjoint / membre de famille apatride",
-    cat: "Long séjour · regroupement familial (statut d'apatride)",
+    cat: "Long séjour (Visa D) · regroupement familial (statut d'apatride)",
     level: "complexe",
     docs: [],
     extra: [],
@@ -308,7 +308,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c3: {
     title: "Employé par une entreprise étrangère (hors France)",
-    cat: "Long séjour · travail",
+    cat: "Long séjour (Visa D) · travail",
     level: "complexe",
     docs: [],
     extra: [],
@@ -316,7 +316,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c4: {
     title: "Employé par une entreprise française",
-    cat: "Long séjour · travail",
+    cat: "Long séjour (Visa D) · travail",
     level: "complexe",
     docs: [],
     extra: [],
@@ -324,7 +324,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c5: {
     title: "Événement culturel / artistique / scientifique / sportif",
-    cat: "Court séjour · mission ponctuelle",
+    cat: "Court séjour (Visa C) · mission ponctuelle",
     level: "attention",
     docs: [
       "Justificatifs liés à l'événement (invitation, programme, contrat)",
@@ -341,7 +341,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c6: {
     title: "Mannequin",
-    cat: "Long séjour · travail",
+    cat: "Long séjour (Visa D) · travail",
     level: "complexe",
     docs: [],
     extra: [],
@@ -349,7 +349,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c7: {
     title: "Marin",
-    cat: "Long séjour · travail",
+    cat: "Long séjour (Visa D) · travail",
     level: "complexe",
     docs: [],
     extra: [],
@@ -357,7 +357,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c8: {
     title: "Chercheur",
-    cat: "Long séjour · travail",
+    cat: "Long séjour (Visa D) · travail",
     level: "complexe",
     docs: [],
     extra: [],
@@ -365,7 +365,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
   c9: {
     title: "Stage salarié",
-    cat: "Long séjour · travail",
+    cat: "Long séjour (Visa D) · travail",
     level: "complexe",
     docs: [],
     extra: [],
@@ -381,7 +381,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
   },
 };
 
-/* ============ ASSEMBLAGE DYNAMIQUE (court séjour) ============ */
+/* ============ ASSEMBLAGE DYNAMIQUE (court séjour, Visa C) ============ */
 
 function profDoc(prof?: Profile["prof"]): string {
   if (prof === "commercant")
@@ -526,7 +526,7 @@ function buildTourisme(p: Profile): CaseResult {
       p.financePar === "garant"
         ? "Visa touriste classique · pris en charge par un garant"
         : `Visa touriste classique · ${PROF_LABEL[p.prof ?? "salarie"]}`,
-    cat: "Court séjour Schengen · tourisme",
+    cat: "Court séjour Schengen (Visa C) · tourisme",
     level: "standard",
     docs,
     extra: [],
@@ -564,7 +564,7 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
     title: enfantParent
       ? `Visite familiale · enfant/parent de Français · ${PROF_LABEL[p.prof ?? "salarie"]}`
       : `Visite familiale · ${PROF_LABEL[p.prof ?? "salarie"]}`,
-    cat: "Court séjour Schengen · visite familiale",
+    cat: "Court séjour Schengen (Visa C) · visite familiale",
     level: "attention",
     docs,
     extra: [],
@@ -599,7 +599,7 @@ export function buildCourtSejour(p: Profile): CaseResult {
     return {
       key: "cs_famille_ue",
       title: "Visite privée · famille d'un ressortissant UE, EEE ou Suisse",
-      cat: "Court séjour Schengen · libre circulation UE/EEE/Suisse",
+      cat: "Court séjour Schengen (Visa C) · libre circulation UE/EEE/Suisse",
       level: "attention",
       docs,
       extra: [],
@@ -612,12 +612,12 @@ export function buildCourtSejour(p: Profile): CaseResult {
   const META = {
     visite_generale: {
       title: "Visite familiale généraliste",
-      cat: "Court séjour Schengen · visite privée",
+      cat: "Court séjour Schengen (Visa C) · visite privée",
       level: "attention" as Level,
     },
     visite_enfant_parent: {
       title: "Visite enfant/parent de Français",
-      cat: "Court séjour Schengen · lien direct avec un citoyen français",
+      cat: "Court séjour Schengen (Visa C) · lien direct avec un citoyen français",
       level: "attention" as Level,
     },
   };
@@ -797,9 +797,9 @@ export const TREE: Record<string, TreeNode> = {
   a_duree: {
     q: "Quelle est la durée prévue du séjour ?",
     opts: [
-      { l: "≤ 90 jours (court séjour)", n: "a_residence", set: { base: "tourisme" } },
+      { l: "≤ 90 jours (Visa C)", n: "a_residence", set: { base: "tourisme" } },
       {
-        l: "> 90 jours (long séjour)",
+        l: "> 90 jours (Visa D)",
         n: "DYNAMIC",
         set: { base: "tourisme", duree: "long" },
         r: true,
@@ -961,8 +961,8 @@ export const TREE: Record<string, TreeNode> = {
   b_duree: {
     q: "Quelle est la durée du séjour ?",
     opts: [
-      { l: "≤ 90 jours (court séjour)", n: "b_motif" },
-      { l: "> 90 jours (long séjour)", n: "b_long", r: true },
+      { l: "≤ 90 jours (Visa C)", n: "b_motif" },
+      { l: "> 90 jours (Visa D)", n: "b_long", r: true },
     ],
   },
   b_motif: {
@@ -1291,8 +1291,8 @@ export const TREE: Record<string, TreeNode> = {
   d_duree: {
     q: "Quelle est la durée prévue du séjour ?",
     opts: [
-      { l: "≤ 90 jours (court séjour)", n: "d_court" },
-      { l: "> 90 jours (long séjour)", n: "d_long" },
+      { l: "≤ 90 jours (Visa C)", n: "d_court" },
+      { l: "> 90 jours (Visa D)", n: "d_long" },
     ],
   },
   d_long: {
