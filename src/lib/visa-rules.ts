@@ -184,6 +184,8 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
       "Attestation de l'entreprise d'accueil en France",
       "Justificatif de maintien de la rémunération",
       "Justificatif de logement",
+      "Autorisation de travail : autorisation de travail obtenue par votre employeur auprès de l'administration française, sauf dispense pour manifestation, mannequin, détachement pour enseignement et mission d'ingénierie ou expertise",
+      "Diplôme : copie des diplômes, justificatifs de qualification et attestations de travail",
     ],
     extra: [],
     notes: [],
@@ -561,7 +563,18 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
     docs.push("Justificatif de lien de parenté avec la personne de l'attestation d'accueil");
   }
   docs.push(PRE_RESERVATION_TRANSPORT);
-  docs.push(...professionDocsTourisme(p.prof));
+
+  if (p.financePar === "garant") {
+    docs.push(
+      "Attestation de prise en charge",
+      "Preuve du lien avec le garant (si disponible)",
+      "Justificatifs des ressources du garant",
+      "3 derniers relevés bancaires",
+    );
+  } else {
+    docs.push(...professionDocsTourisme(p.prof));
+  }
+
   docs.push(...etatCivilDocs(p.situationFamiliale));
   docs.push("Justificatifs des biens personnels");
   docs.push(hebergementDoc(p.hebergement));
@@ -569,9 +582,14 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
 
   return {
     key: enfantParent ? "b_enfant_parent" : "b_famille",
-    title: enfantParent
-      ? `Visite familiale · enfant/parent de Français · ${PROF_LABEL[p.prof ?? "salarie"]}`
-      : `Visite familiale · ${PROF_LABEL[p.prof ?? "salarie"]}`,
+    title:
+      p.financePar === "garant"
+        ? (enfantParent
+            ? "Visite familiale · enfant/parent de Français · pris en charge par un garant"
+            : "Visite familiale · pris en charge par un garant")
+        : enfantParent
+          ? `Visite familiale · enfant/parent de Français · ${PROF_LABEL[p.prof ?? "salarie"]}`
+          : `Visite familiale · ${PROF_LABEL[p.prof ?? "salarie"]}`,
     cat: "Court séjour Schengen (Visa C) · visite familiale",
     level: "attention",
     docs,
@@ -772,7 +790,7 @@ export const TREE: Record<string, TreeNode> = {
     q: "Avez-vous déjà eu un refus de visa pour la France ou un autre pays Schengen ?",
     opts: [
       { l: "Oui", n: "q5", set: { refusVisa: true } },
-      { l: "Non", n: "motif" },
+      { l: "Non", n: "hebergement" },
     ],
   },
   q5: {
@@ -783,36 +801,129 @@ export const TREE: Record<string, TreeNode> = {
       { key: "q5_motif", label: "Motif du refus (si connu)" },
       { key: "q5_type_visa", label: "Type de visa demandé" },
     ],
-    next: "motif",
+    next: "hebergement",
   },
 
-  /* ============ ÉTAPE 2 — MOTIF DU VOYAGE ============ */
+  /* ============ HÉBERGEMENT / FINANCEMENT — communes, avant le motif ============ */
+  hebergement: {
+    q: "Où allez-vous séjourner pendant votre voyage ?",
+    help: "Question commune posée avant le motif du voyage : elle s'applique à toutes les branches court séjour.",
+    opts: [
+      { l: "Hôtel / hébergement touristique", n: "hotel_fields", set: { hebergement: "hotel" } },
+      { l: "Chez une personne", n: "personne_qui", set: { hebergement: "personne" } },
+      { l: "Autre (logement personnel)", n: "financement", set: { hebergement: "autre" } },
+    ],
+  },
+  hotel_fields: {
+    q: "Hôtel.",
+    fields: [
+      { key: "hotel_nom", label: "Nom de l'hôtel" },
+      { key: "hotel_adresse", label: "Adresse" },
+      { key: "hotel_cp_ville", label: "Code postal / ville" },
+      { key: "hotel_dates", label: "Dates de réservation" },
+    ],
+    next: "hotel_confirmee",
+  },
+  hotel_confirmee: {
+    q: "Avez-vous une réservation confirmée ?",
+    opts: [
+      { l: "Oui", n: "financement" },
+      { l: "Non", n: "financement" },
+    ],
+  },
+  personne_qui: {
+    q: "Chez qui allez-vous séjourner ?",
+    opts: [
+      { l: "Famille", n: "personne_fields" },
+      { l: "Ami(e)", n: "personne_fields" },
+      { l: "Connaissance", n: "personne_fields" },
+      { l: "Autre", n: "personne_fields" },
+    ],
+  },
+  personne_fields: {
+    q: "Personne hébergeante.",
+    fields: [
+      { key: "personne_nom", label: "Nom" },
+      { key: "personne_lien", label: "Quel est votre lien avec cette personne ?" },
+      { key: "personne_adresse", label: "Adresse" },
+      { key: "personne_coordonnees", label: "Téléphone / e-mail" },
+    ],
+    next: "personne_nationalite",
+  },
+  personne_nationalite: {
+    q: "Cette personne est-elle de nationalité française ?",
+    opts: [
+      { l: "Oui", n: "financement" },
+      { l: "Non", n: "personne_fields2" },
+    ],
+  },
+  personne_fields2: {
+    q: "Nationalité / statut de la personne hébergeante.",
+    fields: [{ key: "personne_nat_statut", label: "Nationalité / statut" }],
+    next: "financement",
+  },
+  financement: {
+    q: "Qui finance le voyage ?",
+    opts: [
+      { l: "Moi-même", n: "duree" },
+      { l: "Une autre personne / garant", n: "garant_fields", set: { financePar: "garant" } },
+    ],
+  },
+  garant_fields: {
+    q: "Personne qui finance le voyage.",
+    fields: [
+      { key: "garant_nom", label: "Nom de la personne" },
+      { key: "garant_lien", label: "Quel est votre lien avec cette personne ?" },
+      { key: "garant_pays", label: "Dans quel pays réside-t-elle ?" },
+    ],
+    next: "garant_frais",
+  },
+  garant_frais: {
+    q: "Quels frais prend-elle en charge ?",
+    opts: [
+      { l: "Transport", n: "duree" },
+      { l: "Hébergement", n: "duree" },
+      { l: "Nourriture", n: "duree" },
+      { l: "Tous les frais", n: "duree" },
+      { l: "Autre", n: "duree" },
+    ],
+  },
+  duree: {
+    q: "Quelle est la durée prévue du séjour ?",
+    help: "Dernière question commune avant le motif du voyage.",
+    opts: [
+      { l: "≤ 90 jours (court séjour)", n: "motif", set: { duree: "court" } },
+      { l: "> 90 jours (long séjour)", n: "motif_long", set: { duree: "long" } },
+    ],
+  },
+
+  /* ============ ÉTAPE 2 — MOTIF DU VOYAGE (court séjour) ============ */
   motif: {
     q: "Quel est le motif principal du séjour ?",
     help: "Le motif déclaré conditionne toute la suite du dossier.",
     opts: [
-      { l: "Tourisme / visite privée", n: "a_duree" },
-      { l: "Visite familiale", n: "b_duree" },
+      { l: "Tourisme / visite privée", n: "a_residence", set: { base: "tourisme" } },
+      { l: "Visite familiale", n: "b_motif" },
       { l: "Travail", n: "c1" },
-      { l: "Mariage / conjoint", n: "d_duree" },
+      { l: "Mariage / conjoint", n: "d_court" },
+      { l: "Raisons de santé", n: "dout", r: true },
+      { l: "Études", n: "eout", r: true },
+    ],
+  },
+  motif_long: {
+    q: "Quel est le motif principal du séjour ?",
+    help: "Séjour de plus de 90 jours — le motif déclaré conditionne toute la suite du dossier.",
+    opts: [
+      { l: "Tourisme / visite privée", n: "DYNAMIC", set: { base: "tourisme" }, r: true },
+      { l: "Visite familiale", n: "b_long", r: true },
+      { l: "Travail", n: "c1_long" },
+      { l: "Mariage / conjoint", n: "d_long" },
       { l: "Raisons de santé", n: "dout", r: true },
       { l: "Études", n: "eout", r: true },
     ],
   },
 
   /* ============ BRANCHE A — TOURISME / VISITE PRIVÉE ============ */
-  a_duree: {
-    q: "Quelle est la durée prévue du séjour ?",
-    opts: [
-      { l: "≤ 90 jours (Visa C)", n: "a_residence", set: { base: "tourisme" } },
-      {
-        l: "> 90 jours (Visa D)",
-        n: "DYNAMIC",
-        set: { base: "tourisme", duree: "long" },
-        r: true,
-      },
-    ],
-  },
   a_residence: {
     q: "Résidez-vous actuellement dans un pays autre que votre nationalité ?",
     opts: [
@@ -829,11 +940,11 @@ export const TREE: Record<string, TreeNode> = {
     next: "a_ue",
   },
   a_ue: {
-    q: "Voyagez-vous avec ou rejoignez-vous un membre de votre famille ressortissant français, de l'UE ou de l'EEE ?",
+    q: "Rejoignez-vous un membre de votre famille ressortissant français, de l'UE ou de l'EEE ?",
     help: "Si oui, des pièces supplémentaires (lien familial, nationalité, preuve d'accompagnement) s'ajoutent à la checklist tourisme — elles ne la remplacent pas.",
     opts: [
       { l: "Oui", n: "a_ue_fields", set: { ueEeeFamily: true } },
-      { l: "Non", n: "a_hebergement" },
+      { l: "Non", n: "a_profession" },
     ],
   },
   a_ue_fields: {
@@ -846,89 +957,7 @@ export const TREE: Record<string, TreeNode> = {
       { key: "a_ue_naissance", label: "Date de naissance", type: "date" },
       { key: "a_ue_nationalite", label: "Nationalité" },
     ],
-    next: "a_hebergement",
-  },
-  a_hebergement: {
-    q: "Où allez-vous séjourner pendant votre voyage ?",
-    opts: [
-      { l: "Hôtel / hébergement touristique", n: "a_hotel_fields", set: { hebergement: "hotel" } },
-      { l: "Chez une personne", n: "a_personne_qui", set: { hebergement: "personne" } },
-      { l: "Autre (logement personnel)", n: "a_financement", set: { hebergement: "autre" } },
-    ],
-  },
-  a_hotel_fields: {
-    q: "Hôtel.",
-    fields: [
-      { key: "a_hotel_nom", label: "Nom de l'hôtel" },
-      { key: "a_hotel_adresse", label: "Adresse" },
-      { key: "a_hotel_cp_ville", label: "Code postal / ville" },
-      { key: "a_hotel_dates", label: "Dates de réservation" },
-    ],
-    next: "a_hotel_confirmee",
-  },
-  a_hotel_confirmee: {
-    q: "Avez-vous une réservation confirmée ?",
-    opts: [
-      { l: "Oui", n: "a_financement" },
-      { l: "Non", n: "a_financement" },
-    ],
-  },
-  a_personne_qui: {
-    q: "Chez qui allez-vous séjourner ?",
-    opts: [
-      { l: "Famille", n: "a_personne_fields" },
-      { l: "Ami(e)", n: "a_personne_fields" },
-      { l: "Connaissance", n: "a_personne_fields" },
-      { l: "Autre", n: "a_personne_fields" },
-    ],
-  },
-  a_personne_fields: {
-    q: "Personne hébergeante.",
-    fields: [
-      { key: "a_personne_nom", label: "Nom" },
-      { key: "a_personne_lien", label: "Quel est votre lien avec cette personne ?" },
-      { key: "a_personne_adresse", label: "Adresse" },
-      { key: "a_personne_coordonnees", label: "Téléphone / e-mail" },
-    ],
-    next: "a_personne_nationalite",
-  },
-  a_personne_nationalite: {
-    q: "Cette personne est-elle de nationalité française ?",
-    opts: [
-      { l: "Oui", n: "a_financement" },
-      { l: "Non", n: "a_personne_fields2" },
-    ],
-  },
-  a_personne_fields2: {
-    q: "Nationalité / statut de la personne hébergeante.",
-    fields: [{ key: "a_personne_nat_statut", label: "Nationalité / statut" }],
-    next: "a_financement",
-  },
-  a_financement: {
-    q: "Qui finance le voyage ?",
-    opts: [
-      { l: "Moi-même", n: "a_profession" },
-      { l: "Une autre personne / garant", n: "a_garant_fields", set: { financePar: "garant" } },
-    ],
-  },
-  a_garant_fields: {
-    q: "Personne qui finance le voyage.",
-    fields: [
-      { key: "a_garant_nom", label: "Nom de la personne" },
-      { key: "a_garant_lien", label: "Quel est votre lien avec cette personne ?" },
-      { key: "a_garant_pays", label: "Dans quel pays réside-t-elle ?" },
-    ],
-    next: "a_garant_frais",
-  },
-  a_garant_frais: {
-    q: "Quels frais prend-elle en charge ?",
-    opts: [
-      { l: "Transport", n: "situation" },
-      { l: "Hébergement", n: "situation" },
-      { l: "Nourriture", n: "situation" },
-      { l: "Tous les frais", n: "situation" },
-      { l: "Autre", n: "situation" },
-    ],
+    next: "a_profession",
   },
   a_profession: {
     q: "Quelle est votre situation professionnelle ?",
@@ -965,13 +994,6 @@ export const TREE: Record<string, TreeNode> = {
   },
 
   /* ============ BRANCHE B — VISITE FAMILIALE ============ */
-  b_duree: {
-    q: "Quelle est la durée du séjour ?",
-    opts: [
-      { l: "≤ 90 jours (Visa C)", n: "b_motif" },
-      { l: "> 90 jours (Visa D)", n: "b_long", r: true },
-    ],
-  },
   b_motif: {
     q: "Quel est le motif familial précis ?",
     opts: [
@@ -988,11 +1010,11 @@ export const TREE: Record<string, TreeNode> = {
   b_qui: {
     q: "Qui allez-vous visiter ?",
     opts: [
-      { l: "Parent", n: "b_famille_fields" },
-      { l: "Enfant", n: "b_famille_fields" },
-      { l: "Frère / sœur", n: "b_famille_fields" },
-      { l: "Conjoint", n: "b_famille_fields" },
-      { l: "Autre membre de famille", n: "b_famille_fields" },
+      { l: "Parent", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
+      { l: "Enfant", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
+      { l: "Frère / sœur", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
+      { l: "Conjoint", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
+      { l: "Autre membre de famille", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
     ],
   },
   b_famille_fields: {
@@ -1004,18 +1026,7 @@ export const TREE: Record<string, TreeNode> = {
       { key: "b_famille_adresse", label: "Adresse" },
       { key: "b_famille_coordonnees", label: "Téléphone / e-mail" },
     ],
-    next: "b_hebergement",
-  },
-  b_hebergement: {
-    q: "Allez-vous séjourner chez cette personne ?",
-    opts: [
-      {
-        l: "Oui",
-        n: "b_profession",
-        set: { base: "visite_familiale_membre", hebergement: "personne" },
-      },
-      { l: "Non — hôtel ou autre hébergement", n: "b_profession", set: { hebergement: "hotel" } },
-    ],
+    next: "b_profession",
   },
   b_profession: {
     q: "Quelle est votre situation professionnelle ?",
@@ -1051,8 +1062,8 @@ export const TREE: Record<string, TreeNode> = {
   b_enfant_nationalite: {
     q: "Cette personne est-elle de nationalité française ?",
     opts: [
-      { l: "Oui", n: "b_hebergement" },
-      { l: "Non — vérifier la catégorie familiale concernée", n: "b_hebergement" },
+      { l: "Oui", n: "b_profession" },
+      { l: "Non — vérifier la catégorie familiale concernée", n: "b_profession" },
     ],
   },
 
@@ -1153,8 +1164,20 @@ export const TREE: Record<string, TreeNode> = {
     ],
   },
 
-  /* ============ BRANCHE C — TRAVAIL ============ */
+  /* ============ BRANCHE C — TRAVAIL (court séjour) ============ */
   c1: {
+    q: "Quel est votre projet professionnel en France ?",
+    opts: [
+      { l: "Voyage professionnel / d'affaires", n: "c10_fields" },
+      { l: "Détachement / mission temporaire", n: "c_detachement_fields" },
+      { l: "Événement culturel ou artistique", n: "c5_fields" },
+      { l: "Mannequin / modèle", n: "c6_fields" },
+      { l: "Recherche / activité scientifique", n: "c8_fields" },
+      { l: "Stage professionnel", n: "c9_fields" },
+    ],
+  },
+  /* ============ BRANCHE C — TRAVAIL (long séjour, liste complète) ============ */
+  c1_long: {
     q: "Quel est votre projet professionnel en France ?",
     opts: [
       { l: "Embauche (emploi salarié chez un employeur en France)", n: "c_embauche_fields" },
@@ -1295,13 +1318,6 @@ export const TREE: Record<string, TreeNode> = {
   },
 
   /* ============ BRANCHE D — MARIAGE / CONJOINT ============ */
-  d_duree: {
-    q: "Quelle est la durée prévue du séjour ?",
-    opts: [
-      { l: "≤ 90 jours (Visa C)", n: "d_court" },
-      { l: "> 90 jours (Visa D)", n: "d_long" },
-    ],
-  },
   d_long: {
     q: "Quel est votre projet en France ?",
     opts: [
