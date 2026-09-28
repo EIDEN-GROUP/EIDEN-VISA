@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useNotifications } from "@/lib/store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bell, Check, FolderOpen } from "lucide-react";
+import { Bell, Check, FolderOpen, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function relative(iso: string | Date) {
@@ -55,33 +55,58 @@ export function NotificationBell({ tone = "surface" }: { tone?: "rail" | "surfac
             <p className="p-4 text-sm text-muted-foreground">Aucune notification.</p>
           )}
           {items.map((n) => (
-            <button
+            <div
               key={n.id}
-              onClick={() => {
-                if (!n.read) marquerLu([n.id]);
-                if (n.dossierId) navigate({ to: "/dossiers/$id", params: { id: n.dossierId } });
-              }}
               className={cn(
-                "flex w-full gap-2.5 px-3 py-2.5 text-left hover:bg-accent/40",
+                "flex w-full gap-2.5 px-3 py-2.5 text-left",
                 !n.read && "bg-accent/30",
               )}
             >
-              <FolderOpen
-                className={cn(
-                  "mt-0.5 h-3.5 w-3.5 shrink-0",
-                  n.read ? "text-muted-foreground" : "text-primary",
+              <button
+                onClick={() => {
+                  if (!n.read) marquerLu([n.id]);
+                  if (n.url) {
+                    window.open(n.url, "_blank", "noopener,noreferrer");
+                  } else if (n.dossierId) {
+                    navigate({ to: "/dossiers/$id", params: { id: n.dossierId } });
+                  }
+                }}
+                className="flex flex-1 gap-2.5 text-left hover:opacity-80"
+              >
+                {n.url ? (
+                  <ExternalLink
+                    className={cn(
+                      "mt-0.5 h-3.5 w-3.5 shrink-0",
+                      n.read ? "text-muted-foreground" : "text-primary",
+                    )}
+                    strokeWidth={1.5}
+                  />
+                ) : (
+                  <FolderOpen
+                    className={cn(
+                      "mt-0.5 h-3.5 w-3.5 shrink-0",
+                      n.read ? "text-muted-foreground" : "text-primary",
+                    )}
+                    strokeWidth={1.5}
+                  />
                 )}
-                strokeWidth={1.5}
-              />
-              <div className="min-w-0">
-                <p className="text-sm text-foreground">{n.message}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {n.acteurNom ? `${n.acteurNom} · ` : ""}
-                  {relative(n.createdAt)}
-                </p>
-              </div>
-              {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-            </button>
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground">{n.message}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {n.acteurNom ? `${n.acteurNom} · ` : ""}
+                    {relative(n.createdAt)}
+                  </p>
+                  {n.url && (
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary">
+                      Voir <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
+                    </span>
+                  )}
+                </div>
+              </button>
+              {!n.read && (
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+              )}
+            </div>
           ))}
         </div>
       </PopoverContent>

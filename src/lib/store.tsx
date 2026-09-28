@@ -57,6 +57,12 @@ import {
   listMyNotifications as listMyNotificationsFn,
   markNotificationsRead as markNotificationsReadFn,
 } from "@/backend/functions/assignments";
+import {
+  listWatches as listWatchesFn,
+  createWatch as createWatchFn,
+  toggleWatch as toggleWatchFn,
+  deleteWatch as deleteWatchFn,
+} from "@/backend/functions/rdvWatches";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
 export const ROLE_LABEL: Record<Role, string> = {
@@ -472,6 +478,44 @@ export function useNotifications() {
     items: query.data?.items ?? [],
     unread: query.data?.unread ?? 0,
     marquerLu: (ids?: string[]) => markRead.mutateAsync(ids),
+  };
+}
+
+const RDV_WATCHES_KEY = ["rdv-watches"] as const;
+
+/**
+ * Surveillance de disponibilité RDV — URLs ajoutées dynamiquement depuis l'écran dédié,
+ * relues et cochées par scripts/rdv_watcher.py (jamais codées en dur ici ni côté script).
+ */
+export function useRdvWatches() {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: RDV_WATCHES_KEY,
+    queryFn: () => listWatchesFn(),
+    // Rafraîchi assez souvent pour voir le résultat du script externe sans recharger la page.
+    refetchInterval: 30_000,
+  });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: RDV_WATCHES_KEY });
+  const creer = useMutation({
+    mutationFn: (data: { label: string; url: string; dossierId?: string; intervalSeconds?: number }) =>
+      createWatchFn({ data }),
+    onSuccess: invalidate,
+  });
+  const basculer = useMutation({
+    mutationFn: (data: { id: string; actif: boolean }) => toggleWatchFn({ data }),
+    onSuccess: invalidate,
+  });
+  const supprimer = useMutation({
+    mutationFn: (id: string) => deleteWatchFn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+  return {
+    watches: query.data ?? [],
+    isLoading: query.isLoading,
+    creer: (data: { label: string; url: string; dossierId?: string; intervalSeconds?: number }) =>
+      creer.mutateAsync(data),
+    basculer: (id: string, actif: boolean) => basculer.mutateAsync({ id, actif }),
+    supprimer: (id: string) => supprimer.mutateAsync(id),
   };
 }
 

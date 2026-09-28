@@ -6,7 +6,6 @@ import {
   alertes,
   completion,
   encaisse,
-  ETAPES,
   PACKS,
   CENTRES,
   MODALITE_LABEL,
@@ -51,16 +50,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Circle,
-  FileText,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileText, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
 
@@ -81,8 +71,6 @@ function DossierDetail() {
     dossier: d,
     isLoading,
     togglePiece,
-    avancer,
-    reculer,
     encaisser,
     changerPack,
     changerModalite,
@@ -231,73 +219,6 @@ function DossierDetail() {
           ))}
         </div>
       )}
-
-      {/* Stepper */}
-      <Card className="panel">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Parcours en 7 étapes</CardTitle>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => reculer(d.id)}
-              disabled={d.etape <= 1}
-            >
-              Étape précédente
-            </Button>
-            <Button size="sm" onClick={() => avancer(d.id)} disabled={d.etape >= 7}>
-              Étape suivante <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
-            {ETAPES.map((e) => {
-              const done = e.n < d.etape;
-              const active = e.n === d.etape;
-              return (
-                <li
-                  key={e.n}
-                  className={cn(
-                    "rounded-xl border p-2.5 text-xs",
-                    active ? "border-primary" : "border-border",
-                    !active && !done && "text-muted-foreground/80",
-                  )}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {done ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-[var(--ok)]" strokeWidth={1.5} />
-                    ) : (
-                      <Circle
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          active ? "text-primary" : "text-muted-foreground",
-                        )}
-                        strokeWidth={1.5}
-                      />
-                    )}
-                    <span className="font-semibold text-foreground">Étape {e.n}</span>
-                  </div>
-                  <div className="mt-1 font-medium text-foreground">{e.label}</div>
-                  <div className="mt-1 text-muted-foreground">{e.encaissement}</div>
-                </li>
-              );
-            })}
-          </ol>
-          {(() => {
-            const current = ETAPES.find((e) => e.n === d.etape);
-            if (!current) return null;
-            return (
-              <div className="mt-4 border-l-2 border-primary pl-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Étape en cours · {current.role}
-                </div>
-                <p className="mt-1 text-sm text-foreground">{current.detail}</p>
-              </div>
-            );
-          })()}
-        </CardContent>
-      </Card>
 
       {cloture && (
         <Card className="panel">

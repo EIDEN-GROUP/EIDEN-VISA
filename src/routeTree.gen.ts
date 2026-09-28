@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
 import { Route as AppProfilRouteImport } from './routes/_app/profil'
 import { Route as AppQualificationRouteImport } from './routes/_app/qualification'
+import { Route as AppRdvWatchRouteImport } from './routes/_app/rdv-watch'
 import { Route as AppReferentielRouteImport } from './routes/_app/referentiel'
 import { Route as AppDossiersIndexRouteImport } from './routes/_app/dossiers/index'
 import { Route as AppDossiersIdRouteImport } from './routes/_app/dossiers/$id'
@@ -61,6 +62,11 @@ const AppQualificationRoute = AppQualificationRouteImport.update({
   path: '/qualification',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRdvWatchRoute = AppRdvWatchRouteImport.update({
+  id: '/rdv-watch',
+  path: '/rdv-watch',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReferentielRoute = AppReferentielRouteImport.update({
   id: '/referentiel',
   path: '/referentiel',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/paiements': typeof AppPaiementsRoute
   '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
+  '/rdv-watch': typeof AppRdvWatchRoute
   '/referentiel': typeof AppReferentielRoute
   '/dossiers/$id': typeof AppDossiersIdRoute
   '/dossiers/$id/recu': typeof DossiersIdRecuRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/paiements': typeof AppPaiementsRoute
   '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
+  '/rdv-watch': typeof AppRdvWatchRoute
   '/referentiel': typeof AppReferentielRoute
   '/': typeof AppIndexRoute
   '/dossiers/$id': typeof AppDossiersIdRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/_app/paiements': typeof AppPaiementsRoute
   '/_app/profil': typeof AppProfilRoute
   '/_app/qualification': typeof AppQualificationRoute
+  '/_app/rdv-watch': typeof AppRdvWatchRoute
   '/_app/referentiel': typeof AppReferentielRoute
   '/_app/': typeof AppIndexRoute
   '/_app/dossiers/$id': typeof AppDossiersIdRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/profil'
     | '/qualification'
+    | '/rdv-watch'
     | '/referentiel'
     | '/dossiers/$id'
     | '/dossiers/$id/recu'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/profil'
     | '/qualification'
+    | '/rdv-watch'
     | '/referentiel'
     | '/'
     | '/dossiers/$id'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/_app/paiements'
     | '/_app/profil'
     | '/_app/qualification'
+    | '/_app/rdv-watch'
     | '/_app/referentiel'
     | '/_app/'
     | '/_app/dossiers/$id'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppQualificationRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/rdv-watch': {
+      id: '/_app/rdv-watch'
+      path: '/rdv-watch'
+      fullPath: '/rdv-watch'
+      preLoaderRoute: typeof AppRdvWatchRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/referentiel': {
       id: '/_app/referentiel'
       path: '/referentiel'
@@ -267,6 +286,7 @@ interface AppRouteChildren {
   AppPaiementsRoute: typeof AppPaiementsRoute
   AppProfilRoute: typeof AppProfilRoute
   AppQualificationRoute: typeof AppQualificationRoute
+  AppRdvWatchRoute: typeof AppRdvWatchRoute
   AppReferentielRoute: typeof AppReferentielRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDossiersIdRoute: typeof AppDossiersIdRoute
@@ -277,6 +297,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPaiementsRoute: AppPaiementsRoute,
   AppProfilRoute: AppProfilRoute,
   AppQualificationRoute: AppQualificationRoute,
+  AppRdvWatchRoute: AppRdvWatchRoute,
   AppReferentielRoute: AppReferentielRoute,
   AppIndexRoute: AppIndexRoute,
   AppDossiersIdRoute: AppDossiersIdRoute,

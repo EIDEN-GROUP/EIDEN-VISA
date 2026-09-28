@@ -89,6 +89,7 @@ export const listMyNotifications = createServerFn({ method: "GET" }).handler(asy
       type: n.type,
       message: n.message,
       dossierId: n.dossierId,
+      url: n.url,
       acteurNom: n.acteurNom,
       read: n.readAt !== null,
       createdAt: n.createdAt,

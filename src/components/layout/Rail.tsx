@@ -9,6 +9,7 @@ import {
   ListTree,
   Wallet,
   BookOpen,
+  BellRing,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const NAV = [
   { to: "/qualification", label: "Qualification", icon: ListTree },
   { to: "/paiements", label: "Paiements", icon: Wallet },
   { to: "/referentiel", label: "Référentiel", icon: BookOpen },
+  { to: "/rdv-watch", label: "Surveillance RDV", icon: BellRing },
 ] as const;
 
 function RailBody({ onNavigate }: { onNavigate?: () => void }) {

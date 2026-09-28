@@ -24,6 +24,8 @@ export const notifications = pgTable("notifications", {
   type: text("type").$type<"assignation" | "info">().notNull().default("assignation"),
   message: text("message").notNull(),
   dossierId: text("dossier_id"),
+  /** Lien externe optionnel (ex. la page TLScontact/BLS surveillée) — bouton « Voir » dans la cloche. */
+  url: text("url"),
   /** Qui a déclenché la notification (affichage : « par X »). */
   acteurNom: text("acteur_nom"),
   readAt: timestamp("read_at", { withTimezone: true }),
@@ -81,6 +83,27 @@ export const dossiers = pgTable("dossiers", {
     .notNull()
     .default("en_attente"),
   decisionDate: text("decision_date"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Surveillance de disponibilité RDV (TLScontact/BLS ou tout autre site public) —
+ * ajoutée dynamiquement depuis l'écran dédié, jamais codée en dur. Un script externe
+ * (Python) relit cette table, va vérifier chaque `url`, et compare au `lastSnapshotHash`
+ * pour détecter un changement (créneau apparu) sans jamais automatiser la réservation
+ * elle-même — voir scripts/rdv_watcher.py.
+ */
+export const rdvWatches = pgTable("rdv_watches", {
+  id: text("id").primaryKey(),
+  label: text("label").notNull(),
+  url: text("url").notNull(),
+  dossierId: text("dossier_id").references(() => dossiers.id, { onDelete: "set null" }),
+  actif: boolean("actif").notNull().default(true),
+  intervalSeconds: integer("interval_seconds").notNull().default(300),
+  lastSnapshotHash: text("last_snapshot_hash"),
+  lastStatus: text("last_status"),
+  lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+  createdByUserId: text("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
