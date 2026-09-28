@@ -34,7 +34,8 @@ export interface Profile {
     | "visite_enfant_parent"
     | "famille_ue"
     | "visite_familiale_membre"
-    | "enfant_parent_francais";
+    | "enfant_parent_francais"
+    | "en_vue_mariage";
   dependent?: boolean;
   minor?: boolean;
   married?: boolean;
@@ -54,6 +55,12 @@ export interface Profile {
   duree?: "court" | "long";
   /** Q22 — où le demandeur séjourne pendant le voyage. */
   hebergement?: "hotel" | "personne" | "autre";
+  /** Moyen de transport — pose la pièce « billet aller-retour » sur le bon support. */
+  transport?: "avion" | "autobus" | "bateau";
+  /** En vue de mariage : certificat de la mairie (bans publiés sans opposition) disponible. */
+  bansCertificat?: boolean;
+  /** En vue de mariage : le/la futur(e) conjoint(e) est de nationalité française. */
+  futurConjointFrancais?: boolean;
   /** Q35 — qui finance le voyage. */
   financePar?: "soi_meme" | "garant";
   /** Q-F3 (questions finales communes) — déclenche les pièces d'état civil. */
@@ -419,7 +426,15 @@ const PASSEPORT_FORMULAIRE = [
   "2 photos d'identité sur fond blanc",
 ];
 const ASSURANCE_VOYAGE = "Assurance voyage";
-const PRE_RESERVATION_TRANSPORT = "Pré-réservation du transport (avion, bateau ou voiture)";
+
+/** Pièce transport — précise le support choisi quand le demandeur l'a indiqué. */
+function transportDoc(t?: Profile["transport"]): string {
+  const support =
+    t === "avion" ? "avion" : t === "autobus" ? "autobus" : t === "bateau" ? "bateau" : null;
+  return support
+    ? `Pré-réservation ou réservation du billet aller-retour (${support})`
+    : "Pré-réservation ou réservation du billet aller-retour (avion, autobus ou bateau)";
+}
 
 function hebergementDoc(h?: Profile["hebergement"]): string {
   if (h === "hotel") return "Réservation d'hôtel";
@@ -498,7 +513,7 @@ const PROF_LABEL: Record<NonNullable<Profile["prof"]>, string> = {
 function buildTourisme(p: Profile): CaseResult {
   if (p.duree === "long") return { key: "a_long", ...FIXED["a_long"]! };
 
-  const docs: string[] = [...PASSEPORT_FORMULAIRE, PRE_RESERVATION_TRANSPORT];
+  const docs: string[] = [...PASSEPORT_FORMULAIRE, transportDoc(p.transport)];
 
   if (p.financePar === "garant") {
     docs.push(
@@ -562,7 +577,7 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
   } else {
     docs.push("Justificatif de lien de parenté avec la personne de l'attestation d'accueil");
   }
-  docs.push(PRE_RESERVATION_TRANSPORT);
+  docs.push(transportDoc(p.transport));
 
   if (p.financePar === "garant") {
     docs.push(
@@ -584,9 +599,9 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
     key: enfantParent ? "b_enfant_parent" : "b_famille",
     title:
       p.financePar === "garant"
-        ? (enfantParent
-            ? "Visite familiale · enfant/parent de Français · pris en charge par un garant"
-            : "Visite familiale · pris en charge par un garant")
+        ? enfantParent
+          ? "Visite familiale · enfant/parent de Français · pris en charge par un garant"
+          : "Visite familiale · pris en charge par un garant"
         : enfantParent
           ? `Visite familiale · enfant/parent de Français · ${PROF_LABEL[p.prof ?? "salarie"]}`
           : `Visite familiale · ${PROF_LABEL[p.prof ?? "salarie"]}`,
@@ -600,10 +615,60 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
   };
 }
 
+/**
+ * « En vue de mariage » — court séjour. Deux questions seulement (certificat de
+ * publication des bans, nationalité française du futur conjoint) : chacune ne déclenche
+ * sa pièce que si la réponse est « oui ». Le socle commun (passeport, transport,
+ * hébergement, financement) vient des questions posées avant le motif.
+ */
+function buildEnVueMariage(p: Profile): CaseResult {
+  const docs: string[] = [...PASSEPORT_FORMULAIRE, transportDoc(p.transport)];
+
+  if (p.bansCertificat)
+    docs.push(
+      "Certificat délivré par la mairie attestant que la publication des bans a été effectuée sans opposition",
+    );
+  if (p.futurConjointFrancais) docs.push("Justificatif de la nationalité française du conjoint");
+
+  if (p.financePar === "garant") {
+    docs.push(
+      "Attestation de prise en charge",
+      "Preuve du lien avec le garant (si disponible)",
+      "Justificatifs des ressources du garant",
+      "3 derniers relevés bancaires",
+    );
+  }
+
+  docs.push(...etatCivilDocs(p.situationFamiliale));
+  docs.push(hebergementDoc(p.hebergement));
+  docs.push(ASSURANCE_VOYAGE);
+
+  const notes: string[] = [];
+  if (!p.bansCertificat)
+    notes.push(
+      "Certificat de publication des bans non disponible : pièce centrale du dossier « en vue de mariage » — à obtenir auprès de la mairie du lieu de célébration avant le dépôt.",
+    );
+  if (!p.futurConjointFrancais)
+    notes.push(
+      "Le futur conjoint n'est pas déclaré de nationalité française : vérifier le motif réel et la catégorie de visa applicable avant d'engager le dossier.",
+    );
+
+  return {
+    key: "d_en_vue_mariage",
+    title: "En vue de mariage · mariage en France",
+    cat: "Court séjour Schengen (Visa C) · en vue de mariage",
+    level: "attention",
+    docs,
+    extra: [],
+    notes,
+  };
+}
+
 export function buildCourtSejour(p: Profile): CaseResult {
   const base = p.base ?? "tourisme";
 
   if (base === "tourisme") return buildTourisme(p);
+  if (base === "en_vue_mariage") return buildEnVueMariage(p);
   if (base === "visite_familiale_membre" || base === "enfant_parent_francais")
     return buildVisiteFamiliale(p);
 
@@ -811,7 +876,7 @@ export const TREE: Record<string, TreeNode> = {
     opts: [
       { l: "Hôtel / hébergement touristique", n: "hotel_fields", set: { hebergement: "hotel" } },
       { l: "Chez une personne", n: "personne_qui", set: { hebergement: "personne" } },
-      { l: "Autre (logement personnel)", n: "financement", set: { hebergement: "autre" } },
+      { l: "Autre (logement personnel)", n: "transport", set: { hebergement: "autre" } },
     ],
   },
   hotel_fields: {
@@ -827,8 +892,8 @@ export const TREE: Record<string, TreeNode> = {
   hotel_confirmee: {
     q: "Avez-vous une réservation confirmée ?",
     opts: [
-      { l: "Oui", n: "financement" },
-      { l: "Non", n: "financement" },
+      { l: "Oui", n: "transport" },
+      { l: "Non", n: "transport" },
     ],
   },
   personne_qui: {
@@ -853,14 +918,23 @@ export const TREE: Record<string, TreeNode> = {
   personne_nationalite: {
     q: "Cette personne est-elle de nationalité française ?",
     opts: [
-      { l: "Oui", n: "financement" },
+      { l: "Oui", n: "transport" },
       { l: "Non", n: "personne_fields2" },
     ],
   },
   personne_fields2: {
     q: "Nationalité / statut de la personne hébergeante.",
     fields: [{ key: "personne_nat_statut", label: "Nationalité / statut" }],
-    next: "financement",
+    next: "transport",
+  },
+  transport: {
+    q: "Quel est votre moyen de transport pour vous rendre en France ?",
+    help: "Déclenche la pièce « pré-réservation ou réservation du billet aller-retour ».",
+    opts: [
+      { l: "Avion", n: "financement", set: { transport: "avion" } },
+      { l: "Autobus", n: "financement", set: { transport: "autobus" } },
+      { l: "Bateau", n: "financement", set: { transport: "bateau" } },
+    ],
   },
   financement: {
     q: "Qui finance le voyage ?",
@@ -905,7 +979,7 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Tourisme / visite privée", n: "a_residence", set: { base: "tourisme" } },
       { l: "Visite familiale", n: "b_motif" },
       { l: "Travail", n: "c1" },
-      { l: "Mariage / conjoint", n: "d_court" },
+      { l: "En vue de mariage", n: "d_court", set: { base: "en_vue_mariage" } },
       { l: "Raisons de santé", n: "dout", r: true },
       { l: "Études", n: "eout", r: true },
     ],
@@ -917,7 +991,7 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Tourisme / visite privée", n: "DYNAMIC", set: { base: "tourisme" }, r: true },
       { l: "Visite familiale", n: "b_long", r: true },
       { l: "Travail", n: "c1_long" },
-      { l: "Mariage / conjoint", n: "d_long" },
+      { l: "En vue de mariage", n: "d_long" },
       { l: "Raisons de santé", n: "dout", r: true },
       { l: "Études", n: "eout", r: true },
     ],
@@ -1014,7 +1088,11 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Enfant", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
       { l: "Frère / sœur", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
       { l: "Conjoint", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
-      { l: "Autre membre de famille", n: "b_famille_fields", set: { base: "visite_familiale_membre" } },
+      {
+        l: "Autre membre de famille",
+        n: "b_famille_fields",
+        set: { base: "visite_familiale_membre" },
+      },
     ],
   },
   b_famille_fields: {
@@ -1100,7 +1178,9 @@ export const TREE: Record<string, TreeNode> = {
   },
   b_conjoint_pays_fields: {
     q: "Lieu du mariage.",
-    fields: [{ key: "b_conjoint_pays_mariage", label: "Dans quel pays le mariage a-t-il été célébré ?" }],
+    fields: [
+      { key: "b_conjoint_pays_mariage", label: "Dans quel pays le mariage a-t-il été célébré ?" },
+    ],
     next: "b_conjoint_reside",
   },
   b_conjoint_reside: {
@@ -1217,7 +1297,10 @@ export const TREE: Record<string, TreeNode> = {
     fields: [
       { key: "c_det_employeur_actuel", label: "Employeur actuel" },
       { key: "c_det_pays", label: "Pays" },
-      { key: "c_det_anciennete", label: "Depuis combien de temps travaillez-vous avec cette entreprise ?" },
+      {
+        key: "c_det_anciennete",
+        label: "Depuis combien de temps travaillez-vous avec cette entreprise ?",
+      },
       { key: "c_det_entreprise_fr", label: "Entreprise française d'accueil" },
       { key: "c_det_poste", label: "Poste en France" },
       { key: "c_det_duree", label: "Durée du détachement" },
@@ -1370,7 +1453,9 @@ export const TREE: Record<string, TreeNode> = {
   },
   d_conjoint_pays_fields: {
     q: "Lieu du mariage.",
-    fields: [{ key: "d_conjoint_pays_mariage", label: "Dans quel pays le mariage a-t-il été célébré ?" }],
+    fields: [
+      { key: "d_conjoint_pays_mariage", label: "Dans quel pays le mariage a-t-il été célébré ?" },
+    ],
     next: "d_conjoint_reside",
   },
   d_conjoint_reside: {
@@ -1443,29 +1528,22 @@ export const TREE: Record<string, TreeNode> = {
     next: "d_apatride",
     fieldsResult: true,
   },
+  /* En vue de mariage — mariage français (court séjour). Deux questions, chacune liée
+     à une pièce : certificat de publication des bans, nationalité française du conjoint. */
   d_court: {
-    q: "Êtes-vous marié(e) à un ressortissant français ?",
-    help: "Le court séjour « mariage/conjoint » rejoint la même checklist que la visite familiale lorsque le lien n'est pas un conjoint français.",
+    q: "Avez-vous le certificat de la mairie confirmant que la publication des bans a été effectuée sans opposition ?",
+    help: "En vue de mariage — mariage français.",
     opts: [
-      { l: "Oui", n: "d_court_conjoint_fields" },
-      {
-        l: "Non — visite familiale / visite privée",
-        n: "b_qui",
-        set: { base: "visite_familiale_membre" },
-      },
+      { l: "Oui", n: "d_court_nationalite", set: { bansCertificat: true } },
+      { l: "Non", n: "d_court_nationalite" },
     ],
   },
-  d_court_conjoint_fields: {
-    q: "Conjoint.",
-    fields: [
-      { key: "d_court_nom", label: "Nom du conjoint" },
-      { key: "d_court_nationalite", label: "Nationalité" },
-      { key: "d_court_lien", label: "Quel est votre lien ?" },
-      { key: "d_court_residence", label: "Résidence du conjoint" },
-      { key: "d_court_dates", label: "Dates du séjour" },
+  d_court_nationalite: {
+    q: "Votre futur(e) conjoint(e) est-il/elle de nationalité française ?",
+    opts: [
+      { l: "Oui", n: "situation", set: { futurConjointFrancais: true } },
+      { l: "Non", n: "situation" },
     ],
-    next: "conjoint_court",
-    fieldsResult: true,
   },
 };
 
