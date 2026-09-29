@@ -147,7 +147,8 @@ function useDossierMutations() {
     onSuccess: invalidateAll,
   });
   const setDecisionMutation = useMutation({
-    mutationFn: (vars: { id: string; decision: Decision }) => setDecisionFn({ data: vars }),
+    mutationFn: (vars: { id: string; decision: Decision; motif?: string }) =>
+      setDecisionFn({ data: vars }),
     onSuccess: invalidateAll,
   });
   const assignerMutation = useMutation({
@@ -225,8 +226,8 @@ function useDossierMutations() {
       changerModaliteMutation.mutateAsync({ id, modalite }),
     changerCentre: (id: string, centre: Centre) =>
       changerCentreMutation.mutateAsync({ id, centre }),
-    setDecision: (id: string, decision: Decision) =>
-      setDecisionMutation.mutateAsync({ id, decision }),
+    setDecision: (id: string, decision: Decision, motif?: string) =>
+      setDecisionMutation.mutateAsync({ id, decision, ...(motif ? { motif } : {}) }),
     setUploadAutorisation: (id: string, autorise: boolean) =>
       autoriserUploadMutation.mutateAsync({ id, autorise }),
     assigner: (dossierId: string, assigneeUserId: string, note?: string | undefined) =>
@@ -497,8 +498,12 @@ export function useRdvWatches() {
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: RDV_WATCHES_KEY });
   const creer = useMutation({
-    mutationFn: (data: { label: string; url: string; dossierId?: string; intervalSeconds?: number }) =>
-      createWatchFn({ data }),
+    mutationFn: (data: {
+      label: string;
+      url: string;
+      dossierId?: string;
+      intervalSeconds?: number;
+    }) => createWatchFn({ data }),
     onSuccess: invalidate,
   });
   const basculer = useMutation({

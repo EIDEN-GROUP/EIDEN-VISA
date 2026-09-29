@@ -57,10 +57,7 @@ export function NotificationBell({ tone = "surface" }: { tone?: "rail" | "surfac
           {items.map((n) => (
             <div
               key={n.id}
-              className={cn(
-                "flex w-full gap-2.5 px-3 py-2.5 text-left",
-                !n.read && "bg-accent/30",
-              )}
+              className={cn("flex w-full gap-2.5 px-3 py-2.5 text-left", !n.read && "bg-accent/30")}
             >
               <button
                 onClick={() => {
@@ -103,9 +100,7 @@ export function NotificationBell({ tone = "surface" }: { tone?: "rail" | "surfac
                   )}
                 </div>
               </button>
-              {!n.read && (
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-              )}
+              {!n.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
             </div>
           ))}
         </div>

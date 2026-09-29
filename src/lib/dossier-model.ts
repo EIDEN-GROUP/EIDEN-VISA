@@ -15,66 +15,57 @@ import {
 export const ETAPES = [
   {
     n: 1,
-    key: "accueil",
-    label: "Accueil & diagnostic",
+    key: "reception",
+    label: "Réception et diagnostic",
     detail:
-      "Le client est reçu en devanture. La réception explique le service, vérifie l'éligibilité de base et fait signer la clause de non-garantie.",
+      "Le client est reçu en agence. La réception explique le service, vérifie l'éligibilité de base et fait signer la clause de non-garantie.",
     encaissement: "Gratuit",
     role: "Réception",
   },
   {
     n: 2,
-    key: "creneau",
-    label: "Qualification & ouverture du dossier",
+    key: "rassemblement",
+    label: "Rassemblement du dossier",
     detail:
-      "Création de la fiche France-Visas et qualification du type de visa via la Boussole. Autorisation du dossier avant de commencer à réunir les pièces.",
+      "Le client réunit ses pièces et l'équipe vérifie chaque document un par un. Toute pièce manquante ou non conforme est signalée ici.",
     encaissement: "Acompte selon la modalité choisie",
     role: "Back office",
   },
   {
     n: 3,
-    key: "attente",
-    label: "Dossier en préparation",
+    key: "france_visas",
+    label: "Création du dossier sur France-Visas",
     detail:
-      "Le client réunit ses pièces, l'équipe suit l'avancement au jour le jour. C'est ici que le dossier peut stagner : à surveiller.",
+      "Création du compte et saisie du dossier sur le portail France-Visas, à partir des réponses de la qualification.",
     encaissement: "—",
     role: "Back office",
   },
   {
     n: 4,
-    key: "constitution",
-    label: "Constitution du dossier",
+    key: "rdv",
+    label: "Prise de rendez-vous sur TLScontact",
     detail:
-      "Le client revient en agence : complétion pièce par pièce, photos aux normes prises sur place, contrôle qualité.",
+      "Recherche d'un créneau et prise du rendez-vous au centre de dépôt. Étape dépendante des disponibilités du centre.",
     encaissement: "—",
-    role: "Préparation",
-  },
-  {
-    n: 5,
-    key: "options",
-    label: "Options à la carte",
-    detail:
-      "Pré-réservation hôtel/vol via l'agence partenaire (jamais une vente ferme), assurance via un courtier agréé qui facture le client en direct.",
-    encaissement: "+300 MAD voyage · commission assurance",
     role: "Back office",
   },
   {
-    n: 6,
-    key: "solde",
-    label: "Solde & remise du dossier scellé",
+    n: 5,
+    key: "confirmation_rdv",
+    label: "Confirmation du rendez-vous",
     detail:
-      "Paiement du solde selon le palier. Les frais consulaires restants sont payés par le client en direct au centre.",
+      "Le rendez-vous est confirmé et le dossier scellé est remis au client, qui se présentera lui-même au centre.",
     encaissement: "Solde du palier choisi",
     role: "Réception",
   },
   {
-    n: 7,
-    key: "depot",
-    label: "Dépôt au centre",
+    n: 6,
+    key: "decision",
+    label: "Visa approuvé ou refusé",
     detail:
-      "Le client dépose lui-même son dossier complet au centre de dépôt (TLScontact ou BLS). Fin du cycle Eiden Visa.",
+      "Décision du consulat, hors du contrôle d'Eiden mais à enregistrer : approbation ou refus, avec le motif en cas de refus.",
     encaissement: "Droit de visa payé en direct par le client",
-    role: "Client",
+    role: "Consulat",
   },
 ] as const;
 
@@ -212,6 +203,12 @@ export const DECISION_LABEL: Record<Decision, string> = {
   refuse: "Visa refusé",
 };
 
+/** Une question posée à la qualification et la réponse donnée par ce client précis. */
+export interface QualificationReponse {
+  question: string;
+  reponse: string;
+}
+
 export interface Dossier {
   id: string;
   client: {
@@ -224,7 +221,15 @@ export interface Dossier {
      * indécises côté client). */
     voyageDebut: string | null;
     voyageFin: string | null;
+    /** Passeport — `null` tant que la pièce n'est pas passée entre les mains de l'agence. */
+    passeportNumero: string | null;
+    passeportDelivrance: string | null;
+    passeportExpiration: string | null;
+    passeportLieu: string | null;
   };
+  /** Le fil des questions/réponses de la Boussole pour ce client. Vide pour les dossiers
+   * créés avant que ce fil ne soit conservé. */
+  qualification: QualificationReponse[];
   agent: string;
   /** Le VRAI compte qui a ouvert ce dossier — sert à filtrer "Mes dossiers" par utilisateur.
    * `null` pour les dossiers créés avant l'ajout de ce champ. */
@@ -250,6 +255,8 @@ export interface Dossier {
   notes: string[];
   decision: Decision;
   decisionDate: string | null;
+  /** Motif communiqué par le consulat en cas de refus — `null` sinon. */
+  decisionMotif: string | null;
 }
 
 export function resolveCase(caseKey: string, profile: Profile): CaseResult {
@@ -292,15 +299,52 @@ export function encaisse(d: Dossier) {
   return d.paiements.filter((p) => p.encaisse).reduce((s, p) => s + p.montant, 0);
 }
 
+/**
+ * Validité du passeport : règle Schengen — il doit rester valable au moins 3 mois
+ * après la date de retour prévue. `null` si on ne peut pas trancher (dates absentes).
+ */
+export function passeportValiditeOk(d: Dossier): boolean | null {
+  const { passeportExpiration } = d.client;
+  const retour = d.client.voyageFin;
+  if (!passeportExpiration || !retour) return null;
+  const exp = new Date(passeportExpiration);
+  const minimum = new Date(retour);
+  minimum.setMonth(minimum.getMonth() + 3);
+  return exp.getTime() >= minimum.getTime();
+}
+
 /** Blocages détectés par le système, avant que le client ne les découvre. */
 export function alertes(d: Dossier): string[] {
   const out: string[] = [];
   const c = completion(d);
+
+  // Étape 2 — rassemblement : c'est ici que la vérification des pièces se joue.
   if (d.etape >= 2 && !d.uploadAutorise)
     out.push("Dossier non autorisé : le service ne peut pas téléverser de documents.");
-  if (d.etape >= 6 && c.pct < 100)
-    out.push(`Solde en cours alors que ${c.total - c.ok} pièce(s) officielle(s) manquent encore.`);
-  if (d.caseKey === "tc3" && d.etape < 4)
+  if (d.etape >= 2 && c.pct < 100)
+    out.push(
+      `Rassemblement incomplet : ${c.total - c.ok} pièce(s) officielle(s) sur ${c.total} manquent encore.`,
+    );
+
+  // Passeport — pièce bloquante, contrôlée dès qu'on connaît sa date d'expiration.
+  if (d.etape >= 2 && !d.client.passeportNumero)
+    out.push("Informations du passeport non renseignées : à saisir avant France-Visas.");
+  if (passeportValiditeOk(d) === false)
+    out.push(
+      "Passeport insuffisamment valide : il doit rester valable au moins 3 mois après la date de retour prévue.",
+    );
+
+  // Étape 3 — France-Visas : rien ne doit partir sur le portail avec un dossier incomplet.
+  if (d.etape >= 3 && c.pct < 100)
+    out.push("Dossier saisi sur France-Visas alors que des pièces officielles manquent encore.");
+
+  // Étape 4/5 — rendez-vous puis remise du dossier scellé.
+  if (d.etape >= 5 && c.pct < 100)
+    out.push(
+      `Rendez-vous confirmé alors que ${c.total - c.ok} pièce(s) officielle(s) manquent : le client risque un refus de dépôt au centre.`,
+    );
+
+  if (d.caseKey === "tc3" && d.etape < 3)
     out.push(
       "Autorisation de travail employeur à vérifier avant toute autre pièce, sinon le dossier est bloqué.",
     );
@@ -308,13 +352,22 @@ export function alertes(d: Dossier): string[] {
     out.push(
       "Cas complexe : hors pack standard, faire valider par un accompagnement dédié avant d'encaisser un solde.",
     );
+
+  // Paiements — acompte à l'étape 2 (rassemblement), solde à l'étape 5 (confirmation du RDV).
   if (d.modalitePaiement === "acompte" && d.etape >= 2) {
     const acompte = d.paiements.find((p) => p.echeance === "acompte");
     if (acompte && !acompte.encaisse)
       out.push("Acompte de 50 % non encaissé : l'engagement du client n'est pas sécurisé.");
   }
   const impayes = d.paiements.filter((p) => !p.encaisse);
-  if (d.etape >= 6 && impayes.length)
+  if (d.etape >= 5 && impayes.length)
     out.push(`Solde non encaissé : ${impayes.map((p) => p.libelle).join(", ")}.`);
+
+  // Étape 6 — la décision doit être enregistrée, sinon le dossier reste en suspens.
+  if (d.etape >= 6 && d.decision === "en_attente")
+    out.push("Décision du consulat non enregistrée : à saisir dès que le client la reçoit.");
+  if (d.decision === "refuse" && !d.decisionMotif)
+    out.push("Visa refusé sans motif enregistré : le motif conditionne toute nouvelle tentative.");
+
   return out;
 }

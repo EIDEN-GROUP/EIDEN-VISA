@@ -39,10 +39,10 @@ function RdvWatch() {
         <h1 className="page-title">Surveillance RDV</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Collez ici l'URL de la page de disponibilité que vous consultez à la main (TLScontact,
-          BLS, tout site public). Le script de surveillance relit cette liste toutes seules
-          minutes et prévient l'équipe (notification dans l'app) dès qu'un changement est
-          détecté — il ne réserve jamais de créneau à votre place, il vous fait juste gagner le
-          temps de rafraîchir la page vous-même.
+          BLS, tout site public). Le script de surveillance relit cette liste toutes seules minutes
+          et prévient l'équipe (notification dans l'app) dès qu'un changement est détecté — il ne
+          réserve jamais de créneau à votre place, il vous fait juste gagner le temps de rafraîchir
+          la page vous-même.
         </p>
       </div>
 
@@ -56,7 +56,11 @@ function RdvWatch() {
               <label className="text-xs font-medium text-muted-foreground">
                 Libellé (ex. « TLScontact Agadir — France »)
               </label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Libellé" />
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Libellé"
+              />
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-muted-foreground">

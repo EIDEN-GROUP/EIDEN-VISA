@@ -6,6 +6,7 @@ import {
   alertes,
   completion,
   encaisse,
+  passeportValiditeOk,
   PACKS,
   CENTRES,
   MODALITE_LABEL,
@@ -88,6 +89,12 @@ function DossierDetail() {
   const [editTelephone, setEditTelephone] = useState("");
   const [editVille, setEditVille] = useState("");
   const [editNaissance, setEditNaissance] = useState("");
+  const [editPassNumero, setEditPassNumero] = useState("");
+  const [editPassDelivrance, setEditPassDelivrance] = useState("");
+  const [editPassExpiration, setEditPassExpiration] = useState("");
+  const [editPassLieu, setEditPassLieu] = useState("");
+  const [refusOpen, setRefusOpen] = useState(false);
+  const [refusMotif, setRefusMotif] = useState("");
 
   if (!d) {
     return (
@@ -111,16 +118,21 @@ function DossierDetail() {
   const a = alertes(d);
   const totalEncaisse = encaisse(d);
   const totalDu = d.paiements.reduce((s, p) => s + p.montant, 0);
-  // Étape 7 = dépôt chez TLS/BLS, le cycle Eiden Visa est terminé pour ce dossier :
+  // Étape 6 = décision du consulat : le cycle Eiden Visa est terminé pour ce dossier,
   // on gèle les panneaux de travail (pièces, pack, encaissement) pour éviter une
   // modification accidentelle d'un dossier déjà clos.
-  const cloture = d.etape === 7;
+  const cloture = d.etape === 6;
+  const passeportOk = passeportValiditeOk(d);
 
   function openEdit() {
     setEditNom(d!.client.nom);
     setEditTelephone(d!.client.telephone);
     setEditVille(d!.client.ville);
     setEditNaissance(d!.client.naissance);
+    setEditPassNumero(d!.client.passeportNumero ?? "");
+    setEditPassDelivrance(d!.client.passeportDelivrance ?? "");
+    setEditPassExpiration(d!.client.passeportExpiration ?? "");
+    setEditPassLieu(d!.client.passeportLieu ?? "");
     setEditOpen(true);
   }
 
@@ -131,6 +143,10 @@ function DossierDetail() {
       telephone: editTelephone.trim(),
       ville: editVille.trim(),
       naissance: editNaissance.trim(),
+      passeportNumero: editPassNumero.trim() || null,
+      passeportDelivrance: editPassDelivrance || null,
+      passeportExpiration: editPassExpiration || null,
+      passeportLieu: editPassLieu.trim() || null,
     });
     setEditOpen(false);
   }
@@ -181,7 +197,7 @@ function DossierDetail() {
             <div className="flex items-center gap-3">
               <h1 className="page-title">{d.client.nom}</h1>
               <NiveauBadge level={d.niveau} />
-              {d.etape === 7 && <ClotureBadge />}
+              {d.etape === 6 && <ClotureBadge />}
             </div>
             <p className="ref mt-1 text-muted-foreground">{d.id}</p>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -252,7 +268,10 @@ function DossierDetail() {
                   ? "bg-[var(--stop)] hover:bg-[var(--stop)]/90"
                   : "border-[var(--stop)]/40 text-[var(--stop)] hover:bg-[var(--stop-soft)]"
               }
-              onClick={() => setDecision(d.id, "refuse")}
+              onClick={() => {
+                setRefusMotif(d.decisionMotif ?? "");
+                setRefusOpen(true);
+              }}
             >
               Visa refusé
             </Button>
@@ -266,6 +285,95 @@ function DossierDetail() {
                 Décision du {d.decisionDate}
               </span>
             )}
+            {d.decision === "refuse" && (
+              <div className="w-full border-l-2 border-[var(--stop)] pl-3">
+                <div className="text-xs font-semibold uppercase tracking-wide text-[var(--stop)]">
+                  Motif du refus
+                </div>
+                <p className="mt-1 text-sm text-foreground">
+                  {d.decisionMotif ||
+                    "Non renseigné — à saisir, il conditionne toute nouvelle tentative."}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Passeport */}
+      <Card className="panel">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Passeport</CardTitle>
+          {passeportOk === true && <span className="ref text-[var(--ok)]">Validité conforme</span>}
+          {passeportOk === false && (
+            <span className="ref text-[var(--stop)]">Validité insuffisante</span>
+          )}
+        </CardHeader>
+        <CardContent>
+          {d.client.passeportNumero ? (
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
+              <div>
+                <dt className="text-xs text-muted-foreground">Numéro</dt>
+                <dd className="mt-0.5 font-medium text-foreground">{d.client.passeportNumero}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Lieu de délivrance</dt>
+                <dd className="mt-0.5 text-foreground">{d.client.passeportLieu || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Délivré le</dt>
+                <dd className="mt-0.5 text-foreground">
+                  {d.client.passeportDelivrance
+                    ? new Date(d.client.passeportDelivrance).toLocaleDateString("fr-FR")
+                    : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Expire le</dt>
+                <dd
+                  className={cn(
+                    "mt-0.5 font-medium",
+                    passeportOk === false ? "text-[var(--stop)]" : "text-foreground",
+                  )}
+                >
+                  {d.client.passeportExpiration
+                    ? new Date(d.client.passeportExpiration).toLocaleDateString("fr-FR")
+                    : "—"}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Passeport non renseigné — cliquez sur « Modifier » pour saisir le numéro et les dates.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Réponses de la qualification pour CE client */}
+      {d.qualification.length > 0 && (
+        <Card className="panel">
+          <CardHeader>
+            <CardTitle className="text-base">
+              Questions posées au client ({d.qualification.length})
+            </CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Le fil exact de la Boussole au moment de l'ouverture du dossier — figé, même si
+              l'arbre de qualification évolue ensuite.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {d.qualification.map((qr, i) => (
+              <div
+                key={i}
+                className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-2.5"
+              >
+                <span className="min-w-0 flex-1 text-sm text-muted-foreground">{qr.question}</span>
+                <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                  {qr.reponse}
+                </span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -550,6 +658,45 @@ function DossierDetail() {
                 placeholder="JJ/MM/AAAA"
               />
             </div>
+            <div className="col-span-2 mt-1 border-t border-border pt-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Passeport
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Numéro</label>
+              <Input
+                value={editPassNumero}
+                onChange={(e) => setEditPassNumero(e.target.value)}
+                placeholder="AB1234567"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Lieu de délivrance
+              </label>
+              <Input
+                value={editPassLieu}
+                onChange={(e) => setEditPassLieu(e.target.value)}
+                placeholder="Agadir"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Délivré le</label>
+              <Input
+                type="date"
+                value={editPassDelivrance}
+                onChange={(e) => setEditPassDelivrance(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Expire le</label>
+              <Input
+                type="date"
+                value={editPassExpiration}
+                onChange={(e) => setEditPassExpiration(e.target.value)}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>
@@ -560,6 +707,44 @@ function DossierDetail() {
               onClick={saveEdit}
             >
               Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={refusOpen} onOpenChange={setRefusOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enregistrer un refus de visa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Le motif communiqué par le consulat conditionne toute nouvelle tentative : sans lui,
+              impossible de savoir quoi corriger pour le prochain dossier.
+            </p>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Motif du refus (tel que communiqué)
+              </label>
+              <Input
+                value={refusMotif}
+                onChange={(e) => setRefusMotif(e.target.value)}
+                placeholder="Ex. justificatifs de ressources insuffisants"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefusOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              className="bg-[var(--stop)] text-white hover:bg-[var(--stop)]/90"
+              onClick={async () => {
+                await setDecision(d.id, "refuse", refusMotif.trim() || undefined);
+                setRefusOpen(false);
+              }}
+            >
+              Enregistrer le refus
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -48,6 +48,10 @@ function rowToDossier(row: DossierRow): Dossier {
       naissance: row.clientNaissance,
       voyageDebut: row.clientVoyageDebut,
       voyageFin: row.clientVoyageFin,
+      passeportNumero: row.clientPasseportNumero,
+      passeportDelivrance: row.clientPasseportDelivrance,
+      passeportExpiration: row.clientPasseportExpiration,
+      passeportLieu: row.clientPasseportLieu,
     },
     agent: row.agent,
     agentUserId: row.agentUserId,
@@ -55,6 +59,7 @@ function rowToDossier(row: DossierRow): Dossier {
     ouvertLe: row.ouvertLe,
     caseKey: row.caseKey,
     profile: row.profile,
+    qualification: row.qualification,
     titre: row.titre,
     categorie: row.categorie,
     niveau: row.niveau,
@@ -68,6 +73,7 @@ function rowToDossier(row: DossierRow): Dossier {
     notes: row.notes,
     decision: row.decision,
     decisionDate: row.decisionDate,
+    decisionMotif: row.decisionMotif,
   };
 }
 
@@ -142,7 +148,7 @@ export const listAlertesDossiers = createServerFn({ method: "GET" }).handler(asy
   const rows = await db
     .select()
     .from(dossiersTable)
-    .where(sql`${dossiersTable.etape} < 7`)
+    .where(sql`${dossiersTable.etape} < 6`)
     .orderBy(desc(dossiersTable.createdAt))
     .limit(300);
   return rows.map(rowToDossier);
@@ -206,12 +212,12 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       db
         .select({ n: sqlCount() })
         .from(dossiersTable)
-        .where(and(sql`${dossiersTable.etape} < 7`, ...range)),
+        .where(and(sql`${dossiersTable.etape} < 6`, ...range)),
       db
         .select({ n: sqlCount() })
         .from(dossiersTable)
         .where(
-          and(sql`${dossiersTable.etape} < 7`, eq(dossiersTable.uploadAutorise, false), ...range),
+          and(sql`${dossiersTable.etape} < 6`, eq(dossiersTable.uploadAutorise, false), ...range),
         ),
       db.execute(sql`
         select coalesce(sum((p->>'montant')::numeric), 0) as total
@@ -308,6 +314,10 @@ const dossierInput = z.object({
     naissance: z.string(),
     voyageDebut: z.string().nullable().default(null),
     voyageFin: z.string().nullable().default(null),
+    passeportNumero: z.string().nullable().default(null),
+    passeportDelivrance: z.string().nullable().default(null),
+    passeportExpiration: z.string().nullable().default(null),
+    passeportLieu: z.string().nullable().default(null),
   }),
   agent: z.string(),
   assigneeUserId: z.string().nullable().default(null),
@@ -375,6 +385,7 @@ const dossierInput = z.object({
     }),
   ),
   notes: z.array(z.string()),
+  qualification: z.array(z.object({ question: z.string(), reponse: z.string() })).default([]),
 });
 
 export const createDossier = createServerFn({ method: "POST" })
@@ -391,12 +402,17 @@ export const createDossier = createServerFn({ method: "POST" })
       clientNaissance: data.client.naissance,
       clientVoyageDebut: data.client.voyageDebut,
       clientVoyageFin: data.client.voyageFin,
+      clientPasseportNumero: data.client.passeportNumero,
+      clientPasseportDelivrance: data.client.passeportDelivrance,
+      clientPasseportExpiration: data.client.passeportExpiration,
+      clientPasseportLieu: data.client.passeportLieu,
       agent: data.agent,
       agentUserId,
       assigneeUserId: data.assigneeUserId,
       ouvertLe: data.ouvertLe,
       caseKey: data.caseKey,
       profile: data.profile as Profile,
+      qualification: data.qualification,
       titre: data.titre,
       categorie: data.categorie,
       niveau: data.niveau,
@@ -433,18 +449,18 @@ export const avancerEtape = createServerFn({ method: "POST" })
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     if (!row) throw new Error("Dossier introuvable.");
     const etape =
-      data.direction === "avancer" ? Math.min(7, row.etape + 1) : Math.max(1, row.etape - 1);
+      data.direction === "avancer" ? Math.min(6, row.etape + 1) : Math.max(1, row.etape - 1);
     await db.update(dossiersTable).set({ etape }).where(eq(dossiersTable.id, data.id));
-    if (etape === 7 && row.etape !== 7)
+    if (etape === 6 && row.etape !== 6)
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
 export const setEtape = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), etape: z.number().min(1).max(7) }))
+  .validator(z.object({ id: z.string(), etape: z.number().min(1).max(6) }))
   .handler(async ({ data }) => {
     await requireUserId();
     await db.update(dossiersTable).set({ etape: data.etape }).where(eq(dossiersTable.id, data.id));
-    if (data.etape === 7)
+    if (data.etape === 6)
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
@@ -558,7 +574,7 @@ export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async
       select d.id, d.client_nom as nom, d.etape,
         coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) as montant
       from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
-      where d.etape >= 6
+      where d.etape >= 5
       group by d.id, d.client_nom, d.etape
       having coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) > 0
       order by d.etape desc
@@ -622,21 +638,30 @@ export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async
 });
 
 export const setDecision = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), decision: z.enum(["en_attente", "approuve", "refuse"]) }))
+  .validator(
+    z.object({
+      id: z.string(),
+      decision: z.enum(["en_attente", "approuve", "refuse"]),
+      motif: z.string().max(500).optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     await requireUserId();
     const decisionDate =
       data.decision === "en_attente" ? null : new Date().toLocaleDateString("fr-FR");
+    // Le motif n'a de sens que sur un refus : on le purge dans les autres cas plutôt que
+    // de laisser traîner le motif d'un refus précédent sur un dossier redevenu approuvé.
+    const decisionMotif = data.decision === "refuse" ? data.motif?.trim() || null : null;
     await db
       .update(dossiersTable)
-      .set({ decision: data.decision, decisionDate })
+      .set({ decision: data.decision, decisionDate, decisionMotif })
       .where(eq(dossiersTable.id, data.id));
     if (data.decision !== "en_attente") {
       await logActivity(
         "dossier.decision",
         data.decision === "approuve"
           ? "Visa approuvé par le consulat."
-          : "Visa refusé par le consulat.",
+          : `Visa refusé par le consulat.${decisionMotif ? ` Motif : ${decisionMotif}` : ""}`,
         data.id,
       );
     }
@@ -651,6 +676,10 @@ export const updateClient = createServerFn({ method: "POST" })
         telephone: z.string().min(1),
         ville: z.string().min(1),
         naissance: z.string(),
+        passeportNumero: z.string().nullable().default(null),
+        passeportDelivrance: z.string().nullable().default(null),
+        passeportExpiration: z.string().nullable().default(null),
+        passeportLieu: z.string().nullable().default(null),
       }),
     }),
   )
@@ -665,6 +694,10 @@ export const updateClient = createServerFn({ method: "POST" })
         clientTelephone: data.client.telephone,
         clientVille: data.client.ville,
         clientNaissance: data.client.naissance,
+        clientPasseportNumero: data.client.passeportNumero,
+        clientPasseportDelivrance: data.client.passeportDelivrance,
+        clientPasseportExpiration: data.client.passeportExpiration,
+        clientPasseportLieu: data.client.passeportLieu,
       })
       .where(eq(dossiersTable.id, data.id));
   });

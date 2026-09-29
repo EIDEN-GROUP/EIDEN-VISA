@@ -1,5 +1,12 @@
 import { pgTable, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
-import type { Piece, Paiement, Centre, PackKey, Modalite } from "@/lib/dossier-model";
+import type {
+  Piece,
+  Paiement,
+  Centre,
+  PackKey,
+  Modalite,
+  QualificationReponse,
+} from "@/lib/dossier-model";
 import type { Level, Profile } from "@/lib/visa-rules";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
@@ -52,6 +59,11 @@ export const dossiers = pgTable("dossiers", {
   // le client ne les connaît pas toujours au moment de l'ouverture du dossier.
   clientVoyageDebut: text("client_voyage_debut"),
   clientVoyageFin: text("client_voyage_fin"),
+  // Passeport — saisi quand la pièce passe entre les mains de l'agence, d'où le nullable.
+  clientPasseportNumero: text("client_passeport_numero"),
+  clientPasseportDelivrance: text("client_passeport_delivrance"),
+  clientPasseportExpiration: text("client_passeport_expiration"),
+  clientPasseportLieu: text("client_passeport_lieu"),
   agent: text("agent").notNull(),
   // Le compte réel qui a ouvert le dossier — permet un filtre "Mes dossiers" fiable,
   // contrairement à `agent` qui n'est qu'un texte d'affichage (nom + rôle au moment de la création).
@@ -62,6 +74,10 @@ export const dossiers = pgTable("dossiers", {
   ouvertLe: text("ouvert_le").notNull(),
   caseKey: text("case_key").notNull(),
   profile: jsonb("profile").$type<Profile>().notNull().default({}),
+  // Le fil questions/réponses de la Boussole, figé au moment de l'ouverture du dossier :
+  // c'est la trace de ce qui a été demandé À CE client, indépendante de l'arbre actuel
+  // (qui, lui, évolue). Vide pour les dossiers antérieurs.
+  qualification: jsonb("qualification").$type<QualificationReponse[]>().notNull().default([]),
   titre: text("titre").notNull(),
   categorie: text("categorie").notNull(),
   niveau: text("niveau").$type<Level>().notNull(),
@@ -76,13 +92,15 @@ export const dossiers = pgTable("dossiers", {
   pieces: jsonb("pieces").$type<Piece[]>().notNull().default([]),
   paiements: jsonb("paiements").$type<Paiement[]>().notNull().default([]),
   notes: jsonb("notes").$type<string[]>().notNull().default([]),
-  // Ce qui se passe après l'étape 7 (dépôt) : la décision du consulat, hors du contrôle
+  // Étape 6 du parcours : la décision du consulat, hors du contrôle
   // d'Eiden mais à suivre — c'est le vrai "après" du cycle, pas juste un dossier gelé.
   decision: text("decision")
     .$type<"en_attente" | "approuve" | "refuse">()
     .notNull()
     .default("en_attente"),
   decisionDate: text("decision_date"),
+  /** Motif du refus communiqué par le consulat — null si approuvé ou en attente. */
+  decisionMotif: text("decision_motif"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

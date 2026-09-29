@@ -114,7 +114,7 @@ const SEED: SeedInput[] = [
     caseKey: "tc1",
     profile: {},
     pack: "global",
-    etape: 7,
+    etape: 6,
     centre: "TLScontact Agadir",
     autorise: true,
     fournis: "tout",
@@ -217,7 +217,7 @@ const SEED: SeedInput[] = [
     caseKey: "DYNAMIC",
     profile: { base: "tourisme", prof: "agriculteur", married: true, spouseNoJob: true },
     pack: "base",
-    etape: 7,
+    etape: 6,
     centre: "TLScontact Agadir",
     autorise: true,
     fournis: "tout",
@@ -238,7 +238,12 @@ export function buildSeed(): Dossier[] {
         naissance: s.naissance,
         voyageDebut: null,
         voyageFin: null,
+        passeportNumero: null,
+        passeportDelivrance: null,
+        passeportExpiration: null,
+        passeportLieu: null,
       },
+      qualification: [],
       agent: s.agent,
       agentUserId: null,
       assigneeUserId: null,
@@ -267,6 +272,7 @@ export function buildSeed(): Dossier[] {
       notes: [...(s.notes ?? []), ...c.notes],
       decision: "en_attente",
       decisionDate: null,
+      decisionMotif: null,
     } satisfies Dossier;
   });
 }

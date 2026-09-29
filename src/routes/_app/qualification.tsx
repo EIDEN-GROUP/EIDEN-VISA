@@ -95,6 +95,10 @@ function Qualification() {
   const [naissance, setNaissance] = useState("");
   const [voyageDebut, setVoyageDebut] = useState("");
   const [voyageFin, setVoyageFin] = useState("");
+  const [passNumero, setPassNumero] = useState("");
+  const [passDelivrance, setPassDelivrance] = useState("");
+  const [passExpiration, setPassExpiration] = useState("");
+  const [passLieu, setPassLieu] = useState("");
   const [centre, setCentre] = useState<Centre>(CENTRES[0]);
   const [modalite, setModalite] = useState<Modalite>("comptant");
 
@@ -186,6 +190,10 @@ function Qualification() {
         naissance,
         voyageDebut: voyageDebut || null,
         voyageFin: voyageFin || null,
+        passeportNumero: passNumero.trim() || null,
+        passeportDelivrance: passDelivrance || null,
+        passeportExpiration: passExpiration || null,
+        passeportLieu: passLieu.trim() || null,
       },
       agent,
       // Le serveur dérive le VRAI agentUserId de la session (voir createDossier) — cette
@@ -195,6 +203,12 @@ function Qualification() {
       ouvertLe: new Date().toLocaleDateString("fr-FR"),
       caseKey: result.caseKey,
       profile,
+      // Le fil des questions réellement posées à CE client, figé ici : l'arbre évoluera,
+      // la trace du dossier ne doit pas bouger avec lui.
+      qualification: history.map((h) => ({
+        question: TREE[h.nodeKey]?.q ?? h.nodeKey,
+        reponse: h.label,
+      })),
       titre: result.c.title,
       categorie: result.c.cat,
       niveau: result.c.level,
@@ -207,9 +221,13 @@ function Qualification() {
       // Échéancier dérivé du pack (base par défaut) et de la modalité choisie à l'accueil :
       // comptant = une ligne de solde, acompte = 50 % + solde 50 %.
       paiements: planPaiement("base", modalite),
-      notes: [...result.c.notes, ...(detailsNote(profile.details) ? [detailsNote(profile.details)!] : [])],
+      notes: [
+        ...result.c.notes,
+        ...(detailsNote(profile.details) ? [detailsNote(profile.details)!] : []),
+      ],
       decision: "en_attente",
       decisionDate: null,
+      decisionMotif: null,
     };
     await ajouter(dossier);
     navigate({ to: "/dossiers/$id", params: { id } });
@@ -259,16 +277,12 @@ function Qualification() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {node.fields.map((f) => (
                     <div key={f.key} className={node.fields!.length === 1 ? "sm:col-span-2" : ""}>
-                      <label className="text-xs font-medium text-muted-foreground">
-                        {f.label}
-                      </label>
+                      <label className="text-xs font-medium text-muted-foreground">{f.label}</label>
                       <Input
                         type={f.type === "date" ? "date" : "text"}
                         placeholder={f.placeholder}
                         value={fieldValues[f.key] ?? ""}
-                        onChange={(e) =>
-                          setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))
-                        }
+                        onChange={(e) => setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))}
                       />
                     </div>
                   ))}
@@ -474,6 +488,73 @@ function Qualification() {
                         La date de retour doit être postérieure à la date de départ.
                       </p>
                     )}
+                  </div>
+                )}
+                <div className="col-span-2 mt-2 border-t border-border pt-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Passeport
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Facultatif à l'ouverture — à compléter dès que la pièce est entre vos mains.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Numéro de passeport
+                  </label>
+                  <Input
+                    value={passNumero}
+                    onChange={(e) => setPassNumero(e.target.value)}
+                    placeholder="AB1234567"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Lieu de délivrance
+                  </label>
+                  <Input
+                    value={passLieu}
+                    onChange={(e) => setPassLieu(e.target.value)}
+                    placeholder="Agadir"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Date de délivrance
+                  </label>
+                  <Input
+                    type="date"
+                    value={passDelivrance}
+                    onChange={(e) => setPassDelivrance(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Date d'expiration
+                  </label>
+                  <Input
+                    type="date"
+                    value={passExpiration}
+                    onChange={(e) => setPassExpiration(e.target.value)}
+                  />
+                </div>
+                {passExpiration && voyageFin && (
+                  <div className="col-span-2 -mt-1">
+                    {(() => {
+                      const min = new Date(voyageFin);
+                      min.setMonth(min.getMonth() + 3);
+                      const ok = new Date(passExpiration).getTime() >= min.getTime();
+                      return ok ? (
+                        <p className="text-xs text-muted-foreground">
+                          Validité du passeport conforme (≥ 3 mois après le retour).
+                        </p>
+                      ) : (
+                        <p className="text-xs text-[var(--stop)]">
+                          Passeport insuffisamment valide : il doit rester valable au moins 3 mois
+                          après la date de retour.
+                        </p>
+                      );
+                    })()}
                   </div>
                 )}
                 <div className="col-span-2">
