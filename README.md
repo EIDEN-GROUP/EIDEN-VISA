@@ -73,8 +73,10 @@ firm sales; insurance is billed directly by the broker.
 | Auth             | cookie-session TanStack Start + bcryptjs (cost 12)                     | `src/backend/auth.ts`                                                    |
 | Build/serveur    | Vite 8 + Nitro (preset `vercel`) + `@lovable.dev/vite-tanstack-config` | `vite.config.ts`                                                         |
 | Qualité          | TypeScript strict + ESLint + Prettier                                  | `tsconfig.json`, `eslint.config.js`, `.prettierrc`                       |
+| Landing page     | Vite 8 + React 19 + Tailwind v4 + lucide — **projet autonome**         | `landing-page/` (voir §3)                                                |
 
 Prérequis : Node.js >= 20 (`engines` dans `package.json`), npm, Docker (pour la DB locale).
+La landing page n'a besoin ni de Docker ni de `.env` / _the landing page needs neither Docker nor `.env`_.
 
 ---
 
@@ -99,6 +101,29 @@ npm run build       # vite build + Nitro vercel
 
 > État vérifié le 2026-09-14 : `typecheck` OK, `lint` 0 erreur (6 warnings shadcn
 > `react-refresh/only-export-components` connus et sans impact), `build` OK (~4,8 s).
+
+### Landing page (dossier séparé / separate folder)
+
+**FR :** la landing page publique vit dans `landing-page/`, un projet Vite + React +
+Tailwind **totalement indépendant** de l'app : son propre `package.json`,
+`node_modules`, `tsconfig.json` et build. Elle n'importe rien de `src/**` et l'app
+n'importe rien d'elle — on peut y travailler sans risque pour le back-office.
+
+**EN:** the public landing page lives in `landing-page/`, a **fully standalone**
+Vite + React + Tailwind project (own `package.json`, `node_modules`, `tsconfig.json`,
+build). It imports nothing from `src/**` and the app imports nothing from it — safe
+to work on without touching the back-office.
+
+```sh
+cd landing-page
+npm install
+npm run dev        # http://localhost:5180 (l'app reste sur :3000 / app stays on :3000)
+npm run build      # tsc --noEmit + vite build → landing-page/dist
+```
+
+Contenu à éditer / content to edit : `landing-page/src/App.tsx` (sections + constante
+`CONTACT` à compléter avant mise en ligne / fill `CONTACT` before going live).
+Détails : `landing-page/README.md`.
 
 ---
 
@@ -242,6 +267,11 @@ France-Visas). Les écrans ne font que lire ce fichier.
 - **PDF :** `src/lib/ops-pdf.ts` (`exportOpsPdf` tableau A4 : en-tête Eiden, KPIs 3/ligne, sections paginées, pied de page ; `exportElementPdf` capture pixel via html2canvas avec fallback tableau si couleurs `oklch` — fix Firefox déjà appliqué) ; reçu client dans `dossiers.$id.recu.tsx`.
 - **Erreurs :** `error-capture.ts` (hors-bande TTL 5 s, chaîne causes), `error-page.ts` (fallback EN statique), `lovable-error-reporting.ts` (client seul, `window.__lovableEvents`), `ErrorComponent/NotFoundComponent` dans `__root`.
 - **Images :** `src/lib/image.ts` (`downscaleImage` 400px JPEG 0.85 pour avatars).
+- **Landing page (isolée / isolated) :** `landing-page/` = SPA Vite statique, sans serveur
+  ni DB. FR : exclue du `tsconfig.json` racine (`include: src/**`), des `ignores` de
+  `eslint.config.js`, et du scan Tailwind de l'app (`source(none)` + `@source "../src"`) ;
+  seul `npm run format` (Prettier racine) la couvre. EN: excluded from the root
+  tsconfig, ESLint and the app's Tailwind scan; only root Prettier formats it.
 
 ---
 
@@ -347,6 +377,12 @@ decorations/*` (21 PNG : `logo-eiden`, `perimetre-*`, `stamp-*`, `ops-security-i
 
 - `eiden-visa-dossier-stickers.png` (login). Icônes jamais seules : légende + couleur.
 
+**Landing page :** FR — `landing-page/src/styles.css` contient une **copie** des tokens
+(marine, lavande/crème du login, `ok`/`stop`, Quicksand + Space Mono) pour garder la même
+identité sans dépendre de `src/styles.css` : à resynchroniser à la main si la charte
+change. Logo redessiné en SVG inline (`Logo` dans `App.tsx`). EN — the landing keeps a
+**copy** of the app tokens (resync by hand if the brand changes); logo is an inline SVG.
+
 ---
 
 ## 16. Arborescence complète / Full file tree
@@ -391,6 +427,11 @@ src/assets/decorations/logo-eiden.png  ops-security-icons.png
   perimetre-travail/tourisme/sante/etudes.png
   stamp-visa-approved/time/rendezvous/passport/name/male/female/family/
   encaissement/eiden/dossier/date/child/boarding-pass/alerte.png
+landing-page/ (projet autonome / standalone)
+  package.json  package-lock.json  vite.config.ts  tsconfig.json  index.html
+  .gitignore  README.md  public/favicon.ico  public/apple-touch-icon.png
+  src/main.tsx  src/App.tsx  src/styles.css
+.claude/launch.json (preview landing :5180 dans Claude Code desktop)
 ```
 
 Aucun test (`*.test.*`), aucun `Dockerfile`, aucun workflow CI — voir §18.
@@ -412,6 +453,16 @@ Aucun test (`*.test.*`), aucun `Dockerfile`, aucun workflow CI — voir §18.
 | `db:push`                 | `drizzle-kit push`              | applique le schema (sans migrations versionnées)     |
 | `db:seed`                 | `tsx scripts/seed.ts`           | admin + seed si vide                                 |
 | `db:setup`                | `db:up && db:push && db:seed`   | installation complète                                |
+
+Landing page — scripts à lancer **dans `landing-page/`** (ou `npm --prefix landing-page run <script>`) /
+_run inside `landing-page/`_ :
+
+| Script      | Commande                     | Usage                                |
+| ----------- | ---------------------------- | ------------------------------------ |
+| `dev`       | `vite`                       | dev local http://localhost:5180      |
+| `build`     | `tsc --noEmit && vite build` | build statique → `landing-page/dist` |
+| `preview`   | `vite preview`               | prévisualiser le build (:5181)       |
+| `typecheck` | `tsc --noEmit`               | types stricts                        |
 
 ---
 
@@ -440,6 +491,11 @@ via compose. Avant d'ouvrir en prod, quel que soit l'hôte :
    lockfile (`bun.lock` + `package-lock.json` — npm utilise le second), table `sessions`
    morte (ne pas utiliser sans migration).
 5. SEO/robots : privé désindexé (fait) ; vérifier en-têtes HTTPS/hôte à la mise en ligne.
+6. Landing page : FR — hébergement aussi différé ; déployable seule comme site statique
+   (ex. projet Vercel séparé avec Root Directory = `landing-page`, sortie `dist`) sans
+   toucher au preset Nitro de l'app. Avant mise en ligne : remplir `CONTACT` dans
+   `landing-page/src/App.tsx` (WhatsApp/email vides → le bouton pointe sur `#contact`).
+   EN — hosting deferred too; deploy as its own static site; fill `CONTACT` first.
 
 ---
 
@@ -470,6 +526,7 @@ via compose. Avant d'ouvrir en prod, quel que soit l'hôte :
 
 | Date         | Portée / Scope                                             | Fichiers                                                                                                                                 | Impact                                                                                                                                                                                            |
 | ------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-29   | Landing page dans un dossier séparé `landing-page/`        | `landing-page/**` (nouveau), `eslint.config.js`, `AGENTS.md`, `.claude/launch.json`, `README.md` (§2, §3, §10, §15, §16, §17, §18)       | Projet Vite + React + Tailwind autonome (port 5180) avec page de départ (hero, méthode 4 étapes, périmètre, contact) ; exclu du lint/typecheck/build de l'app ; aucun changement fonctionnel app  |
 | 2026-09-14   | Sync README : acompte 50/50 + dates de séjour + responsive | `README.md` ( §6, §8, §11, §12) + `dossier-model.ts`, `schema.ts`, `seed.ts`, `qualification.tsx`, `$id.tsx`                             | Acompte corrigé 20/80 → 50/50 (`ACOMPTE_PCT=0.5`, labels, alertes) ; ajout `clientVoyageDebut/Fin` (qualification + fiche dossier) ; seed EV-2026-0141 500+500 ; responsive header dossier détail |
 | 2026-09-14   | Tagline métier en une phrase (FR+EN) en tête README        | `README.md`                                                                                                                              | Ajout du pitch « évite le refus pour dossier incomplet » côté client, aligné sur la proposition de valeur Eiden Visa                                                                              |
 | 2026-09-14   | Audit complet + README bilingue + durcissement prod        | `README.md`, `AGENTS.md`, `package.json`, `eslint.config.js`, `.prettierignore`, `.gitattributes`, `public/robots.txt`, format LF global | README remplace le placeholder ; package renommé `eiden-visa` + `engines` + `typecheck/format:check` ; lint 0 erreur ; build OK ; robots resserré ; seed + règles + architecture documentés       |

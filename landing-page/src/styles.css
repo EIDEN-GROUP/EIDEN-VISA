@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/*
+ * Landing page Eiden Visa : charte de la maquette "Le monde vous attend" :
+ * crème chaud, encre marine, rouge passeport. Polices : Newsreader (titres),
+ * DM Sans (texte), La Belle Aurore (manuscrit), Playfair Display (logo).
+ * Copie autonome : la landing ne dépend d'aucun fichier de l'app.
+ */
+
+@theme {
+  --font-serif: "Newsreader", "Times New Roman", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "La Belle Aurore", cursive;
+  --font-logo: "Playfair Display", "Times New Roman", serif;
+
+  --color-ink: #0b1a30;
+  --color-ink-soft: #2a3342;
+  --color-muted: #6b6f76;
+  --color-cream: #faf8f4;
+  --color-card: #fffefc;
+  --color-sand: #f4ece5;
+  --color-blush: #f9e7e4;
+  --color-line: #e7e1d9;
+  --color-brand: #ae0a1a;
+  --color-brand-dark: #8a0714;
+  --color-eu: #003399;
+  --color-eu-star: #ffcc00;
+
+  --shadow-soft: 0 18px 50px -24px rgb(24 20 40 / 0.18), 0 2px 8px -2px rgb(24 20 40 / 0.05);
+  --shadow-float: 0 24px 60px -28px rgb(24 20 40 / 0.28), 0 4px 14px -4px rgb(24 20 40 / 0.08);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-cream);
+  }
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-brand);
+    color: #fff;
+  }
+  svg.lucide {
+    stroke-width: 1.6px;
+  }
+}
+
+@layer components {
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1380px;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-page {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+}
+
+/* Texte découpé par GSAP SplitText : masqué tant que la découpe n'est pas prête. */
+[data-split] {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-split] {
+    visibility: visible;
+  }
+}
+/* SplitText en <span> (HTML valide dans h1/p) : on rend nous-mêmes lignes et mots animables. */
+.split-line,
+.split-line-mask {
+  display: block;
+  position: relative;
+}
+.split-word,
+.split-char {
+  display: inline-block;
+  position: relative;
+}
+/* Le masque de ligne coupe les jambages (g, p, j) : on lui laisse un peu d'air. */
+.split-line-mask {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}

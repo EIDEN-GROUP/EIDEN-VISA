@@ -39,12 +39,14 @@ Si tu ne sais pas où documenter, demande avant de fusionner — ne saute jamais
 - Métier : échéancier jamais saisi à la main — `planPaiement` / `reglerEcheancier` ; upload 10 Mo + `%PDF-` + gate `uploadAutorise` ; étape 7 gelée ; `SCOPE` et `visa-rules.ts` = seule vérité métier.
 - PDF : garder le fallback tableau anti-`oklch` (`exportRapportTable`) ; légende + couleur pour les icônes.
 - Fins de ligne LF (`.gitattributes`), `npm run format` avant commit.
+- Landing page : `landing-page/` est un projet Vite autonome — aucun import entre `landing-page/**` et `src/**` (dans les deux sens) ; ses dépendances restent dans `landing-page/package.json`, jamais dans le `package.json` racine. Une tâche « app » ne touche pas `landing-page/`, et inversement.
 
 ## 3. Gate prod avant chaque merge
 
 ```sh
 npm run typecheck && npm run lint && npm run build
 npm run db:setup   # sur base jetable, si le schema/seed a changé
+npm --prefix landing-page run build   # si landing-page/ a changé (tsc + vite build)
 ```
 
 `robots.txt` : garder le privé désindexé (`/ops`, `/dossiers`, `/profil`, `/paiements`, `/qualification`).
