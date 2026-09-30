@@ -326,12 +326,27 @@ export function encaisse(d: Dossier) {
  */
 export function passeportValiditeOk(d: Dossier): boolean | null {
   const { passeportExpiration } = d.client;
-  const retour = d.client.voyageFin;
-  if (!passeportExpiration || !retour) return null;
+  if (!passeportExpiration) return null;
   const exp = new Date(passeportExpiration);
+  if (Number.isNaN(exp.getTime())) return null;
+
+  // Un passeport déjà périmé est invalide, qu'on connaisse ou non les dates du voyage :
+  // ne rien signaler tant que les dates manquent laissait passer le cas le plus évident.
+  if (exp.getTime() < Date.now()) return false;
+
+  const retour = d.client.voyageFin;
+  if (!retour) return null;
   const minimum = new Date(retour);
   minimum.setMonth(minimum.getMonth() + 3);
   return exp.getTime() >= minimum.getTime();
+}
+
+/** Le passeport est-il déjà périmé ? Distinct d'une marge de validité trop courte. */
+export function passeportPerime(d: Dossier): boolean {
+  const { passeportExpiration } = d.client;
+  if (!passeportExpiration) return false;
+  const exp = new Date(passeportExpiration);
+  return !Number.isNaN(exp.getTime()) && exp.getTime() < Date.now();
 }
 
 /** Un point à cocher pour l'étape en cours : ce qui doit être fait, et s'il l'est. */
@@ -422,7 +437,11 @@ export function alertes(d: Dossier): string[] {
   const out: string[] = [];
 
   // Passeport — pièce bloquante, indépendante de l'avancement du dossier.
-  if (passeportValiditeOk(d) === false)
+  if (passeportPerime(d))
+    out.push(
+      "Passeport expiré : le client doit le faire renouveler avant toute démarche, aucune pièce du dossier ne peut compenser.",
+    );
+  else if (passeportValiditeOk(d) === false)
     out.push(
       "Passeport insuffisamment valide : il doit rester valable au moins 3 mois après la date de retour prévue.",
     );

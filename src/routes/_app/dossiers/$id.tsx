@@ -8,6 +8,7 @@ import {
   completion,
   encaisse,
   passeportValiditeOk,
+  passeportPerime,
   ETAPES,
   PACKS,
   CENTRES,
@@ -220,6 +221,7 @@ function DossierDetail() {
   // modification accidentelle d'un dossier déjà clos.
   const cloture = d.etape === 6;
   const passeportOk = passeportValiditeOk(d);
+  const passeportExpire = passeportPerime(d);
   const etapeCourante = ETAPES.find((e) => e.n === d.etape) ?? ETAPES[0];
   const checklist = checklistEtape(d);
   const restants = checklist.filter((pt) => !pt.fait).length;
@@ -704,7 +706,9 @@ function DossierDetail() {
                   <span className="ref text-[var(--ok)]">Validité conforme</span>
                 )}
                 {passeportOk === false && (
-                  <span className="ref text-[var(--stop)]">Validité insuffisante</span>
+                  <span className="ref text-[var(--stop)]">
+                    {passeportExpire ? "Passeport expiré" : "Validité insuffisante"}
+                  </span>
                 )}
               </div>
               {d.client.passeportNumero ? (
