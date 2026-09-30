@@ -1,6 +1,6 @@
 // Briques d'animation de la landing.
-// - Framer Motion : apparition des blocs (Reveal), dans les deux sens de scroll.
-// - GSAP : textes (SplitReveal, ScriptReveal, CountUp), rejoués à chaque passage.
+// - Framer Motion : entrée et sortie des blocs (Reveal), dans les deux sens de scroll.
+// - GSAP : textes (SplitReveal, ScriptReveal, CountUp), joués à l'entrée, inversés à la sortie.
 import { motion, useInView } from "framer-motion";
 import {
   createElement,
@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { gsap, prefersReducedMotion, replayOnScroll, SplitText, useGSAP } from "../lib/gsap";
+import { useIntroPrete } from "../lib/intro";
 
 export const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -33,12 +34,17 @@ type RevealProps = {
   y?: number;
   x?: number;
   scale?: number;
+  /** Seuil d'entrée : par défaut l'élément doit dépasser 10 % du bas de l'écran. */
+  immediat?: boolean;
 };
 
+/** Sortie : départ doux puis accélération, plus courte que l'entrée. */
+const EASE_IN = [0.55, 0, 0.75, 0.2] as const;
+
 /**
- * Apparition au scroll (Framer Motion). Rejoue à chaque entrée dans l'écran :
- * par le bas en descendant, par le haut en remontant. Remise à zéro seulement
- * quand l'élément est totalement hors écran, donc jamais visible.
+ * Entrée et sortie au scroll (Framer Motion). L'élément apparaît en entrant dans
+ * l'écran (par le bas en descendant, par le haut en remontant) et disparaît de façon
+ * visible en le quittant : il file vers le haut sous l'en-tête, ou vers le bas.
  */
 export function Reveal({
   children,
@@ -50,18 +56,21 @@ export function Reveal({
   y = 44,
   x = 0,
   scale = 1,
+  immediat = false,
 }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
-  const entered = useInView(ref, { margin: "0px 0px -10% 0px" });
-  const visible = useInView(ref);
+  // Zone active : un peu sous l'en-tête en haut, 10 % au-dessus du bas de l'écran.
+  const actif = useInView(ref, { margin: immediat ? "0px" : "-7% 0px -10% 0px" });
+  const pret = useIntroPrete();
   const [side, setSide] = useState<"shown" | "above" | "below">("below");
 
   useEffect(() => {
-    if (entered) setSide("shown");
-    else if (!visible && ref.current) {
-      setSide(ref.current.getBoundingClientRect().top < 0 ? "above" : "below");
+    if (actif && pret) setSide("shown");
+    else if (ref.current) {
+      const r = ref.current.getBoundingClientRect();
+      setSide(r.top + r.height / 2 < window.innerHeight / 2 ? "above" : "below");
     }
-  }, [entered, visible]);
+  }, [actif, pret]);
 
   const Tag = TAGS[as];
   const dir = side === "above" ? -1 : 1;
@@ -74,7 +83,13 @@ export function Reveal({
       animate={
         side === "shown"
           ? { opacity: 1, y: 0, x: 0, scale: 1, transition: { duration, delay, ease: EASE_OUT } }
-          : { opacity: 0, y: y * dir, x: x * dir, scale, transition: { duration: 0 } }
+          : {
+              opacity: 0,
+              y: y * dir,
+              x: x * dir,
+              scale,
+              transition: { duration: Math.min(duration, 0.6), ease: EASE_IN },
+            }
       }
     >
       {children}
@@ -119,6 +134,27 @@ export function SplitReveal({
       let triggers: ReturnType<typeof replayOnScroll> = [];
       let first = true;
 
+      // Arabe (droite à gauche) : aucune découpe. Découper casse la liaison des lettres
+      // arabes et l'ordre des mots latins (« EIDEN Visa » devenait « Visa EIDEN ») ;
+      // le bloc entier se dévoile donc dans le sens de lecture, de droite à gauche.
+      if (getComputedStyle(el).direction === "rtl") {
+        gsap.set(el, { visibility: "visible" });
+        const balayage = gsap.fromTo(
+          el,
+          { clipPath: "inset(-25% -4% -25% 100%)", y: mode === "chars" ? 8 : 26, opacity: 0 },
+          {
+            clipPath: "inset(-25% -4% -25% -4%)",
+            y: 0,
+            opacity: 1,
+            duration: mode === "chars" ? 0.8 : 1.15,
+            ease: "power3.out",
+            delay,
+            paused: true,
+          },
+        );
+        replayOnScroll(el, balayage, { start });
+        return;
+      }
       SplitText.create(el, {
         type: mode === "chars" ? "words,chars" : mode === "words" ? "lines,words" : "lines",
         mask: mode === "chars" ? undefined : "lines",
@@ -161,20 +197,45 @@ export function SplitReveal({
     { scope: ref },
   );
 
-  return createElement(as, { ref, id, className, "data-split": "" }, children);
+  return createElement(
+    as,
+    { ref, id, className, "data-split": "" },
+    typeof children === "string" ? insecable(children) : children,
+  );
 }
 
-/** Écriture manuscrite : chaque ligne se dévoile de gauche à droite, l'une après l'autre. */
+/**
+ * Typographie française : SplitText remplace l'espace insécable avant « ? » / « ! »
+ * par une espace normale ; on garde donc le dernier mot et la ponctuation ensemble.
+ */
+function insecable(texte: string): ReactNode {
+  const m = /^(.*\s)(\S+)[\s ]([?!:;])$/.exec(texte);
+  if (!m) return texte;
+  return (
+    <>
+      {m[1]}
+      <span className="whitespace-nowrap">{`${m[2]} ${m[3]}`}</span>
+    </>
+  );
+}
+
+/**
+ * Écriture manuscrite : chaque ligne se dévoile dans le sens de lecture (gauche → droite
+ * en français, droite → gauche en arabe), l'une après l'autre. `tilt` : inclinaison en
+ * degrés, inversée automatiquement en arabe.
+ */
 export function ScriptReveal({
   lines,
   className,
   lineClassName = "",
   delay = 0,
+  tilt = -11,
 }: {
   lines: string[];
   className?: string;
   lineClassName?: string;
   delay?: number;
+  tilt?: number;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
 
@@ -182,9 +243,11 @@ export function ScriptReveal({
     () => {
       const el = ref.current;
       if (!el || prefersReducedMotion()) return;
+      const rtl = getComputedStyle(el).direction === "rtl";
+      const cache = rtl ? "inset(-30% -5% -30% 100%)" : "inset(-30% 100% -30% -5%)";
       const anim = gsap.fromTo(
         el.querySelectorAll("[data-line]"),
-        { clipPath: "inset(-30% 100% -30% -5%)" },
+        { clipPath: cache },
         {
           clipPath: "inset(-30% -5% -30% -5%)",
           duration: 1.1,
@@ -200,7 +263,12 @@ export function ScriptReveal({
   );
 
   return (
-    <span ref={ref} className={className} aria-label={lines.join(" ")}>
+    <span
+      ref={ref}
+      className={`tilt ${className ?? ""}`}
+      style={{ "--tilt": `${tilt}deg` } as CSSProperties}
+      aria-label={lines.join(" ")}
+    >
       {lines.map((line) => (
         <span key={line} data-line aria-hidden="true" className={`block ${lineClassName}`}>
           {line}
@@ -232,7 +300,7 @@ export function CountUp({ value, className }: { value: number; className?: strin
           el.textContent = formatFr(Math.round(counter.v / 10) * 10);
         },
       });
-      replayOnScroll(el, anim, { start: "top 95%", end: "bottom 5%" });
+      replayOnScroll(el, anim, { start: "top bottom", end: "bottom top" });
     },
     { scope: ref },
   );

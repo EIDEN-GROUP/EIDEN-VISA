@@ -4,13 +4,15 @@
  * Landing page Eiden Visa : charte de la maquette "Le monde vous attend" :
  * crème chaud, encre marine, rouge passeport. Polices : Newsreader (titres),
  * DM Sans (texte), La Belle Aurore (manuscrit), Playfair Display (logo).
+ * En arabe, chaque pile bascule sur Amiri / IBM Plex Sans Arabic / Aref Ruqaa
+ * (glyphes absents des polices latines).
  * Copie autonome : la landing ne dépend d'aucun fichier de l'app.
  */
 
 @theme {
-  --font-serif: "Newsreader", "Times New Roman", serif;
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-script: "La Belle Aurore", cursive;
+  --font-serif: "Newsreader", "Amiri", "Times New Roman", serif;
+  --font-sans: "DM Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "La Belle Aurore", "Aref Ruqaa", cursive;
   --font-logo: "Playfair Display", "Times New Roman", serif;
 
   --color-ink: #0b1a30;
@@ -30,6 +32,17 @@
   --shadow-float: 0 24px 60px -28px rgb(24 20 40 / 0.28), 0 4px 14px -4px rgb(24 20 40 / 0.08);
 }
 
+/* Téléphones peu hauts (iPhone SE…) : hero compacté pour tenir dans l'écran. */
+@custom-variant court (@media (max-height: 740px) and (max-width: 1023.98px));
+
+/*
+ * Part de la carte « Votre destination » qui chevauche le bas du hero : la moitié de la
+ * carte horizontale (161 px d'image + 2 × 14 px de marge), donc centrée sur la jonction.
+ */
+:root {
+  --carte-chevauche: 95px;
+}
+
 @layer base {
   html {
     background-color: var(--color-cream);
@@ -47,6 +60,16 @@
   }
   svg.lucide {
     stroke-width: 1.6px;
+  }
+
+  /* Arabe : l'espacement des lettres casse leur liaison, et l'écriture a besoin d'air. */
+  *:lang(ar) {
+    letter-spacing: 0 !important;
+  }
+  h1:lang(ar),
+  h2:lang(ar),
+  h3:lang(ar) {
+    line-height: 1.3 !important;
   }
 }
 
@@ -75,6 +98,103 @@
     letter-spacing: 0.32em;
     text-transform: uppercase;
   }
+  .eyebrow:lang(ar) {
+    font-size: 0.875rem;
+  }
+
+  /* Inclinaison (écriture manuscrite, tampons) : miroir en arabe. */
+  .tilt {
+    rotate: var(--tilt, 0deg);
+  }
+  [dir="rtl"] .tilt {
+    rotate: calc(var(--tilt, 0deg) * -1);
+  }
+
+  /* Point d'origine côté début de ligne (fil de la méthode). */
+  .origin-start {
+    transform-origin: left center;
+  }
+  [dir="rtl"] .origin-start {
+    transform-origin: right center;
+  }
+
+  /*
+   * Hero : photo plein cadre sous un voile crème, comme la maquette. Mobile : le bas du
+   * bandeau photo se fond dans le texte (partie pleine = chevauchement -mt-14 du texte).
+   * Desktop : moitié texte crème, la photo apparaît vers la voyageuse. Léger voile en
+   * haut : ciel pâle de la maquette, header lisible. En arabe, photo en miroir pour
+   * garder la voyageuse du côté opposé au texte.
+   */
+  .hero-voile {
+    background:
+      linear-gradient(180deg, rgb(250 248 244 / 0.4) 0%, rgb(250 248 244 / 0) 90px),
+      linear-gradient(
+        0deg,
+        var(--color-cream) 0%,
+        var(--color-cream) 3.75rem,
+        rgb(250 248 244 / 0.7) 6rem,
+        rgb(250 248 244 / 0) 9.5rem
+      );
+  }
+  @media (min-width: 1024px) {
+    .hero-voile {
+      --hero-voile-sens: 90deg;
+      background:
+        linear-gradient(180deg, rgb(250 248 244 / 0.4) 0%, rgb(250 248 244 / 0) 160px),
+        linear-gradient(
+          var(--hero-voile-sens),
+          var(--color-cream) 0%,
+          var(--color-cream) 40%,
+          rgb(250 248 244 / 0.88) 46%,
+          rgb(250 248 244 / 0.6) 50.5%,
+          rgb(250 248 244 / 0.28) 54.5%,
+          rgb(250 248 244 / 0.08) 58%,
+          rgb(250 248 244 / 0) 61%
+        );
+    }
+    [dir="rtl"] .hero-voile {
+      --hero-voile-sens: 270deg;
+    }
+  }
+  [dir="rtl"] .hero-photo {
+    scale: -1 1;
+  }
+
+  /* Bandeau final : photo en miroir (tour Eiffel côté opposé au texte) + voile sombre. */
+  .cta-photo {
+    scale: -1 1;
+  }
+  [dir="rtl"] .cta-photo {
+    scale: 1 1;
+  }
+  .cta-voile {
+    background: linear-gradient(
+      180deg,
+      rgb(13 12 14 / 0.35) 0%,
+      rgb(13 12 14 / 0.85) 45%,
+      #0d0c0e 100%
+    );
+  }
+  @media (min-width: 1024px) {
+    .cta-voile {
+      background: linear-gradient(
+        90deg,
+        #0d0c0e 0%,
+        rgb(13 12 14 / 0.9) 28%,
+        rgb(13 12 14 / 0.45) 50%,
+        rgb(13 12 14 / 0) 72%
+      );
+    }
+    [dir="rtl"] .cta-voile {
+      background: linear-gradient(
+        270deg,
+        #0d0c0e 0%,
+        rgb(13 12 14 / 0.9) 28%,
+        rgb(13 12 14 / 0.45) 50%,
+        rgb(13 12 14 / 0) 72%
+      );
+    }
+  }
 }
 
 /* Texte découpé par GSAP SplitText : masqué tant que la découpe n'est pas prête. */
@@ -101,4 +221,120 @@
 .split-line-mask {
   padding-bottom: 0.14em;
   margin-bottom: -0.14em;
+}
+
+/* Bandeau final : léger zoom arrière de la photo à l'apparition. */
+:root {
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes eiden-film-settle {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Loader : ciel découpé par l'avion. `--cut` (px) suit la queue de l'avion ; à gauche
+   du bord, le ciel devient transparent sur une zone fondue (`--plume`). Bord incliné
+   (100deg) pour suivre la montée de l'avion. */
+.loader-rideau {
+  --cut: -400px;
+  --plume: 240px;
+  background: linear-gradient(
+    180deg,
+    #8fbde6 0%,
+    #b5d1e8 32%,
+    #c9b08a 58%,
+    #84736b 78%,
+    #1f2f5c 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    100deg,
+    transparent calc(var(--cut) - var(--plume)),
+    #000 var(--cut)
+  );
+  mask-image: linear-gradient(100deg, transparent calc(var(--cut) - var(--plume)), #000 var(--cut));
+}
+/* Voile marine (bleu UE) sur la photo claire : la marque blanche reste lisible, avec un
+   halo plus sombre derrière le texte. */
+.loader-voile {
+  background:
+    radial-gradient(ellipse 62% 42% at 50% 34%, rgb(8 20 52 / 0.6), transparent 75%),
+    linear-gradient(
+      180deg,
+      rgb(8 20 52 / 0.55) 0%,
+      rgb(8 20 52 / 0.32) 48%,
+      rgb(8 20 52 / 0.5) 100%
+    );
+}
+.loader-trainee {
+  position: absolute;
+  width: 75vw;
+  height: 3px;
+  border-radius: 999px;
+  transform-origin: right center;
+  rotate: -9deg;
+  background: linear-gradient(to left, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 85%);
+  filter: blur(1.5px);
+}
+
+/* Méthode : halo qui pulse autour de l'étape où l'avion vient d'arriver. */
+@keyframes eiden-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+/* Tampons « Schengen Visa » en filigrane (pseudo-éléments, pâles). */
+/* Rond rouge : très grand, à mi-hauteur de la page, côté droit (côté gauche en arabe),
+   derrière tout le contenu (`main` isole la pile, z-index négatif). */
+.filigrane-rond {
+  isolation: isolate;
+}
+.filigrane-rond::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  inset-inline-end: -9vw;
+  width: clamp(340px, 50vw, 820px);
+  aspect-ratio: 1;
+  translate: 0 -50%;
+  rotate: -14deg;
+  pointer-events: none;
+  background: url("/images/tampon-schengen-rond.webp") center / contain no-repeat;
+  opacity: 0.07;
+}
+@media (min-width: 1024px) {
+  .filigrane-rond::before {
+    opacity: 0.09;
+  }
+}
+/* Rectangulaire bleu : en bas à gauche de la FAQ, desktop uniquement. */
+.filigrane-rect::after {
+  content: "";
+  position: absolute;
+  display: none;
+  width: 230px;
+  aspect-ratio: 720 / 470;
+  inset-inline-start: -1.5rem;
+  bottom: 1.5rem;
+  rotate: 9deg;
+  pointer-events: none;
+  background: url("/images/tampon-schengen-rect.webp") center / contain no-repeat;
+  opacity: 0.1;
+}
+@media (min-width: 1024px) {
+  .filigrane-rect::after {
+    display: block;
+  }
 }

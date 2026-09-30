@@ -1,11 +1,11 @@
 // Éléments graphiques de la maquette : logo, drapeau UE, tampons, croquis décoratif.
 import { motion, type MotionValue } from "framer-motion";
 import { Plane } from "lucide-react";
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <span className={`flex flex-col items-center leading-none text-ink ${className}`}>
+    <span lang="fr" className={`flex flex-col items-center leading-none text-ink ${className}`}>
       <span className="font-logo text-[30px] tracking-[0.02em] sm:text-[34px]">EIDEN</span>
       <span className="mt-1.5 pl-[0.55em] text-[9.5px] font-bold tracking-[0.55em] sm:text-[10.5px]">
         VISA
@@ -15,7 +15,7 @@ export function Logo({ className = "" }: { className?: string }) {
 }
 
 /** Drapeau de l'Union européenne (12 étoiles d'or sur fond bleu), ombré comme un tissu. */
-export function EUFlag({ className = "" }: { className?: string }) {
+export function EUFlag({ className = "", label }: { className?: string; label: string }) {
   const id = `u${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const star = (cx: number, cy: number, R = 30) =>
     Array.from({ length: 10 }, (_, k) => {
@@ -29,12 +29,7 @@ export function EUFlag({ className = "" }: { className?: string }) {
   });
 
   return (
-    <svg
-      viewBox="0 0 810 540"
-      role="img"
-      aria-label="Drapeau de l'Union européenne"
-      className={className}
-    >
+    <svg viewBox="0 0 810 540" role="img" aria-label={label} className={className}>
       <defs>
         <clipPath id={`${id}-clip`}>
           <rect width="810" height="540" rx="46" />
@@ -72,6 +67,7 @@ export function HeroStamp({
     <svg
       viewBox="0 0 250 150"
       fill="none"
+      lang="fr"
       aria-hidden="true"
       className={`overflow-visible text-white ${className}`}
     >
@@ -107,10 +103,18 @@ export function HeroStamp({
 }
 
 /** Tampon postal rectangulaire, délavé, à cheval sur la photo de la carte destination. */
-export function PostalStamp({ className = "" }: { className?: string }) {
+export function PostalStamp({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) {
   return (
     <div
+      lang="fr"
       aria-hidden="true"
+      style={style}
       className={`rounded-[10px] border-2 border-dashed border-current p-[5px] ${className}`}
     >
       <div className="flex h-full flex-col items-center justify-between rounded-[6px] border-[1.5px] border-current px-3 py-2">
@@ -122,36 +126,23 @@ export function PostalStamp({ className = "" }: { className?: string }) {
   );
 }
 
-/** Tampon rouge « VISA FRANCE, Vérifié ✓ » posé sur la pièce contrôlée. */
-export function VerifiedStamp({ className = "" }: { className?: string }) {
+/** Tampon rouge (« VISA FRANCE » + « Vérifié ✓ » traduit) posé sur la pièce contrôlée. */
+export function VerifiedStamp({
+  className = "",
+  lignes,
+}: {
+  className?: string;
+  lignes: string[];
+}) {
   return (
     <div
       aria-hidden="true"
       className={`rounded-[6px] border-[2.5px] border-brand/90 bg-white/35 px-4 py-2 text-center text-brand/90 mix-blend-multiply ${className}`}
     >
-      <p className="text-[14px] font-bold tracking-[0.14em]">VISA FRANCE</p>
-      <p className="font-script text-[21px] leading-[1.1]">Vérifié ✓</p>
+      <p lang="fr" className="text-[14px] font-bold tracking-[0.14em]">
+        {lignes[0]}
+      </p>
+      <p className="font-script text-[21px] leading-[1.1]">{lignes[1]}</p>
     </div>
-  );
-}
-
-/** Croquis au trait (tour Eiffel + toits), très pâle, en fond de section. */
-export function EiffelSketch({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 220 260"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.1"
-      strokeLinecap="round"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M110 8v18M104 26h12M103 26l-6 60M117 26l6 60M92 86h36M90 92h40M97 86c-8 40-20 90-44 150M123 86c8 40 20 90 44 150" />
-      <path d="M70 160h80M66 168h88M76 168c10-16 22-22 34-22s24 6 34 22M53 236h28M139 236h28" />
-      <path d="M100 40l14 20M114 40l-14 20M99 62l18 22M117 62l-18 22M88 100l30 30M118 100l-30 30M80 130l52 28M132 130l-52 28M72 176l28 40M148 176l-28 40" />
-      <path d="M0 246h220M8 246v-40h26v40M34 214h30v32M12 206l9-12 9 12M150 246v-34h34v34M184 222h30v24M156 212l11-14 11 14" />
-      <path d="M14 222h4M24 222h4M14 232h4M24 232h4M160 222h5M172 222h5M160 234h5M172 234h5M40 224h5M52 224h5M190 230h5M202 230h5" />
-    </svg>
   );
 }

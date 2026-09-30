@@ -8,11 +8,11 @@ import { canHover, gsap, prefersReducedMotion, replayOnScroll, useGSAP } from ".
 const HIDDEN_FILL = { transform: "translateY(101%)" };
 
 type Variant = "primary" | "light" | "sand" | "outline";
-type Size = "md" | "lg";
+type Size = "md" | "lg" | "auto";
 
 const VARIANTS: Record<Variant, { base: string; fill: string }> = {
   primary: {
-    base: "bg-brand text-white shadow-[0_14px_30px_-14px_rgb(174_10_26/0.75)]",
+    base: "bg-brand text-white shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)]",
     fill: "bg-brand-dark",
   },
   light: { base: "bg-white text-ink shadow-[var(--shadow-soft)]", fill: "bg-sand" },
@@ -23,6 +23,7 @@ const VARIANTS: Record<Variant, { base: string; fill: string }> = {
 const SIZES: Record<Size, string> = {
   md: "h-12 px-7 text-[14.5px]",
   lg: "h-[58px] px-9 text-[15.5px]",
+  auto: "h-12 px-7 text-[14.5px] sm:h-[58px] sm:px-9 sm:text-[15.5px]",
 };
 
 /** Branche l'apparition + le survol GSAP sur un couple (wrapper, bouton). */
@@ -65,7 +66,10 @@ function useButtonMotion(
         if (fill)
           gsap.fromTo(fill, { yPercent: 101 }, { yPercent: 0, duration: 0.5, ease: "power3.out" });
         if (arrow) {
-          const d = arrow.dataset.dir === "left" ? -14 : 14;
+          // Sens de lecture : en arabe, « avancer » va vers la gauche.
+          const recule = arrow.dataset.dir === "left";
+          const rtl = getComputedStyle(arrow).direction === "rtl";
+          const d = recule !== rtl ? -14 : 14;
           gsap
             .timeline()
             .to(arrow, { x: d, opacity: 0, duration: 0.18, ease: "power2.in" })
@@ -146,7 +150,7 @@ export function AnimatedButton({
         <span>{children}</span>
         {arrow && (
           <span data-arrow aria-hidden="true" className="inline-flex">
-            <ArrowRight className="size-[18px]" />
+            <ArrowRight className="size-[18px] rtl:-scale-x-100" />
           </span>
         )}
       </a>
@@ -192,7 +196,7 @@ export function IconButton({
         className={`absolute inset-0 -z-10 ${tones.fill}`}
       />
       <span data-arrow data-dir={direction} aria-hidden="true" className="inline-flex">
-        <Icon className="size-5" />
+        <Icon className="size-5 rtl:-scale-x-100" />
       </span>
     </>
   );
@@ -243,7 +247,7 @@ export function ArrowLink({ href, children, className = "", onClick }: ArrowLink
           {children}
         </span>
         <span data-arrow aria-hidden="true" className="inline-flex">
-          <ArrowRight className="size-[18px]" />
+          <ArrowRight className="size-[18px] rtl:-scale-x-100" />
         </span>
       </a>
     </span>

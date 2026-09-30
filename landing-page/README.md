@@ -21,26 +21,37 @@ npm run preview    # sert dist/ sur http://localhost:5181
 
 ## Où modifier / Where to edit
 
-| Fichier                           | Contenu                                                                                                               |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `src/content.ts`                  | Tous les textes : `LIENS` (cibles des boutons), `NAV`, `ETAPES`, `AVANTAGES`, `PACKS`, `TEMOIGNAGES`, `FAQ`.          |
-| `src/sections/*.tsx`              | Une section par fichier : Header, Hero, Destination (visa Schengen), Methode, Pourquoi, Packs, Temoignages, Faq, Cta. |
-| `src/components/motion.tsx`       | Animations : `Reveal` (Framer Motion), `SplitReveal` / `ScriptReveal` / `CountUp` (GSAP).                             |
-| `src/components/buttons.tsx`      | Boutons animés GSAP (apparition, effet magnétique, remplissage, flèche).                                              |
-| `src/components/decor.tsx`        | Logo, drapeau UE, tampons, croquis tour Eiffel.                                                                       |
-| `src/components/SmoothScroll.tsx` | Défilement fluide Lenis synchronisé avec GSAP ScrollTrigger.                                                          |
-| `src/lib/gsap.ts`                 | Plugins GSAP + `replayOnScroll` (rejoue les animations en descendant **et** en remontant).                            |
-| `src/styles.css`                  | Tokens couleur/typo de la maquette (crème, marine, rouge `#ae0a1a`).                                                  |
-| `index.html`                      | `<title>`, meta description, polices Google (Newsreader, DM Sans, La Belle Aurore, Playfair Display).                 |
-| `public/images/`                  | Photos (webp) issues de cosmos.so ; `public/` : favicon, apple-touch-icon.                                            |
+| Fichier                            | Contenu                                                                                                                                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/content.ts`                   | Données non textuelles : `LIENS` (cibles des boutons), `NAV`, icônes, images (`AVANTAGES`, `PACKS`, `AVATARS`). Packs sans prix.                                                               |
+| `src/i18n/fr.ts`, `src/i18n/ar.ts` | Tous les textes FR et AR, même structure (vérifiée par `tsc`) : packs Standard, Essentiel, Global ; FAQ en 4 questions. `src/i18n/index.tsx` : langue, sens RTL.                               |
+| `src/sections/*.tsx`               | Une section par fichier : Header, Hero, Destination (visa Schengen), Methode, Pourquoi, Packs, Temoignages, Faq, Cta.                                                                          |
+| `src/components/motion.tsx`        | Animations : `Reveal` (Framer Motion), `SplitReveal` / `ScriptReveal` / `CountUp` (GSAP ; `CountUp` inutilisé tant que les packs n'ont pas de prix).                                           |
+| `src/components/buttons.tsx`       | Boutons animés GSAP (apparition, effet magnétique, remplissage, flèche).                                                                                                                       |
+| `src/components/decor.tsx`         | Logo, drapeau UE, tampons.                                                                                                                                                                     |
+| `src/components/Loader.tsx`        | Écran d'ouverture : ciel au coucher du soleil (`loader-bg.png`) découpé par un avion (`loader-avion.webp`) qui le traverse de gauche à droite.                                                 |
+| `src/lib/intro.ts`                 | Porte d'intro : les animations d'entrée du hero et du header attendent le passage de l'avion.                                                                                                  |
+| `src/components/SmoothScroll.tsx`  | Défilement fluide Lenis synchronisé avec GSAP ScrollTrigger.                                                                                                                                   |
+| `src/lib/gsap.ts`                  | Plugins GSAP + `replayOnScroll` (rejoue les animations en descendant **et** en remontant).                                                                                                     |
+| `src/styles.css`                   | Tokens couleur/typo de la maquette (crème, marine, rouge `#ae0a1a`) ; tampons Schengen en filigrane (`.filigrane-rond` sur `main` : grand, mi-page à droite ; `.filigrane-rect` : bas de FAQ). |
+| `index.html`                       | `<title>`, meta description, polices Google (Newsreader, DM Sans, La Belle Aurore, Playfair Display).                                                                                          |
+| `public/images/`                   | Photos (webp) issues de cosmos.so ; `public/` : favicon, apple-touch-icon.                                                                                                                     |
 
 ## Animations
 
-- **FR :** chaque animation se rejoue à chaque passage à l'écran, dans les deux sens de
-  scroll ; la remise à zéro se fait hors écran. `prefers-reduced-motion` est respecté
-  (pas de Lenis, textes affichés directement).
-- **EN:** every animation replays each time it enters the viewport, scrolling down or up;
-  resets happen off-screen. `prefers-reduced-motion` is honoured (no Lenis, static text).
+- **FR :** loader au chargement (ciel + marque, puis un avion traverse l'écran et découpe
+  le ciel comme un rideau pour révéler la page ; le scroll est figé pendant le vol). Au
+  scroll, chaque bloc, texte et bouton a une **entrée et une sortie visibles** dans les deux
+  sens (`Reveal` et `replayOnScroll`) ; le hero s'efface en parallaxe, la photo du CTA
+  se pose en parallaxe. Méthode : un avion vole en boucle d'étape en étape sur un fil
+  en pointillés (GSAP MotionPath), pause hors écran. `prefers-reduced-motion` : pas de loader, pas de Lenis, textes
+  affichés directement.
+- **EN:** opening loader (sky + wordmark, then a plane flies across and cuts the sky like a
+  curtain to reveal the page; scroll locked during the flight). On scroll, every block, text
+  and button has a **visible entrance and exit** in both directions; the hero fades out with
+  parallax, the CTA photo settles with parallax. Method: a plane loops from step to step along a
+  dotted path (GSAP MotionPath), paused off-screen. `prefers-reduced-motion`: no loader, no
+  Lenis, static text.
 
 ## Règles / Rules
 

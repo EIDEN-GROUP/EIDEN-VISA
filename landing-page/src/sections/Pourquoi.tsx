@@ -1,9 +1,12 @@
-import { motion } from "framer-motion";
-import { VerifiedStamp } from "../components/decor";
 import { Reveal, SplitReveal } from "../components/motion";
 import { AVANTAGES } from "../content";
+import { useLangue } from "../i18n";
+
+const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 export function Pourquoi() {
+  const { t } = useLangue();
+
   return (
     <section
       id="services"
@@ -11,17 +14,17 @@ export function Pourquoi() {
       className="scroll-mt-24 pt-20 lg:pt-[86px]"
     >
       <div className="container-page">
-        <div className="grid gap-5 lg:grid-cols-[1.12fr_1fr] lg:items-center lg:gap-10">
+        <div className="grid gap-5 lg:grid-cols-[1.12fr_1fr] lg:items-center lg:gap-10 font-bold">
           <div>
             <SplitReveal as="p" mode="chars" className="eyebrow text-brand">
-              Pourquoi Eiden <span className="whitespace-nowrap">Visa ?</span>
+              {t.pourquoi.surtitre}
             </SplitReveal>
             <SplitReveal
               as="h2"
               id="services-titre"
               className="mt-4 max-w-[650px] font-serif text-[clamp(2.1rem,3.4vw,3.05rem)] leading-[1.06] tracking-[-0.01em] text-ink"
             >
-              Un accompagnement complet pour votre visa France.
+              {t.pourquoi.titre}
             </SplitReveal>
           </div>
           <SplitReveal
@@ -30,45 +33,55 @@ export function Pourquoi() {
             delay={0.15}
             className="max-w-[560px] text-[16px] leading-[1.75] text-muted lg:pt-8"
           >
-            Nous simplifions vos démarches et vous accompagnons à chaque étape, avec une expertise
-            dédiée et un suivi personnalisé.
+            {t.pourquoi.texte}
           </SplitReveal>
         </div>
 
-        <div className="mt-11 grid gap-5 sm:grid-cols-2 lg:mt-[58px] lg:gap-6 xl:grid-cols-4">
-          {AVANTAGES.map(({ icon: Icon, titre, texte, image, alt, position, tampon }, i) => (
-            <Reveal key={titre} delay={i * 0.12} y={64} className="h-full">
-              <motion.article
-                whileHover={{ y: -8 }}
-                transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                className="group flex h-full min-h-[400px] flex-col overflow-hidden rounded-[16px] bg-card shadow-[var(--shadow-soft)] transition-shadow duration-500 hover:shadow-[var(--shadow-float)] lg:min-h-[414px]"
+        {/* Cartes accordéon : la carte survolée s'élargit (lg+) et révèle sa description.
+            Sur écrans tactiles (pas de hover), la description reste visible. */}
+        <div className="mt-11 grid gap-5 sm:grid-cols-2 lg:mt-[58px] lg:flex lg:h-[460px]">
+          {AVANTAGES.map(({ image, position }, i) => {
+            const { titre, texte, alt } = t.pourquoi.avantages[i]!;
+            return (
+              <Reveal
+                key={image}
+                delay={i * 0.12}
+                y={64}
+                className={`group h-[380px] sm:h-[420px] lg:h-full lg:min-w-0 lg:flex-1 lg:transition-[flex-grow] lg:duration-700 ${EASE} lg:hover:grow-[2.4] lg:focus-within:grow-[2.4]`}
               >
-                <div className="relative z-10 px-5 pt-5 xl:px-6 xl:pt-6">
-                  <span className="grid size-[55px] place-items-center rounded-full bg-blush text-brand transition-transform duration-500 group-hover:-rotate-6">
-                    <Icon className="size-6" />
-                  </span>
-                  <h3 className="mt-4 font-serif text-[24px] leading-[1.12] text-ink">{titre}</h3>
-                  <p className="mt-2 text-[15px] leading-[1.55] text-muted">{texte}</p>
-                </div>
-                <div className="relative mt-auto h-[215px] overflow-hidden">
+                <article
+                  tabIndex={0}
+                  className="relative h-full overflow-hidden rounded-[18px] shadow-[var(--shadow-soft)] outline-none transition-shadow duration-500 hover:shadow-[var(--shadow-float)] focus-visible:ring-2 focus-visible:ring-brand"
+                >
                   <img
                     src={image}
                     alt={alt}
                     loading="lazy"
                     style={{ objectPosition: position }}
-                    className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.07]"
+                    className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1.2s] ${EASE} group-hover:scale-[1.06]`}
                   />
                   <div
                     aria-hidden="true"
-                    className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-card to-transparent"
+                    className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/5 transition-opacity duration-700 [@media(hover:hover)]:opacity-80 [@media(hover:hover)]:group-hover:opacity-100"
                   />
-                  {tampon && (
-                    <VerifiedStamp className="absolute bottom-[14%] left-[10%] -rotate-[9deg]" />
-                  )}
-                </div>
-              </motion.article>
-            </Reveal>
-          ))}
+                  <div className="absolute inset-x-0 bottom-0 p-6 xl:p-7">
+                    <h3 className="font-serif text-[24px] leading-[1.12] text-white lg:text-[26px]">
+                      {titre}
+                    </h3>
+                    <div
+                      className={`grid grid-rows-[1fr] transition-[grid-template-rows] duration-700 ${EASE} [@media(hover:hover)]:grid-rows-[0fr] [@media(hover:hover)]:group-hover:grid-rows-[1fr] [@media(hover:hover)]:group-focus-within:grid-rows-[1fr]`}
+                    >
+                      <p
+                        className={`overflow-hidden text-[15px] leading-[1.55] text-white/85 transition-[opacity,transform] duration-700 ${EASE} [@media(hover:hover)]:translate-y-3 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:delay-150 [@media(hover:hover)]:group-focus-within:translate-y-0 [@media(hover:hover)]:group-focus-within:opacity-100`}
+                      >
+                        <span className="block pt-2 lg:max-w-[340px]">{texte}</span>
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>
