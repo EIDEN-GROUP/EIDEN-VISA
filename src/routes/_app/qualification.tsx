@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import { cn } from "@/lib/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   TREE,
   getFixedCase,
   buildCourtSejour,
+  buildLongSejour,
   type Profile,
   type CaseResult,
 } from "@/lib/visa-rules";
@@ -29,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import stampApproved from "@/assets/decorations/stamp-visa-approved.png";
 import stampName from "@/assets/decorations/stamp-name.png";
 import stampFamily from "@/assets/decorations/stamp-family.png";
@@ -66,20 +69,6 @@ function familyRelated(caseKey: string, profile: Profile) {
   return FAMILY_CASE_KEYS.includes(caseKey) || FAMILY_BASES.includes(profile.base);
 }
 
-// Étiquette de chaque champ libre (Q5, Q16-21, Q38-41...), pour reformer une note lisible
-// à partir de `profile.details` (key -> label), sans dupliquer le texte dans le TREE.
-const FIELD_LABELS: Record<string, string> = Object.fromEntries(
-  Object.values(TREE).flatMap((n) => n.fields?.map((f) => [f.key, f.label] as const) ?? []),
-);
-
-function detailsNote(details: Profile["details"]): string | null {
-  if (!details || Object.keys(details).length === 0) return null;
-  const lines = Object.entries(details)
-    .filter(([, v]) => v)
-    .map(([k, v]) => `${FIELD_LABELS[k] ?? k} : ${v}`);
-  return lines.length ? `Informations complémentaires saisies :\n${lines.join("\n")}` : null;
-}
-
 function Qualification() {
   const navigate = useNavigate();
   const { ajouter } = useDossiers();
@@ -110,13 +99,45 @@ function Qualification() {
   const node = TREE[nodeKey]!;
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
 
+  // Carrousel : une question par diapo. On peut revenir en arrière pour relire ses
+  // réponses, mais jamais dépasser la question en cours — elle est toujours la dernière.
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", duration: 18 });
+  const [diapo, setDiapo] = useState(0);
+  const [peutReculer, setPeutReculer] = useState(false);
+  const [peutAvancer, setPeutAvancer] = useState(false);
+  const [histoOuverte, setHistoOuverte] = useState(false);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => {
+      setDiapo(emblaApi.selectedScrollSnap());
+      setPeutReculer(emblaApi.canScrollPrev());
+      setPeutAvancer(emblaApi.canScrollNext());
+    };
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    onSelect();
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi]);
+
+  // Une question répondue ajoute une diapo : on recale la vue sur la question en cours.
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.reInit();
+    emblaApi.scrollTo(history.length);
+  }, [emblaApi, history.length, nodeKey]);
+
   function goToResult(key: string, nextProfile: Profile) {
-    const caseKey = key === "DYNAMIC" ? "DYNAMIC" : key;
     const c =
-      caseKey === "DYNAMIC"
+      key === "DYNAMIC"
         ? buildCourtSejour(nextProfile)
-        : (getFixedCase(caseKey) ?? buildCourtSejour(nextProfile));
-    setResult({ caseKey, c });
+        : key === "DYNAMIC_LS"
+          ? buildLongSejour(nextProfile)
+          : (getFixedCase(key) ?? buildCourtSejour(nextProfile));
+    setResult({ caseKey: key, c });
   }
 
   function choose(opt: NonNullable<(typeof node)["opts"]>[number]) {
@@ -160,6 +181,7 @@ function Qualification() {
     setFieldValues({});
     setCentre(CENTRES[0]);
     setModalite("comptant");
+    setHistoOuverte(false);
   }
 
   function retour() {
@@ -221,13 +243,20 @@ function Qualification() {
       // Échéancier dérivé du pack (base par défaut) et de la modalité choisie à l'accueil :
       // comptant = une ligne de solde, acompte = 50 % + solde 50 %.
       paiements: planPaiement("base", modalite),
-      notes: [
-        ...result.c.notes,
-        ...(detailsNote(profile.details) ? [detailsNote(profile.details)!] : []),
-      ],
+      // Les réponses libres ne sont plus aplaties ici : elles vivent dans `profile.details`,
+      // et la fiche dossier les affiche groupées par sujet.
+      notes: result.c.notes,
       decision: "en_attente",
       decisionDate: null,
       decisionMotif: null,
+      recuRemis: false,
+      recuLe: null,
+      franceVisasFait: false,
+      franceVisasRef: null,
+      franceVisasLe: null,
+      rdvPris: false,
+      rdvDate: null,
+      rdvLe: null,
     };
     await ajouter(dossier);
     navigate({ to: "/dossiers/$id", params: { id } });
@@ -249,70 +278,169 @@ function Qualification() {
         )}
       </div>
 
-      {history.length > 0 && (
-        <div className="space-y-2">
-          {history.map((h, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3"
-            >
-              <span className="text-sm text-muted-foreground">{TREE[h.nodeKey]!.q}</span>
-              <span className="ml-4 shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                {h.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
       {!result && (
-        <Card className="panel">
-          <CardHeader>
-            <CardTitle className="text-lg">{node.q}</CardTitle>
-            {node.help && <p className="pt-1 text-sm text-muted-foreground">{node.help}</p>}
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {node.fields ? (
-              <>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {node.fields.map((f) => (
-                    <div key={f.key} className={node.fields!.length === 1 ? "sm:col-span-2" : ""}>
-                      <label className="text-xs font-medium text-muted-foreground">{f.label}</label>
-                      <Input
-                        type={f.type === "date" ? "date" : "text"}
-                        placeholder={f.placeholder}
-                        value={fieldValues[f.key] ?? ""}
-                        onChange={(e) => setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Button onClick={submitFields} className="mt-2 w-full">
-                  Continuer
-                </Button>
-              </>
-            ) : (
-              node.opts!.map((opt, i) => (
-                <button
-                  key={i}
-                  onClick={() => choose(opt)}
-                  className="block w-full rounded-xl border border-border px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent"
-                >
-                  {opt.l}
-                </button>
-              ))
-            )}
+        <>
+          {/* Progression — la page ne s'allonge plus, on avance de diapo en diapo. */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-sm font-medium text-foreground">
+              Question {history.length + 1}
+              {history.length > 0 && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {diapo < history.length
+                    ? `· vous relisez la réponse ${diapo + 1}`
+                    : `· ${history.length} réponse${history.length > 1 ? "s" : ""} donnée${history.length > 1 ? "s" : ""}`}
+                </span>
+              )}
+            </div>
             {history.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={retour} className="mt-2">
-                <ArrowLeft className="h-3.5 w-3.5" /> Question précédente
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => emblaApi?.scrollPrev()}
+                  disabled={!peutReculer}
+                  aria-label="Relire la réponse précédente"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => emblaApi?.scrollNext()}
+                  disabled={!peutAvancer}
+                  aria-label="Revenir à la question en cours"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+          <div className="h-1 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${((diapo + 1) / (history.length + 1)) * 100}%` }}
+            />
+          </div>
+
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex items-start">
+              {/* Réponses déjà données — consultables en glissant, non modifiables ici. */}
+              {history.map((h, i) => (
+                <div key={i} className="min-w-0 flex-[0_0_100%] pr-4">
+                  <Card className="panel border-dashed">
+                    <CardHeader>
+                      <div className="ref text-muted-foreground">Réponse {i + 1}</div>
+                      <CardTitle className="text-lg">{TREE[h.nodeKey]!.q}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <span className="inline-block rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+                        {h.label}
+                      </span>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Pour modifier cette réponse, revenez à la question en cours puis utilisez «
+                        Question précédente ».
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+
+              {/* Question en cours — toujours la dernière diapo. */}
+              <div className="min-w-0 flex-[0_0_100%] pr-4">
+                <Card className="panel">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{node.q}</CardTitle>
+                    {node.help && <p className="pt-1 text-sm text-muted-foreground">{node.help}</p>}
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {node.fields ? (
+                      <>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {node.fields.map((f) => (
+                            <div
+                              key={f.key}
+                              className={node.fields!.length === 1 ? "sm:col-span-2" : ""}
+                            >
+                              <label className="text-xs font-medium text-muted-foreground">
+                                {f.label}
+                              </label>
+                              <Input
+                                type={f.type === "date" ? "date" : "text"}
+                                placeholder={f.placeholder}
+                                value={fieldValues[f.key] ?? ""}
+                                onChange={(e) =>
+                                  setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <Button onClick={submitFields} className="mt-2 w-full">
+                          Continuer
+                        </Button>
+                      </>
+                    ) : (
+                      node.opts!.map((opt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => choose(opt)}
+                          className="block w-full rounded-xl border border-border px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent"
+                        >
+                          {opt.l}
+                        </button>
+                      ))
+                    )}
+                    {history.length > 0 && (
+                      <Button variant="ghost" size="sm" onClick={retour} className="mt-2">
+                        <ArrowLeft className="h-3.5 w-3.5" /> Question précédente
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {result && (
         <div className="space-y-6">
+          {/* Le résultat arrive en premier : plus besoin de faire défiler toutes les
+              réponses pour le voir. Elles restent consultables juste en dessous. */}
+          {history.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/30">
+              <button
+                onClick={() => setHistoOuverte((o) => !o)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  {history.length} réponse{history.length > 1 ? "s" : ""} donnée
+                  {history.length > 1 ? "s" : ""}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-primary">
+                  {histoOuverte ? "Masquer" : "Voir le détail"}
+                  <ChevronRight
+                    className={cn("h-3.5 w-3.5 transition-transform", histoOuverte && "rotate-90")}
+                  />
+                </span>
+              </button>
+              {histoOuverte && (
+                <div className="space-y-2 border-t border-border px-4 py-3">
+                  {history.map((h, i) => (
+                    <div key={i} className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="min-w-0 flex-1 text-sm text-muted-foreground">
+                        {TREE[h.nodeKey]!.q}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                        {h.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <Card className="panel">
             <CardHeader>
               <div className="flex items-center justify-between gap-3">

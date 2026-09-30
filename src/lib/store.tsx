@@ -16,6 +16,7 @@ import {
   setEtape as setEtapeFn,
   changerCentre as changerCentreFn,
   setDecision as setDecisionFn,
+  setJalon as setJalonFn,
   setUploadAutorisation as setUploadAutorisationFn,
   encaisser as encaisserFn,
   changerPack as changerPackFn,
@@ -151,6 +152,16 @@ function useDossierMutations() {
       setDecisionFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const setJalonMutation = useMutation({
+    mutationFn: (vars: {
+      id: string;
+      jalon: "recu" | "france_visas" | "rdv";
+      fait: boolean;
+      reference?: string;
+      date?: string;
+    }) => setJalonFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
   const assignerMutation = useMutation({
     mutationFn: (vars: { dossierId: string; assigneeUserId: string; note?: string | undefined }) =>
       assignDossierFn({
@@ -228,6 +239,12 @@ function useDossierMutations() {
       changerCentreMutation.mutateAsync({ id, centre }),
     setDecision: (id: string, decision: Decision, motif?: string) =>
       setDecisionMutation.mutateAsync({ id, decision, ...(motif ? { motif } : {}) }),
+    setJalon: (
+      id: string,
+      jalon: "recu" | "france_visas" | "rdv",
+      fait: boolean,
+      extra?: { reference?: string; date?: string },
+    ) => setJalonMutation.mutateAsync({ id, jalon, fait, ...(extra ?? {}) }),
     setUploadAutorisation: (id: string, autorise: boolean) =>
       autoriserUploadMutation.mutateAsync({ id, autorise }),
     assigner: (dossierId: string, assigneeUserId: string, note?: string | undefined) =>

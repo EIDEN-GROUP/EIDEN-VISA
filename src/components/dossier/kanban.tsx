@@ -1,9 +1,39 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ETAPES, type Dossier } from "@/lib/dossier-model";
-import { NiveauBadge } from "@/components/dossier/badges";
+import { ETAPES, checklistEtape, type Dossier } from "@/lib/dossier-model";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Circle } from "lucide-react";
+
+/**
+ * Sur une carte, ce qui compte n'est pas une étiquette figée à l'ouverture du dossier
+ * mais ce qu'il reste à faire ICI, à cette étape — et le prochain geste concret.
+ */
+function AvancementEtape({ dossier }: { dossier: Dossier }) {
+  const points = checklistEtape(dossier);
+  if (points.length === 0) return null;
+  const restants = points.filter((pt) => !pt.fait);
+  const prochain = restants[0];
+
+  if (!prochain) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--ok)]">
+        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+        Étape complète
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Circle className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+        {points.length - restants.length}/{points.length} fait
+        {points.length - restants.length > 1 ? "s" : ""}
+      </div>
+      <div className="mt-1 line-clamp-2 text-xs text-foreground">{prochain.label}</div>
+    </div>
+  );
+}
 
 export function DossiersKanban({
   dossiers,
@@ -67,11 +97,8 @@ export function DossiersKanban({
                     <Link to="/dossiers/$id" params={{ id: d.id }} className="block">
                       <div className="text-sm font-medium text-foreground">{d.client.nom}</div>
                       <div className="ref mt-0.5 text-muted-foreground">{d.id}</div>
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <NiveauBadge level={d.niveau} />
-                        {!d.uploadAutorise && (
-                          <span className="ref text-[var(--warn)]">Non autorisé</span>
-                        )}
+                      <div className="mt-2 border-t border-border pt-2">
+                        <AvancementEtape dossier={d} />
                       </div>
                     </Link>
                     {/* Équivalent clavier au glisser-déposer : déplacer une carte à la souris
@@ -89,7 +116,7 @@ export function DossiersKanban({
                       <button
                         type="button"
                         aria-label={`Avancer ${d.client.nom} à l'étape suivante`}
-                        disabled={e.n >= 7}
+                        disabled={e.n >= ETAPES.length}
                         onClick={() => onMove(d.id, e.n + 1)}
                         className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >

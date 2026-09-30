@@ -6,6 +6,7 @@
 
 import {
   buildCourtSejour,
+  buildLongSejour,
   getFixedCase,
   type CaseResult,
   type Level,
@@ -257,10 +258,30 @@ export interface Dossier {
   decisionDate: string | null;
   /** Motif communiqué par le consulat en cas de refus — `null` sinon. */
   decisionMotif: string | null;
+  /**
+   * Démarches faites HORS de l'application : sur le portail France-Visas puis au centre.
+   * L'app ne peut pas les constater elle-même, donc l'agent les déclare — et la référence
+   * saisie sert de preuve, sans quoi « étape suivante » ne veut rien dire.
+   */
+  /** Le reçu papier a été remis au client, en main propre (étape 2). */
+  recuRemis: boolean;
+  /** Quand la remise a été déclarée (horodatage automatique). */
+  recuLe: string | null;
+  franceVisasFait: boolean;
+  /** Numéro du dossier créé sur France-Visas. */
+  franceVisasRef: string | null;
+  /** Quand la création a été déclarée faite (horodatage automatique). */
+  franceVisasLe: string | null;
+  rdvPris: boolean;
+  /** Date du rendez-vous obtenu au centre (ISO AAAA-MM-JJ). */
+  rdvDate: string | null;
+  /** Quand la prise de rendez-vous a été déclarée faite (horodatage automatique). */
+  rdvLe: string | null;
 }
 
 export function resolveCase(caseKey: string, profile: Profile): CaseResult {
   if (caseKey === "DYNAMIC") return buildCourtSejour(profile);
+  if (caseKey === "DYNAMIC_LS") return buildLongSejour(profile);
   return (
     getFixedCase(caseKey) ?? {
       key: caseKey,
@@ -313,35 +334,97 @@ export function passeportValiditeOk(d: Dossier): boolean | null {
   return exp.getTime() >= minimum.getTime();
 }
 
-/** Blocages détectés par le système, avant que le client ne les découvre. */
+/** Un point à cocher pour l'étape en cours : ce qui doit être fait, et s'il l'est. */
+export interface PointEtape {
+  label: string;
+  fait: boolean;
+  /** Pourquoi ce point compte — affiché quand la raison n'est pas évidente. */
+  aide?: string;
+}
+
+/**
+ * Ce que l'étape en cours attend concrètement. Remplace le décompte abstrait de
+ * « points de vigilance » : l'agent voit la liste de son étape, pas celle du dossier entier.
+ */
+export function checklistEtape(d: Dossier): PointEtape[] {
+  const c = completion(d);
+  const piecesOk = c.total > 0 && c.pct === 100;
+  const piecesLabel = `Pièces officielles réunies (${c.ok}/${c.total})`;
+  const soldeOk = d.paiements.filter((p) => !p.encaisse).length === 0;
+  const acompte = d.paiements.find((p) => p.echeance === "acompte");
+
+  switch (d.etape) {
+    case 1:
+      return [
+        { label: "Qualification faite", fait: d.qualification.length > 0 },
+        {
+          label: "Coordonnées du client complètes",
+          fait: Boolean(d.client.nom && d.client.telephone && d.client.ville && d.client.naissance),
+        },
+      ];
+    case 2:
+      return [
+        {
+          label: "Reçu remis au client",
+          fait: d.recuRemis,
+          aide: "C'est le reçu qui indique au client les pièces à rapporter.",
+        },
+        {
+          label: "Téléversement autorisé",
+          fait: d.uploadAutorise,
+          aide: "Un responsable (CEO ou Réception) doit autoriser le dossier.",
+        },
+        { label: "Passeport renseigné", fait: Boolean(d.client.passeportNumero) },
+        { label: piecesLabel, fait: piecesOk },
+        ...(d.modalitePaiement === "acompte" && acompte
+          ? [{ label: "Acompte de 50 % encaissé", fait: acompte.encaisse }]
+          : []),
+      ];
+    case 3:
+      return [
+        { label: piecesLabel, fait: piecesOk },
+        { label: "Dossier créé sur France-Visas", fait: d.franceVisasFait },
+        { label: "Numéro France-Visas enregistré", fait: Boolean(d.franceVisasRef) },
+      ];
+    case 4:
+      return [
+        { label: "Dossier France-Visas confirmé", fait: d.franceVisasFait },
+        { label: `Rendez-vous pris · ${d.centre}`, fait: d.rdvPris },
+        { label: "Date du rendez-vous enregistrée", fait: Boolean(d.rdvDate) },
+      ];
+    case 5:
+      return [
+        { label: "Rendez-vous confirmé", fait: d.rdvPris && Boolean(d.rdvDate) },
+        { label: "Solde encaissé", fait: soldeOk },
+        {
+          label: piecesLabel,
+          fait: piecesOk,
+          aide: "Le dossier remis au client doit être complet : le centre peut refuser le dépôt.",
+        },
+      ];
+    case 6:
+      return [
+        { label: "Décision du consulat enregistrée", fait: d.decision !== "en_attente" },
+        ...(d.decision === "refuse"
+          ? [{ label: "Motif du refus enregistré", fait: Boolean(d.decisionMotif) }]
+          : []),
+      ];
+    default:
+      return [];
+  }
+}
+
+/**
+ * Blocages transverses, hors de la checklist d'étape : ce qui peut faire échouer le
+ * dossier quelle que soit l'étape où il se trouve.
+ */
 export function alertes(d: Dossier): string[] {
   const out: string[] = [];
-  const c = completion(d);
 
-  // Étape 2 — rassemblement : c'est ici que la vérification des pièces se joue.
-  if (d.etape >= 2 && !d.uploadAutorise)
-    out.push("Dossier non autorisé : le service ne peut pas téléverser de documents.");
-  if (d.etape >= 2 && c.pct < 100)
-    out.push(
-      `Rassemblement incomplet : ${c.total - c.ok} pièce(s) officielle(s) sur ${c.total} manquent encore.`,
-    );
-
-  // Passeport — pièce bloquante, contrôlée dès qu'on connaît sa date d'expiration.
-  if (d.etape >= 2 && !d.client.passeportNumero)
-    out.push("Informations du passeport non renseignées : à saisir avant France-Visas.");
+  // Passeport — pièce bloquante, indépendante de l'avancement du dossier.
   if (passeportValiditeOk(d) === false)
     out.push(
       "Passeport insuffisamment valide : il doit rester valable au moins 3 mois après la date de retour prévue.",
-    );
-
-  // Étape 3 — France-Visas : rien ne doit partir sur le portail avec un dossier incomplet.
-  if (d.etape >= 3 && c.pct < 100)
-    out.push("Dossier saisi sur France-Visas alors que des pièces officielles manquent encore.");
-
-  // Étape 4/5 — rendez-vous puis remise du dossier scellé.
-  if (d.etape >= 5 && c.pct < 100)
-    out.push(
-      `Rendez-vous confirmé alors que ${c.total - c.ok} pièce(s) officielle(s) manquent : le client risque un refus de dépôt au centre.`,
     );
 
   if (d.caseKey === "tc3" && d.etape < 3)
@@ -353,21 +436,13 @@ export function alertes(d: Dossier): string[] {
       "Cas complexe : hors pack standard, faire valider par un accompagnement dédié avant d'encaisser un solde.",
     );
 
-  // Paiements — acompte à l'étape 2 (rassemblement), solde à l'étape 5 (confirmation du RDV).
-  if (d.modalitePaiement === "acompte" && d.etape >= 2) {
-    const acompte = d.paiements.find((p) => p.echeance === "acompte");
-    if (acompte && !acompte.encaisse)
-      out.push("Acompte de 50 % non encaissé : l'engagement du client n'est pas sécurisé.");
-  }
-  const impayes = d.paiements.filter((p) => !p.encaisse);
-  if (d.etape >= 5 && impayes.length)
-    out.push(`Solde non encaissé : ${impayes.map((p) => p.libelle).join(", ")}.`);
-
-  // Étape 6 — la décision doit être enregistrée, sinon le dossier reste en suspens.
-  if (d.etape >= 6 && d.decision === "en_attente")
-    out.push("Décision du consulat non enregistrée : à saisir dès que le client la reçoit.");
-  if (d.decision === "refuse" && !d.decisionMotif)
-    out.push("Visa refusé sans motif enregistré : le motif conditionne toute nouvelle tentative.");
+  // Incohérences d'ordre : une étape franchie sans que la précédente soit acquise.
+  if (d.etape >= 3 && !d.recuRemis)
+    out.push("Reçu non remis au client alors que le dossier a dépassé le rassemblement.");
+  if (d.etape >= 4 && !d.franceVisasFait)
+    out.push("Rendez-vous engagé alors que le dossier n'est pas créé sur France-Visas.");
+  if (d.etape >= 5 && !d.rdvPris)
+    out.push("Dossier remis au client alors qu'aucun rendez-vous n'est enregistré.");
 
   return out;
 }

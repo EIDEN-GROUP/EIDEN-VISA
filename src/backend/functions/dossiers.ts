@@ -74,6 +74,14 @@ function rowToDossier(row: DossierRow): Dossier {
     decision: row.decision,
     decisionDate: row.decisionDate,
     decisionMotif: row.decisionMotif,
+    recuRemis: row.recuRemis,
+    recuLe: row.recuLe,
+    franceVisasFait: row.franceVisasFait,
+    franceVisasRef: row.franceVisasRef,
+    franceVisasLe: row.franceVisasLe,
+    rdvPris: row.rdvPris,
+    rdvDate: row.rdvDate,
+    rdvLe: row.rdvLe,
   };
 }
 
@@ -363,6 +371,29 @@ const dossierInput = z.object({
     ueEeeFamily: z.boolean().optional(),
     bansCertificat: z.boolean().optional(),
     futurConjointFrancais: z.boolean().optional(),
+    // Long séjour (Visa D) — sinon zod retire ces réponses en silence à l'enregistrement.
+    lsMotif: z.enum(["etudes", "travail", "famille", "visiteur", "stage", "autre"]).optional(),
+    lsEtudesType: z.enum(["superieures", "pro", "privee", "autre"]).optional(),
+    lsAdmission: z.boolean().optional(),
+    lsDureeCourte: z.boolean().optional(),
+    lsFinancement: z.enum(["soi", "parents", "famille", "tiers", "bourse"]).optional(),
+    lsTravailType: z
+      .enum(["salarie", "temporaire", "saisonnier", "talent", "entrepreneur", "autre"])
+      .optional(),
+    lsContrat: z.boolean().optional(),
+    lsAutorisationTravail: z.enum(["oui", "non", "inconnu"]).optional(),
+    lsTypeContrat: z.enum(["cdi", "cdd", "saisonnier", "autre"]).optional(),
+    lsFamilleQui: z.enum(["conjoint", "parent_enfant", "ascendant", "enfant", "autre"]).optional(),
+    lsPersonneFrancaise: z.boolean().optional(),
+    lsAscendantCharge: z.boolean().optional(),
+    lsSituation: z
+      .enum(["salarie", "fonctionnaire", "retraite", "etudiant", "sans", "autre"])
+      .optional(),
+    lsFinanceSejour: z.enum(["soi", "famille", "autre"]).optional(),
+    lsFonds: z.boolean().optional(),
+    lsLogement: z.enum(["propriete", "location", "heberge", "autre"]).optional(),
+    lsStageEtudiant: z.boolean().optional(),
+    lsConvention: z.boolean().optional(),
     details: z.record(z.string()).optional(),
   }),
   titre: z.string(),
@@ -665,6 +696,75 @@ export const setDecision = createServerFn({ method: "POST" })
         data.id,
       );
     }
+  });
+
+/**
+ * Déclare (ou annule) un jalon fait hors de l'application. La date de déclaration est
+ * posée par le serveur : c'est une trace, pas une saisie que l'on peut antidater.
+ */
+export const setJalon = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.string(),
+      jalon: z.enum(["recu", "france_visas", "rdv"]),
+      fait: z.boolean(),
+      reference: z.string().max(120).optional(),
+      date: z.string().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+    if (!row) throw new Error("Dossier introuvable.");
+    const horodatage = data.fait ? new Date().toLocaleDateString("fr-FR") : null;
+
+    if (data.jalon === "recu") {
+      await db
+        .update(dossiersTable)
+        .set({ recuRemis: data.fait, recuLe: horodatage })
+        .where(eq(dossiersTable.id, data.id));
+      await logActivity(
+        "dossier.recu",
+        data.fait ? "Reçu remis au client" : "Remise du reçu annulée",
+        data.id,
+      );
+      return;
+    }
+
+    if (data.jalon === "france_visas") {
+      await db
+        .update(dossiersTable)
+        .set({
+          franceVisasFait: data.fait,
+          franceVisasRef: data.fait ? data.reference?.trim() || null : null,
+          franceVisasLe: horodatage,
+        })
+        .where(eq(dossiersTable.id, data.id));
+      await logActivity(
+        "dossier.france_visas",
+        data.fait
+          ? `Dossier créé sur France-Visas${data.reference?.trim() ? ` (réf. ${data.reference.trim()})` : ""}`
+          : "Création France-Visas annulée",
+        data.id,
+      );
+      return;
+    }
+
+    await db
+      .update(dossiersTable)
+      .set({
+        rdvPris: data.fait,
+        rdvDate: data.fait ? data.date || null : null,
+        rdvLe: horodatage,
+      })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "dossier.rdv",
+      data.fait
+        ? `Rendez-vous pris au centre${data.date ? ` pour le ${new Date(data.date).toLocaleDateString("fr-FR")}` : ""}`
+        : "Prise de rendez-vous annulée",
+      data.id,
+    );
   });
 
 export const updateClient = createServerFn({ method: "POST" })
