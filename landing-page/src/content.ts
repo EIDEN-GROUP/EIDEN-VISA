@@ -26,6 +26,13 @@ export const LIENS = {
   whatsapp: "https://wa.me/212777777428",
 };
 
+/** Coordonnées affichées dans le pied de page. */
+export const CONTACT = {
+  telephone: "+212 777 777 428",
+  telephoneLien: "tel:+212777777428",
+  email: "contact@eiden-group.com",
+};
+
 /**
  * Demande rapide (bouton flottant). Libellés : `t.demande.visas` / `t.demande.pays`.
  * Types de visa : intitulés du formulaire harmonisé Schengen (« Objet principal du

@@ -320,6 +320,11 @@ export const fr = {
     contact: "Nous contacter",
     script: ["De nouveaux", "horizons vous", "attendent !"],
   },
+  footer: {
+    telephone: "Téléphone",
+    email: "E-mail",
+    droits: "Tous droits réservés.",
+  },
 };
 
 export type Dictionnaire = typeof fr;

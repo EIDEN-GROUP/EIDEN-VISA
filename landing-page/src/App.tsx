@@ -9,6 +9,7 @@ import { lancerIntro } from "./lib/intro";
 import { Cta } from "./sections/Cta";
 import { Destination } from "./sections/Destination";
 import { Faq } from "./sections/Faq";
+import { Footer } from "./sections/Footer";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
 import { Methode } from "./sections/Methode";
@@ -53,6 +54,7 @@ export function App() {
               <Faq />
               <Cta />
             </main>
+            <Footer />
           </DemandeRapide>
         )}
       </SmoothScroll>

@@ -297,4 +297,9 @@ export const ar: Dictionnaire = {
     contact: "تواصل معنا",
     script: ["آفاق جديدة", "في انتظارك!"],
   },
+  footer: {
+    telephone: "الهاتف",
+    email: "البريد الإلكتروني",
+    droits: "جميع الحقوق محفوظة.",
+  },
 };
