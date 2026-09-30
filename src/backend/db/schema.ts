@@ -99,6 +99,14 @@ export const dossiers = pgTable("dossiers", {
     .notNull()
     .default("en_attente"),
   decisionDate: text("decision_date"),
+  // Jalons faits hors de l'app (portail France-Visas, centre de dépôt) : l'agent les déclare,
+  // la référence saisie tient lieu de preuve.
+  franceVisasFait: boolean("france_visas_fait").notNull().default(false),
+  franceVisasRef: text("france_visas_ref"),
+  franceVisasLe: text("france_visas_le"),
+  rdvPris: boolean("rdv_pris").notNull().default(false),
+  rdvDate: text("rdv_date"),
+  rdvLe: text("rdv_le"),
   /** Motif du refus communiqué par le consulat — null si approuvé ou en attente. */
   decisionMotif: text("decision_motif"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

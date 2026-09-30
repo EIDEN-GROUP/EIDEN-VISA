@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDossiersPage, useCurrentUser, type DateRange } from "@/lib/store";
 import { DateRangeFilter } from "@/components/filters/date-range-filter";
-import { completion } from "@/lib/dossier-model";
+import { completion, ETAPES } from "@/lib/dossier-model";
 import { NiveauBadge, DecisionBadge } from "@/components/dossier/badges";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,6 +21,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Search, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
 import stampDossier from "@/assets/decorations/stamp-dossier.png";
 import { DossiersKanban } from "@/components/dossier/kanban";
@@ -41,6 +48,7 @@ function DossiersList() {
   const [range, setRange] = useState<DateRange>({});
   const [mine, setMine] = useState(false);
   const { user } = useCurrentUser();
+  const navigate = useNavigate();
 
   // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête —
   // à l'échelle réelle (potentiellement des millions de lignes) une requête par lettre serait intenable.
@@ -54,8 +62,32 @@ function DossiersList() {
     () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau, range, mine }),
     [page, debouncedQ, niveau, range, mine],
   );
-  const { dossiers, total, isLoading, setEtape } = useDossiersPage(params);
+  const { dossiers, total, isLoading, setEtape, setDecision } = useDossiersPage(params);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Dernière étape = décision du consulat. Y déposer une carte n'a de sens que si l'on
+  // sait ce qu'a répondu le consulat : on déplace le dossier, puis on demande la décision
+  // dans la foulée plutôt que de laisser un dossier "arrivé au bout" sans réponse.
+  const ETAPE_DECISION = ETAPES.length;
+  const [decisionPour, setDecisionPour] = useState<{ id: string; nom: string } | null>(null);
+  const [motif, setMotif] = useState("");
+  const [modeRefus, setModeRefus] = useState(false);
+
+  async function deplacer(id: string, etape: number) {
+    await setEtape(id, etape);
+    if (etape === ETAPE_DECISION) {
+      const d = dossiers.find((x) => x.id === id);
+      setMotif("");
+      setModeRefus(false);
+      setDecisionPour({ id, nom: d?.client.nom ?? id });
+    }
+  }
+
+  function fermerDecision() {
+    setDecisionPour(null);
+    setModeRefus(false);
+    setMotif("");
+  }
 
   return (
     <div className="space-y-6">
@@ -163,7 +195,7 @@ function DossiersList() {
       )}
 
       {vue === "kanban" ? (
-        <DossiersKanban dossiers={dossiers} onMove={(id, etape) => setEtape(id, etape)} />
+        <DossiersKanban dossiers={dossiers} onMove={(id, etape) => deplacer(id, etape)} />
       ) : (
         <div className="panel overflow-x-auto">
           <Table>
@@ -183,7 +215,11 @@ function DossiersList() {
               {dossiers.map((d) => {
                 const c = completion(d);
                 return (
-                  <TableRow key={d.id} className="cursor-pointer">
+                  <TableRow
+                    key={d.id}
+                    className="cursor-pointer"
+                    onClick={() => navigate({ to: "/dossiers/$id", params: { id: d.id } })}
+                  >
                     <TableCell className="p-0">
                       <Link to="/dossiers/$id" params={{ id: d.id }} className="block px-5 py-3">
                         <span className="ref text-muted-foreground">{d.id}</span>
@@ -265,6 +301,74 @@ function DossiersList() {
           )}
         </div>
       )}
+
+      <Dialog open={decisionPour !== null} onOpenChange={(o) => !o && fermerDecision()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Décision du consulat</DialogTitle>
+          </DialogHeader>
+          {decisionPour && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                <b className="text-foreground">{decisionPour.nom}</b> arrive à la dernière étape.
+                Quelle est la décision du consulat ?
+              </p>
+
+              {!modeRefus ? (
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    className="bg-[var(--ok)] text-white hover:bg-[var(--ok)]/90"
+                    onClick={async () => {
+                      await setDecision(decisionPour.id, "approuve");
+                      fermerDecision();
+                    }}
+                  >
+                    Visa approuvé
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-[var(--stop)]/40 text-[var(--stop)] hover:bg-[var(--stop-soft)]"
+                    onClick={() => setModeRefus(true)}
+                  >
+                    Visa refusé
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Motif du refus (tel que communiqué)
+                  </label>
+                  <Input
+                    value={motif}
+                    onChange={(e) => setMotif(e.target.value)}
+                    placeholder="Ex. justificatifs de ressources insuffisants"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Le motif conditionne toute nouvelle tentative — sans lui, impossible de savoir
+                    quoi corriger.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={fermerDecision}>
+              {modeRefus ? "Annuler" : "Plus tard"}
+            </Button>
+            {modeRefus && decisionPour && (
+              <Button
+                className="bg-[var(--stop)] text-white hover:bg-[var(--stop)]/90"
+                onClick={async () => {
+                  await setDecision(decisionPour.id, "refuse", motif.trim() || undefined);
+                  fermerDecision();
+                }}
+              >
+                Enregistrer le refus
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -74,6 +74,12 @@ function rowToDossier(row: DossierRow): Dossier {
     decision: row.decision,
     decisionDate: row.decisionDate,
     decisionMotif: row.decisionMotif,
+    franceVisasFait: row.franceVisasFait,
+    franceVisasRef: row.franceVisasRef,
+    franceVisasLe: row.franceVisasLe,
+    rdvPris: row.rdvPris,
+    rdvDate: row.rdvDate,
+    rdvLe: row.rdvLe,
   };
 }
 
@@ -665,6 +671,62 @@ export const setDecision = createServerFn({ method: "POST" })
         data.id,
       );
     }
+  });
+
+/**
+ * Déclare (ou annule) un jalon fait hors de l'application. La date de déclaration est
+ * posée par le serveur : c'est une trace, pas une saisie que l'on peut antidater.
+ */
+export const setJalon = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.string(),
+      jalon: z.enum(["france_visas", "rdv"]),
+      fait: z.boolean(),
+      reference: z.string().max(120).optional(),
+      date: z.string().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+    if (!row) throw new Error("Dossier introuvable.");
+    const horodatage = data.fait ? new Date().toLocaleDateString("fr-FR") : null;
+
+    if (data.jalon === "france_visas") {
+      await db
+        .update(dossiersTable)
+        .set({
+          franceVisasFait: data.fait,
+          franceVisasRef: data.fait ? data.reference?.trim() || null : null,
+          franceVisasLe: horodatage,
+        })
+        .where(eq(dossiersTable.id, data.id));
+      await logActivity(
+        "dossier.france_visas",
+        data.fait
+          ? `Dossier créé sur France-Visas${data.reference?.trim() ? ` (réf. ${data.reference.trim()})` : ""}`
+          : "Création France-Visas annulée",
+        data.id,
+      );
+      return;
+    }
+
+    await db
+      .update(dossiersTable)
+      .set({
+        rdvPris: data.fait,
+        rdvDate: data.fait ? data.date || null : null,
+        rdvLe: horodatage,
+      })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "dossier.rdv",
+      data.fait
+        ? `Rendez-vous pris au centre${data.date ? ` pour le ${new Date(data.date).toLocaleDateString("fr-FR")}` : ""}`
+        : "Prise de rendez-vous annulée",
+      data.id,
+    );
   });
 
 export const updateClient = createServerFn({ method: "POST" })

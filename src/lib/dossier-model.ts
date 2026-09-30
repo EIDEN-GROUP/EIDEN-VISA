@@ -257,6 +257,21 @@ export interface Dossier {
   decisionDate: string | null;
   /** Motif communiqué par le consulat en cas de refus — `null` sinon. */
   decisionMotif: string | null;
+  /**
+   * Démarches faites HORS de l'application : sur le portail France-Visas puis au centre.
+   * L'app ne peut pas les constater elle-même, donc l'agent les déclare — et la référence
+   * saisie sert de preuve, sans quoi « étape suivante » ne veut rien dire.
+   */
+  franceVisasFait: boolean;
+  /** Numéro du dossier créé sur France-Visas. */
+  franceVisasRef: string | null;
+  /** Quand la création a été déclarée faite (horodatage automatique). */
+  franceVisasLe: string | null;
+  rdvPris: boolean;
+  /** Date du rendez-vous obtenu au centre (ISO AAAA-MM-JJ). */
+  rdvDate: string | null;
+  /** Quand la prise de rendez-vous a été déclarée faite (horodatage automatique). */
+  rdvLe: string | null;
 }
 
 export function resolveCase(caseKey: string, profile: Profile): CaseResult {
@@ -337,8 +352,17 @@ export function alertes(d: Dossier): string[] {
   // Étape 3 — France-Visas : rien ne doit partir sur le portail avec un dossier incomplet.
   if (d.etape >= 3 && c.pct < 100)
     out.push("Dossier saisi sur France-Visas alors que des pièces officielles manquent encore.");
+  if (d.etape >= 4 && !d.franceVisasFait)
+    out.push(
+      "Rendez-vous engagé alors que la création du dossier sur France-Visas n'est pas confirmée.",
+    );
+  if (d.franceVisasFait && !d.franceVisasRef)
+    out.push("Dossier France-Visas déclaré créé sans numéro de référence enregistré.");
 
   // Étape 4/5 — rendez-vous puis remise du dossier scellé.
+  if (d.etape >= 5 && !d.rdvPris)
+    out.push("Rendez-vous non confirmé : aucune prise de rendez-vous n'est enregistrée au centre.");
+  if (d.rdvPris && !d.rdvDate) out.push("Rendez-vous déclaré pris sans date enregistrée.");
   if (d.etape >= 5 && c.pct < 100)
     out.push(
       `Rendez-vous confirmé alors que ${c.total - c.ok} pièce(s) officielle(s) manquent : le client risque un refus de dépôt au centre.`,

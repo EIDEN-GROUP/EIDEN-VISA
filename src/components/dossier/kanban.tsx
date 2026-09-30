@@ -89,7 +89,7 @@ export function DossiersKanban({
                       <button
                         type="button"
                         aria-label={`Avancer ${d.client.nom} à l'étape suivante`}
-                        disabled={e.n >= 7}
+                        disabled={e.n >= ETAPES.length}
                         onClick={() => onMove(d.id, e.n + 1)}
                         className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >

@@ -1552,3 +1552,28 @@ export const SCOPE = {
   in: ["Tourisme / visite", "Famille", "Travail"],
   out: ["Santé (écarté au lancement)", "Études (orienter vers Campus France)"],
 };
+
+/**
+ * Index des champs de saisie libre : clé -> libellé, type, et le nœud qui les regroupe.
+ * Permet de réafficher `profile.details` proprement (groupé, dates formatées) au lieu
+ * d'un bloc de texte à plat, sans redéclarer les libellés ailleurs.
+ */
+export const TREE_FIELDS: Record<string, { label: string; type: "text" | "date"; groupe: string }> =
+  Object.fromEntries(
+    Object.values(TREE).flatMap(
+      (n) =>
+        n.fields?.map(
+          (f) =>
+            [
+              f.key,
+              {
+                label: f.label,
+                type: f.type ?? "text",
+                // `q` des nœuds de saisie est un intitulé court (« Hôtel. », « Conjoint. ») :
+                // il sert de titre de section, débarrassé de son point final.
+                groupe: n.q.replace(/\.$/, ""),
+              },
+            ] as const,
+        ) ?? [],
+    ),
+  );

@@ -273,6 +273,12 @@ export function buildSeed(): Dossier[] {
       decision: "en_attente",
       decisionDate: null,
       decisionMotif: null,
+      franceVisasFait: false,
+      franceVisasRef: null,
+      franceVisasLe: null,
+      rdvPris: false,
+      rdvDate: null,
+      rdvLe: null,
     } satisfies Dossier;
   });
 }
