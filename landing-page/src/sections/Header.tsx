@@ -11,21 +11,6 @@ import { useIntroPrete } from "../lib/intro";
 import { LIENS, NAV } from "../content";
 import { LANGUES, useLangue } from "../i18n";
 
-/** Section affichée : la plus basse dont le haut a passé 40 % de l'écran. */
-function sectionActive() {
-  const repere = window.innerHeight * 0.4;
-  let active: string = NAV[0];
-  let meilleur = -Infinity;
-  for (const id of NAV) {
-    const top = document.getElementById(id)?.getBoundingClientRect().top;
-    if (top !== undefined && top <= repere && top > meilleur) {
-      meilleur = top;
-      active = id;
-    }
-  }
-  return active;
-}
-
 /** Sélecteur de langue (FR / العربية) du header. */
 function MenuLangue() {
   const { langue, changerLangue, t } = useLangue();
@@ -293,7 +278,7 @@ function MenuMobile({
 }
 
 export function Header() {
-  const { t } = useLangue();
+  const { t, langue } = useLangue();
   const ouvrirDemande = useDemande();
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string>(NAV[0]);
@@ -303,25 +288,29 @@ export function Header() {
   const lenis = useLenis();
   const pret = useIntroPrete();
 
+  // Fond du header : une simple lecture de scrollY (React ignore les valeurs identiques).
   useEffect(() => {
-    let raf = 0;
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        setScrolled(window.scrollY > 24);
-        setActive(sectionActive());
-      });
-    };
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Section active : celle qui croise une ligne à 40 % de l'écran. Observateur plutôt que
+  // des mesures à chaque frame ; relancé au changement de langue (sections remontées).
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entrees) => {
+        for (const e of entrees) if (e.isIntersecting) setActive(e.target.id);
+      },
+      { rootMargin: "-40% 0px -59% 0px" },
+    );
+    for (const id of NAV) {
+      const el = document.getElementById(id);
+      if (el) obs.observe(el);
+    }
+    return () => obs.disconnect();
+  }, [langue]);
 
   // Menu mobile ouvert : on fige le défilement de la page.
   useEffect(() => {
@@ -373,7 +362,7 @@ export function Header() {
       transition={{ duration: 1, ease: EASE_OUT, delay: 0.15 }}
       className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow] duration-500 ${
         scrolled && !open
-          ? "bg-cream/90 shadow-[0_10px_30px_-22px_rgb(20_20_40/0.45)] backdrop-blur-md"
+          ? "bg-cream/95 shadow-[0_10px_30px_-22px_rgb(20_20_40/0.45)]"
           : "bg-transparent"
       }`}
     >

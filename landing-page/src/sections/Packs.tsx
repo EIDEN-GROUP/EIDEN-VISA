@@ -79,7 +79,7 @@ export function Packs() {
                     </span>
                   )}
 
-                  <div className="m-2.5 rounded-[18px] bg-card/95 p-5 font-bold shadow-[0_18px_40px_-24px_rgb(0_0_0/0.45)] backdrop-blur-md">
+                  <div className="m-2.5 rounded-[18px] bg-card p-5 font-bold shadow-[0_18px_40px_-24px_rgb(0_0_0/0.45)]">
                     <h3 className="text-[20px] font-bold tracking-[-0.01em] text-ink">{nom}</h3>
                     <p className="mt-1.5 text-[13.5px] leading-[1.5] text-muted">
                       {texte[0]}

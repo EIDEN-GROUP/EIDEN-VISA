@@ -237,7 +237,7 @@ export function Methode() {
           <span
             data-avion
             aria-hidden="true"
-            className="pointer-events-none absolute top-0 left-0 z-[5] text-brand drop-shadow-[0_4px_6px_rgb(174_10_26/0.3)] motion-reduce:hidden"
+            className="pointer-events-none absolute top-0 left-0 z-[5] text-brand will-change-transform drop-shadow-[0_4px_6px_rgb(174_10_26/0.3)] motion-reduce:hidden"
           >
             <Plane className="size-[22px] fill-current" strokeWidth={1.4} />
           </span>

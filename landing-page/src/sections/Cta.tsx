@@ -30,7 +30,7 @@ export function Cta() {
           alt=""
           loading="lazy"
           style={{ scale: photoScale, y: photoY }}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover will-change-transform"
         />
       </div>
       <span aria-hidden="true" className="cta-voile absolute inset-0 -z-10" />

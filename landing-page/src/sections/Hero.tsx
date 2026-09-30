@@ -30,7 +30,10 @@ export function Hero() {
     >
       <div className="relative min-h-[250px] flex-1 court:min-h-[150px] lg:absolute lg:inset-0">
         <div className="absolute inset-0 -z-20 overflow-hidden motion-safe:[animation:eiden-film-settle_2.4s_var(--ease-brand)_both]">
-          <motion.div style={{ y: photoY, scale: photoScale }} className="h-full w-full">
+          <motion.div
+            style={{ y: photoY, scale: photoScale }}
+            className="h-full w-full will-change-transform"
+          >
             <img
               src="/images/bg-hero.png"
               alt={t.hero.imageAlt}
@@ -62,11 +65,11 @@ export function Hero() {
         >
           {/* Tampon Schengen passé en blanc sur la photo, qui tourne avec le scroll. */}
           <motion.img
-            src="/images/tampon-schengen-rond.webp"
+            src="/images/tampon-schengen-rond-blanc.webp"
             alt=""
             aria-hidden="true"
             style={{ rotate: stampRotate }}
-            className="h-auto w-full [filter:brightness(0)_invert(1)_drop-shadow(0_2px_8px_rgb(0_0_0/0.25))]"
+            className="h-auto w-full will-change-transform"
           />
         </motion.div>
       </div>
@@ -74,7 +77,7 @@ export function Hero() {
       <div className="container-page relative z-10 -mt-14 pb-[calc(var(--carte-chevauche)+1.75rem)] lg:mt-0 lg:flex lg:min-h-svh lg:items-center lg:ps-[4.25rem] lg:pt-[92px] lg:pb-[calc(var(--carte-chevauche)+2.5rem)]">
         <motion.div
           style={{ y: texteY, opacity: texteOpacity }}
-          className="max-w-[640px] lg:max-w-[48%] xl:max-w-[650px] font-semibold"
+          className="will-change-transform max-w-[640px] lg:max-w-[48%] xl:max-w-[650px] font-semibold"
         >
           <SplitReveal as="p" mode="chars" className="eyebrow text-muted">
             {t.hero.surtitre}

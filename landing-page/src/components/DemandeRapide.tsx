@@ -107,8 +107,9 @@ function valider(d: Donnees, champs: Champ[], e: Textes["erreurs"]): Erreurs {
   const jour = aujourdhui();
   for (const c of champs) {
     if (c === "email") {
-      if (!d.email.trim()) err.email = e.requis;
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) err.email = e.email;
+      // Facultatif : vérifié seulement s'il est rempli.
+      if (d.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim()))
+        err.email = e.email;
     } else if (c === "telephone") {
       const chiffres = d.telephone.replace(/\D/g, "").length;
       if (!d.telephone.trim()) err.telephone = e.requis;
@@ -811,7 +812,12 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         className={CHAMP}
                       />
                     </Bloc>
-                    <Bloc id={id("email")} label={D.champs.email} erreur={erreurs.email}>
+                    <Bloc
+                      id={id("email")}
+                      label={D.champs.email}
+                      facultatif={D.facultatif}
+                      erreur={erreurs.email}
+                    >
                       <input
                         {...attrs("email")}
                         type="email"
@@ -1166,9 +1172,9 @@ export function DemandeRapide({ children }: { children: ReactNode }) {
           initial={{ opacity: 0, y: -14, rotate: -14 }}
           animate={pret ? { opacity: 1, y: 0, rotate: 0 } : undefined}
           transition={{ type: "spring", stiffness: 120, damping: 11, delay: 1.1 }}
-          className="pointer-events-auto mt-3 flex origin-right cursor-pointer items-center [filter:drop-shadow(0_8px_12px_rgb(0_0_0/0.14))] rtl:origin-left"
+          className="etiquette-balance pointer-events-auto mt-3 flex cursor-pointer items-center will-change-transform [filter:drop-shadow(0_8px_12px_rgb(0_0_0/0.14))]"
         >
-          <span className="etiquette-bagage etiquette-balance relative flex items-center py-2 ps-3.5 pe-7 text-ink">
+          <span className="etiquette-bagage relative flex items-center py-2 ps-3.5 pe-7 text-ink">
             <span className="font-script text-[19px] leading-none whitespace-nowrap sm:text-[21px]">
               {D.tag}
             </span>
