@@ -170,7 +170,7 @@ export const fr = {
         nom: "Meriem A.",
         visa: "Visa visite familiale",
         texte:
-          "Service de qualité, un vrai suivi du début à la fin. J'ai obtenu mon rendez-vous rapidement.",
+          "Service de qualité, un vrai suivi du début à la fin.",
       },
     ],
   },
