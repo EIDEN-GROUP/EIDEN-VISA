@@ -15,13 +15,69 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/** Liens des boutons. À pointer vers l'app / WhatsApp quand les URL de prod sont fixées. */
+/**
+ * Liens des boutons. Les CTA « Commencer mon dossier », « Évaluer mon dossier » et
+ * « Choisir ce pack » n'ont pas de lien : ils ouvrent la demande rapide (`useDemande`).
+ */
 export const LIENS = {
-  commencer: "#packs",
   evaluer: "#packs",
   methode: "#methode",
   contact: "#faq",
+  whatsapp: "https://wa.me/212777777428",
 };
+
+/**
+ * Demande rapide (bouton flottant). Libellés : `t.demande.visas` / `t.demande.pays`.
+ * Types de visa : intitulés du formulaire harmonisé Schengen (« Objet principal du
+ * voyage ») ; « conjoint » = membre de famille d'un ressortissant UE / EEE / Suisse ;
+ * « travail » = visa national de long séjour (D).
+ */
+export const TYPES_VISA = [
+  "conjoint",
+  "tourisme",
+  "famille",
+  "travail",
+  "etudes",
+  "medical",
+] as const;
+export type TypeVisa = (typeof TYPES_VISA)[number];
+/** Long séjour : seule une date de départ prévue a du sens (pas de date de retour). */
+export const VISAS_LONG_SEJOUR: readonly TypeVisa[] = ["travail", "etudes"];
+/** Hors `SCOPE` (src/lib/visa-rules.ts de l'app) : santé écartée au lancement, études → Campus France. */
+export const VISAS_HORS_OFFRE: readonly TypeVisa[] = ["etudes", "medical"];
+
+/** Les 29 États de l'espace Schengen (codes ISO), triés à l'affichage selon la langue. */
+export const PAYS_SCHENGEN = [
+  "de",
+  "at",
+  "be",
+  "bg",
+  "hr",
+  "dk",
+  "es",
+  "ee",
+  "fi",
+  "fr",
+  "gr",
+  "hu",
+  "is",
+  "it",
+  "lv",
+  "li",
+  "lt",
+  "lu",
+  "mt",
+  "no",
+  "nl",
+  "pl",
+  "pt",
+  "cz",
+  "ro",
+  "sk",
+  "si",
+  "se",
+  "ch",
+] as const;
 
 /** Ancres des sections, dans l'ordre du menu (libellés : `t.nav`). */
 export const NAV = ["accueil", "services", "visa", "packs", "faq"] as const;
@@ -45,15 +101,28 @@ export const AVANTAGES: {
 }[] = [
   { icon: Users, image: "/images/04-etudiante.png", position: "50% 55%" },
   { icon: FileSpreadsheet, image: "/images/02-passeport.png", position: "50% 40%" },
-  { icon: ShieldCheck, image: "/images/03-tampon-visa-france.png", position: "50% 50%", tampon: true,},
-  { icon: Settings, image: "/images/why-processus.webp", position: "50% 62%" },
+  {
+    icon: ShieldCheck,
+    image: "/images/hero-3.webp",
+    position: "50% 50%",
+    tampon: true,
+  },
+  { icon: Settings, image: "/images/serenite.jpg", position: "50% 62%" },
 ];
 
 /** Packs Standard, Essentiel, Global (textes : `t.packs.offres`). Aucun prix affiché. */
-export const PACKS: { image: string; position: string; vedette?: boolean }[] = [
-  { image: "/images/pack-essentiel.webp", position: "50% 45%" },
-  { image: "/images/08-maroc-coucher-soleil.png", position: "50% 55%", vedette: true },
-  { image: "/images/06-valise-aeroport.png", position: "50% 50%" },
+/** Même ordre que `t.packs.offres` (fr.ts) : la carte du milieu est la « vedette ». */
+export const PACK_IDS = ["standard", "global", "essentiel"] as const;
+export type PackId = (typeof PACK_IDS)[number];
+export const PACKS: { id: PackId; image: string; position: string; vedette?: boolean }[] = [
+  { id: "standard", image: "/images/pack-essentiel.webp", position: "50% 45%" },
+  {
+    id: "global",
+    image: "/images/hero-bg-2.jpg",
+    position: "50% 55%",
+    vedette: true,
+  },
+  { id: "essentiel", image: "/images/06-valise-aeroport.png", position: "50% 50%" },
 ];
 
 export const AVATARS = [

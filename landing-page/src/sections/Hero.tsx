@@ -1,8 +1,8 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { CirclePlay } from "lucide-react";
+import { Route } from "lucide-react";
 import { useRef } from "react";
 import { AnimatedButton } from "../components/buttons";
-import { HeroStamp } from "../components/decor";
+import { useDemande } from "../components/DemandeRapide";
 import { EASE_OUT, Reveal, ScriptReveal, SplitReveal } from "../components/motion";
 import { HERO_ICONES, LIENS } from "../content";
 import { useLangue } from "../i18n";
@@ -10,6 +10,7 @@ import { useIntroPrete } from "../lib/intro";
 
 export function Hero() {
   const { t } = useLangue();
+  const ouvrirDemande = useDemande();
   const ref = useRef<HTMLElement>(null);
   const pret = useIntroPrete();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -25,13 +26,13 @@ export function Hero() {
     <section
       id="accueil"
       ref={ref}
-      className="relative isolate flex min-h-svh flex-col overflow-hidden lg:block"
+      className="filigrane-hero relative isolate flex min-h-svh flex-col overflow-hidden lg:block"
     >
       <div className="relative min-h-[250px] flex-1 court:min-h-[150px] lg:absolute lg:inset-0">
         <div className="absolute inset-0 -z-20 overflow-hidden motion-safe:[animation:eiden-film-settle_2.4s_var(--ease-brand)_both]">
           <motion.div style={{ y: photoY, scale: photoScale }} className="h-full w-full">
             <img
-              src="/images/hero-222.png"
+              src="/images/bg-hero.png"
               alt={t.hero.imageAlt}
               fetchPriority="high"
               className="hero-photo h-full w-full object-cover object-[86%_50%] lg:object-[70%_30%]"
@@ -48,7 +49,7 @@ export function Hero() {
             lines={t.hero.script}
             delay={1}
             tilt={-11}
-            className="block font-script text-[26px] leading-[1.2] text-ink sm:text-[36px] lg:text-[clamp(2.2rem,3.2vw,2.9rem)]"
+            className="block font-script text-[26px] leading-[1.2] text-cream sm:text-[36px] lg:text-[clamp(2.2rem,3.2vw,2.9rem)]"
             lineClassName="last:ps-[0.35em]"
           />
         </motion.div>
@@ -57,9 +58,16 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.6 }}
           animate={pret ? { opacity: 0.92, scale: 1 } : undefined}
           transition={{ duration: 1.2, ease: EASE_OUT, delay: 1.2 }}
-          className="absolute -start-[26px] bottom-[24%] w-[150px] sm:w-[200px] lg:start-auto lg:-end-[37px] lg:top-[64%] lg:bottom-auto lg:w-[250px]"
+          className="absolute start-3 bottom-[22%] w-[108px] sm:w-[140px] lg:start-auto lg:end-[4%] lg:top-[62%] lg:bottom-auto lg:w-[170px]"
         >
-          <HeroStamp rotate={stampRotate} className="h-auto w-full" />
+          {/* Tampon Schengen passé en blanc sur la photo, qui tourne avec le scroll. */}
+          <motion.img
+            src="/images/tampon-schengen-rond.webp"
+            alt=""
+            aria-hidden="true"
+            style={{ rotate: stampRotate }}
+            className="h-auto w-full [filter:brightness(0)_invert(1)_drop-shadow(0_2px_8px_rgb(0_0_0/0.25))]"
+          />
         </motion.div>
       </div>
 
@@ -90,7 +98,7 @@ export function Hero() {
           </SplitReveal>
 
           <div className="mt-6 flex flex-wrap items-center gap-2.5 sm:mt-8 sm:gap-4 court:mt-4">
-            <AnimatedButton href={LIENS.evaluer} size="auto" fullMobile>
+            <AnimatedButton size="auto" fullMobile popup onClick={() => ouvrirDemande()}>
               {t.hero.evaluer}
             </AnimatedButton>
             <AnimatedButton
@@ -99,7 +107,7 @@ export function Hero() {
               size="auto"
               arrow={false}
               fullMobile
-              leading={<CirclePlay className="size-6" strokeWidth={1.8} />}
+              leading={<Route className="size-[22px] rtl:-scale-x-100" strokeWidth={1.8} />}
             >
               {t.hero.commentCaMarche}
             </AnimatedButton>

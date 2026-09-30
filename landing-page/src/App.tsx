@@ -1,5 +1,6 @@
 import { MotionConfig } from "framer-motion";
 import { useEffect, useState } from "react";
+import { DemandeRapide } from "./components/DemandeRapide";
 import { Loader } from "./components/Loader";
 import { SmoothScroll } from "./components/SmoothScroll";
 import { useLangue } from "./i18n";
@@ -36,8 +37,10 @@ export function App() {
         {intro !== "fini" && (
           <Loader onReady={() => setIntro("vol")} onDone={() => setIntro("fini")} />
         )}
+        {/* Demande rapide : badges + popup, ouverte par les CTA ; hors de <main>, son état
+            survit au changement de langue. */}
         {intro !== "attente" && (
-          <>
+          <DemandeRapide>
             <Header />
             {/* Remonté à chaque changement de langue : SplitText redécoupe les nouveaux textes. */}
             <main key={langue} className="filigrane-rond relative overflow-x-clip">
@@ -50,7 +53,7 @@ export function App() {
               <Faq />
               <Cta />
             </main>
-          </>
+          </DemandeRapide>
         )}
       </SmoothScroll>
     </MotionConfig>

@@ -1,12 +1,14 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { AnimatedButton } from "../components/buttons";
+import { useDemande } from "../components/DemandeRapide";
 import { ScriptReveal, SplitReveal } from "../components/motion";
 import { LIENS } from "../content";
 import { useLangue } from "../i18n";
 
 export function Cta() {
   const { t } = useLangue();
+  const ouvrirDemande = useDemande();
   const ref = useRef<HTMLElement>(null);
   // Photo en parallaxe : elle se pose (zoom arrière) pendant que la section entre.
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
@@ -64,10 +66,10 @@ export function Cta() {
             {t.cta.texte}
           </SplitReveal>
           <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
-            <AnimatedButton href={LIENS.evaluer} fullMobile>
+            <AnimatedButton fullMobile popup onClick={() => ouvrirDemande()}>
               {t.cta.evaluer}
             </AnimatedButton>
-            <AnimatedButton href={LIENS.contact} variant="outline" arrow={false} fullMobile>
+            <AnimatedButton href={LIENS.whatsapp} variant="outline" arrow={false} fullMobile>
               {t.cta.contact}
             </AnimatedButton>
           </div>

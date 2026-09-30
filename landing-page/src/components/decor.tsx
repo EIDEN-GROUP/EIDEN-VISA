@@ -1,7 +1,6 @@
-// Éléments graphiques de la maquette : logo, drapeau UE, tampons, croquis décoratif.
-import { motion, type MotionValue } from "framer-motion";
-import { Plane } from "lucide-react";
-import { useId, type CSSProperties } from "react";
+// Éléments graphiques de la maquette : logo, drapeau UE, tampon « vérifié ».
+// Les tampons Schengen sont des images (public/images/tampon-schengen-*.webp).
+import { useId } from "react";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
@@ -50,79 +49,6 @@ export function EUFlag({ className = "", label }: { className?: string; label: s
         <rect width="810" height="540" fill={`url(#${id}-wave)`} />
       </g>
     </svg>
-  );
-}
-
-/** Tampon rond « PARIS · FRANCE » posé sur la photo du hero, avec ses ondulations postales. */
-export function HeroStamp({
-  className = "",
-  rotate,
-}: {
-  className?: string;
-  /** Rotation pilotée par le scroll (Framer Motion). */
-  rotate?: MotionValue<number>;
-}) {
-  const id = `u${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  return (
-    <svg
-      viewBox="0 0 250 150"
-      fill="none"
-      lang="fr"
-      aria-hidden="true"
-      className={`overflow-visible text-white ${className}`}
-    >
-      <motion.g style={{ rotate }}>
-        <circle cx="75" cy="75" r="69" stroke="currentColor" strokeWidth="3.2" />
-        <circle cx="75" cy="75" r="46" stroke="currentColor" strokeWidth="1.6" />
-        <path id={id} d="M75,75 m-58,0 a58,58 0 1,1 116,0 a58,58 0 1,1 -116,0" />
-        <text
-          fill="currentColor"
-          fontSize="14"
-          fontWeight="700"
-          fontFamily="DM Sans, sans-serif"
-          letterSpacing="2"
-        >
-          <textPath href={`#${id}`} textLength="360" lengthAdjust="spacing">
-            PARIS ★ FRANCE ★ PARIS ★ FRANCE ★
-          </textPath>
-        </text>
-        <Plane x={52} y={52} width={46} height={46} fill="currentColor" strokeWidth={1.2} />
-      </motion.g>
-      {[46, 60, 74, 88].map((y) => (
-        <path
-          key={y}
-          d={`M152 ${y} q8 -7 16 0 t16 0 t16 0 t16 0 t16 0 t16 0`}
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          opacity="0.85"
-        />
-      ))}
-    </svg>
-  );
-}
-
-/** Tampon postal rectangulaire, délavé, à cheval sur la photo de la carte destination. */
-export function PostalStamp({
-  className = "",
-  style,
-}: {
-  className?: string;
-  style?: CSSProperties;
-}) {
-  return (
-    <div
-      lang="fr"
-      aria-hidden="true"
-      style={style}
-      className={`rounded-[10px] border-2 border-dashed border-current p-[5px] ${className}`}
-    >
-      <div className="flex h-full flex-col items-center justify-between rounded-[6px] border-[1.5px] border-current px-3 py-2">
-        <span className="text-[12px] font-bold tracking-[0.3em]">PARIS</span>
-        <Plane className="size-8 -rotate-12 fill-current" strokeWidth={1} />
-        <span className="font-script text-[15px] leading-none">France</span>
-      </div>
-    </div>
   );
 }
 

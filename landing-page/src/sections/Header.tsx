@@ -4,6 +4,7 @@ import { Check, ChevronDown, Plane } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatedButton } from "../components/buttons";
+import { useDemande } from "../components/DemandeRapide";
 import { Logo } from "../components/decor";
 import { EASE_OUT } from "../components/motion";
 import { useIntroPrete } from "../lib/intro";
@@ -113,12 +114,10 @@ function MenuLangue() {
   );
 }
 
-/** Rouge clair, lisible sur le fond marine du menu mobile. */
-const ROUGE_CLAIR = "text-[#ff6b6f]";
 const EASE_RIDEAU = [0.76, 0, 0.24, 1] as const;
 
 /**
- * Menu plein écran (mobile / tablette) : un panneau marine s'ouvre en cercle depuis le
+ * Menu plein écran (mobile / tablette) : un panneau crème s'ouvre en cercle depuis le
  * bouton, les liens montent un à un, la section courante est marquée d'un avion.
  */
 function MenuMobile({
@@ -131,6 +130,7 @@ function MenuMobile({
   fermer: () => void;
 }) {
   const { t, langue, changerLangue } = useLangue();
+  const ouvrirDemande = useDemande();
   const premier = useRef<HTMLAnchorElement>(null);
   const cercle = (rayon: string) => `circle(${rayon} at ${origine.x}px ${origine.y}px)`;
 
@@ -151,18 +151,14 @@ function MenuMobile({
         transition: { duration: 0.6, ease: EASE_RIDEAU, delay: 0.15 },
       }}
       transition={{ duration: 0.8, ease: EASE_RIDEAU }}
-      className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-ink text-white xl:hidden"
+      className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-cream text-ink xl:hidden"
     >
-      {/* Décor : lueur rouge en haut, tampon Schengen en blanc très pâle en bas. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -end-32 -top-32 size-[420px] rounded-full bg-brand/35 blur-[110px]"
-      />
+      {/* Décor : tampon Schengen très pâle en bas. */}
       <img
         src="/images/tampon-schengen-rond.webp"
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute -end-24 -bottom-20 w-[min(105vw,560px)] -rotate-[14deg] opacity-[0.07] [filter:brightness(0)_invert(1)]"
+        className="pointer-events-none absolute -end-24 -bottom-20 w-[min(105vw,560px)] -rotate-[14deg] opacity-[0.08]"
       />
 
       <nav
@@ -174,7 +170,7 @@ function MenuMobile({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.2 } }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="eyebrow text-white/45"
+          className="eyebrow text-muted"
         >
           {t.header.menu}
         </motion.p>
@@ -182,21 +178,21 @@ function MenuMobile({
           {NAV.map((id, i) => {
             const courant = active === id;
             return (
-              <li key={id} className="border-b border-white/10">
+              <li key={id} className="border-b border-line/50">
                 <a
                   ref={i === 0 ? premier : undefined}
                   href={`#${id}`}
                   onClick={fermer}
                   aria-current={courant ? "location" : undefined}
-                  className="group flex items-center gap-4 py-3.5 outline-none focus-visible:bg-white/5 sm:py-4"
+                  className="group flex items-center gap-4 py-3.5 outline-none focus-visible:bg-ink/[0.04] sm:py-4"
                 >
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { duration: 0.2 } }}
                     transition={{ delay: 0.4 + i * 0.07, duration: 0.5 }}
-                    className={`w-7 shrink-0 font-serif text-[14px] tabular-nums ${
-                      courant ? ROUGE_CLAIR : "text-white/35"
+                    className={`w-7 shrink-0 font-serif text-[10px] tabular-nums ${
+                      courant ? "text-brand" : "text-ink/35"
                     }`}
                   >
                     {String(i + 1).padStart(2, "0")}
@@ -207,8 +203,8 @@ function MenuMobile({
                       animate={{ y: 0 }}
                       exit={{ y: "115%", transition: { duration: 0.35, ease: EASE_RIDEAU } }}
                       transition={{ delay: 0.3 + i * 0.07, duration: 0.75, ease: EASE_OUT }}
-                      className={`block font-serif text-[clamp(2rem,8.4vw,3.2rem)] leading-[1.08] transition-colors duration-300 ${
-                        courant ? "text-white" : "text-white/70 group-hover:text-white"
+                      className={`block font-serif text-[25px] leading-[1.08] transition-colors duration-300 ${
+                        courant ? "text-ink" : "text-ink-soft/70 group-hover:text-ink"
                       }`}
                     >
                       {t.nav[id]}
@@ -219,7 +215,7 @@ function MenuMobile({
                       initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.75, duration: 0.6, ease: EASE_OUT }}
-                      className={`ms-auto ${ROUGE_CLAIR}`}
+                      className="ms-auto text-brand"
                     >
                       <Plane className="size-5 fill-current rtl:-scale-x-100" strokeWidth={1.4} />
                     </motion.span>
@@ -237,14 +233,23 @@ function MenuMobile({
           transition={{ delay: 0.7, duration: 0.7, ease: EASE_OUT }}
           className="mt-auto pt-10"
         >
-          <p className="font-script text-[26px] leading-none text-white/65">{t.loader.slogan}</p>
+          <p className="font-script text-[26px] leading-none text-ink/60">{t.loader.slogan}</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <AnimatedButton href={LIENS.commencer} size="md" full entrance={false} onClick={fermer}>
+            <AnimatedButton
+              size="md"
+              full
+              entrance={false}
+              popup
+              onClick={() => {
+                fermer();
+                ouvrirDemande();
+              }}
+            >
               {t.header.commencer}
             </AnimatedButton>
             <AnimatedButton
               href={LIENS.contact}
-              variant="outline"
+              variant="light"
               size="md"
               arrow={false}
               full
@@ -271,8 +276,8 @@ function MenuMobile({
                   }}
                   className={`rounded-full px-4 py-2 text-[13.5px] font-semibold ring-1 transition-colors duration-300 ${
                     actif
-                      ? "bg-white text-ink ring-white"
-                      : "text-white/70 ring-white/25 hover:text-white hover:ring-white/60"
+                      ? "bg-ink text-white ring-ink"
+                      : "text-ink-soft ring-line hover:text-ink hover:ring-ink/30"
                   }`}
                 >
                   {nom}
@@ -289,6 +294,7 @@ function MenuMobile({
 
 export function Header() {
   const { t } = useLangue();
+  const ouvrirDemande = useDemande();
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string>(NAV[0]);
   const [open, setOpen] = useState(false);
@@ -357,7 +363,7 @@ export function Header() {
     setOpen((o) => !o);
   };
 
-  // Menu ouvert : le header passe au-dessus du panneau marine (logo blanc, reste masqué).
+  // Menu ouvert : le header passe au-dessus du panneau crème (langue et CTA masqués).
   const masqueSiMenu = `transition-opacity duration-300 ${open ? "pointer-events-none opacity-0" : ""}`;
 
   return (
@@ -380,9 +386,7 @@ export function Header() {
           href="#accueil"
           aria-label={t.header.accueil}
           onClick={fermer}
-          className={`rounded-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand [&>span]:transition-colors [&>span]:duration-500 ${
-            open ? "[&>span]:text-white" : ""
-          }`}
+          className="rounded-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
         >
           <Logo />
         </a>
@@ -420,7 +424,7 @@ export function Header() {
             <MenuLangue />
           </div>
           <div className={`hidden md:block ${masqueSiMenu}`}>
-            <AnimatedButton href={LIENS.commencer} size="md" entrance={false}>
+            <AnimatedButton size="md" entrance={false} popup onClick={() => ouvrirDemande()}>
               {t.header.commencer}
             </AnimatedButton>
           </div>
@@ -433,7 +437,7 @@ export function Header() {
             aria-label={open ? t.header.fermerMenu : t.header.ouvrirMenu}
             className={`grid size-11 place-items-center rounded-full transition-[background-color,color,box-shadow,scale] duration-500 active:scale-90 xl:hidden ${
               open
-                ? "bg-white text-ink"
+                ? "bg-card text-ink shadow-[var(--shadow-soft)] ring-1 ring-line"
                 : "bg-ink text-white shadow-[0_10px_24px_-10px_rgb(11_26_48/0.6)]"
             }`}
           >

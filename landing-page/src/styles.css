@@ -73,6 +73,59 @@
   }
 }
 
+/* Barres de défilement aux couleurs de la landing. Page : piste crème, pouce marine en
+   pilule qui passe au rouge au survol. Zones internes (popup, listes, menu) : même pouce,
+   plus fin, piste transparente. Chrome / Edge / Safari : pseudo-éléments ::-webkit-scrollbar
+   (ignorés dès que scrollbar-color est posé) ; Firefox : propriétés standard.
+   En couche base : les utilitaires (ex. carrousel sans barre) gardent la priorité. */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-cream);
+  }
+  ::-webkit-scrollbar-thumb {
+    min-height: 56px;
+    border: 3px solid var(--color-cream);
+    border-radius: 999px;
+    background-color: rgb(11 26 48 / 0.3);
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-brand);
+  }
+  ::-webkit-scrollbar-thumb:active {
+    background-color: var(--color-brand-dark);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  body *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  body *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  body *::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    border: 2px solid transparent;
+    background-color: rgb(11 26 48 / 0.22);
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgb(11 26 48 / 0.25) transparent;
+    }
+    html {
+      scrollbar-color: rgb(11 26 48 / 0.35) var(--color-cream);
+    }
+  }
+}
+
 @layer components {
   .container-page {
     margin-inline: auto;
@@ -319,13 +372,33 @@
     opacity: 0.09;
   }
 }
+/* Rectangulaire bleu, côté texte du hero : sous les atouts, à moitié glissé sous la carte
+   « Visa Schengen » (collage), pour que la colonne crème ne reste pas vide. Desktop. */
+.filigrane-hero::before {
+  content: "";
+  position: absolute;
+  display: none;
+  width: 280px;
+  aspect-ratio: 1150 / 750;
+  inset-inline-start: 1rem;
+  bottom: 27px;
+  rotate: -8deg;
+  pointer-events: none;
+  background: url("/images/tampon-schengen-rect.webp") center / contain no-repeat;
+  opacity: 0.2;
+}
+@media (min-width: 1024px) {
+  .filigrane-hero::before {
+    display: block;
+  }
+}
 /* Rectangulaire bleu : en bas à gauche de la FAQ, desktop uniquement. */
 .filigrane-rect::after {
   content: "";
   position: absolute;
   display: none;
   width: 230px;
-  aspect-ratio: 720 / 470;
+  aspect-ratio: 1150 / 750;
   inset-inline-start: -1.5rem;
   bottom: 1.5rem;
   rotate: 9deg;
@@ -336,5 +409,75 @@
 @media (min-width: 1024px) {
   .filigrane-rect::after {
     display: block;
+  }
+}
+
+/* Demande rapide ---------------------------------------------------------------------- */
+/* Pointillé du suivi d'étapes (couleur = currentColor). */
+.pointilles {
+  background: radial-gradient(circle, currentColor 1.3px, transparent 1.8px) center / 8px 3px
+    repeat-x;
+}
+/* Étiquette de bagage « Demande rapide » : papier kraft, bord pointu vers le dock (où
+   passe le fil), balancement léger autour de l'œillet (propriété `rotate`, sans conflit
+   avec le `transform` de Framer Motion). */
+.etiquette-bagage {
+  background:
+    linear-gradient(90deg, transparent calc(100% - 26px), rgb(11 26 48 / 0.05) 0) no-repeat,
+    #f3e6d0;
+  clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 50%, calc(100% - 13px) 100%, 0 100%);
+}
+[dir="rtl"] .etiquette-bagage {
+  background:
+    linear-gradient(270deg, transparent calc(100% - 26px), rgb(11 26 48 / 0.05) 0) no-repeat,
+    #f3e6d0;
+  clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%);
+}
+.etiquette-balance {
+  transform-origin: 100% 50%;
+  animation: eiden-balance 4.8s ease-in-out infinite;
+}
+[dir="rtl"] .etiquette-balance {
+  transform-origin: 0 50%;
+}
+@keyframes eiden-balance {
+  0%,
+  100% {
+    rotate: -3deg;
+  }
+  50% {
+    rotate: 2.5deg;
+  }
+}
+/* Popup : tampons Schengen en filigrane, derrière le contenu (carte isolée, z-index -1). */
+.demande-carte::before,
+.demande-carte::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  background: center / contain no-repeat;
+}
+.demande-carte::before {
+  background-image: url("/images/tampon-schengen-rond.webp");
+  width: 280px;
+  aspect-ratio: 1;
+  inset-inline-end: -80px;
+  bottom: -70px;
+  rotate: -14deg;
+  opacity: 0.07;
+}
+.demande-carte::after {
+  background-image: url("/images/tampon-schengen-rect.webp");
+  width: 170px;
+  aspect-ratio: 1150 / 750;
+  inset-inline-end: 70px;
+  top: 16px;
+  rotate: 9deg;
+  opacity: 0.08;
+}
+@media (prefers-reduced-motion: reduce) {
+  .etiquette-balance {
+    animation: none;
   }
 }

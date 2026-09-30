@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { AnimatedButton, ArrowLink } from "../components/buttons";
+import { useDemande } from "../components/DemandeRapide";
 import { Reveal, SplitReveal } from "../components/motion";
-import { LIENS, PACKS } from "../content";
+import { PACKS } from "../content";
 import { useLangue } from "../i18n";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 export function Packs() {
   const { t } = useLangue();
+  const ouvrirDemande = useDemande();
 
   return (
     <section id="packs" aria-labelledby="packs-titre" className="scroll-mt-24 pt-20 lg:pt-[62px]">
@@ -49,7 +51,7 @@ export function Packs() {
           id="packs-grille"
           className="mt-10 grid scroll-mt-28 gap-6 pt-3 md:grid-cols-3 md:gap-4 xl:gap-5"
         >
-          {PACKS.map(({ image, position, vedette }, i) => {
+          {PACKS.map(({ id, image, position, vedette }, i) => {
             const { nom, texte, alt, inclus } = t.packs.offres[i]!;
             return (
               <Reveal key={image} delay={i * 0.12} y={64} className="h-full">
@@ -105,7 +107,8 @@ export function Packs() {
                         </ul>
                         <div className="pt-5">
                           <AnimatedButton
-                            href={LIENS.commencer}
+                            popup
+                            onClick={() => ouvrirDemande({ pack: id })}
                             variant={vedette ? "primary" : "sand"}
                             size="md"
                             full

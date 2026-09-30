@@ -97,7 +97,8 @@ function useButtonMotion(
 }
 
 type ButtonProps = {
-  href: string;
+  /** Lien ; sans `href`, rend un <button> (ex. ouverture de la demande rapide). */
+  href?: string;
   children: ReactNode;
   variant?: Variant;
   size?: Size;
@@ -108,7 +109,9 @@ type ButtonProps = {
   fullMobile?: boolean;
   entrance?: boolean;
   className?: string;
-  onClick?: MouseEventHandler<HTMLAnchorElement>;
+  onClick?: MouseEventHandler<HTMLElement>;
+  /** Le clic ouvre une fenêtre (aria-haspopup="dialog"). */
+  popup?: boolean;
 };
 
 export function AnimatedButton({
@@ -123,37 +126,56 @@ export function AnimatedButton({
   entrance = true,
   className = "",
   onClick,
+  popup = false,
 }: ButtonProps) {
   const wrap = useRef<HTMLSpanElement>(null);
-  const btn = useRef<HTMLAnchorElement>(null);
+  const btn = useRef<HTMLElement>(null);
   useButtonMotion(wrap, btn, { entrance, magnet: full ? 0.08 : 0.22 });
   const v = VARIANTS[variant];
+  const classes = `relative isolate inline-flex cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-full font-semibold whitespace-nowrap will-change-transform focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${SIZES[size]} ${v.base} ${full ? "w-full" : fullMobile ? "w-full sm:w-auto" : ""}`;
+  const contenu = (
+    <>
+      <span
+        data-fill
+        aria-hidden="true"
+        style={HIDDEN_FILL}
+        className={`absolute inset-0 -z-10 rounded-full ${v.fill}`}
+      />
+      {leading}
+      <span>{children}</span>
+      {arrow && (
+        <span data-arrow aria-hidden="true" className="inline-flex">
+          <ArrowRight className="size-[18px] rtl:-scale-x-100" />
+        </span>
+      )}
+    </>
+  );
 
   return (
     <span
       ref={wrap}
       className={`${full ? "flex w-full" : fullMobile ? "flex w-full sm:inline-flex sm:w-auto" : "inline-flex"} ${className}`}
     >
-      <a
-        ref={btn}
-        href={href}
-        onClick={onClick}
-        className={`relative isolate inline-flex items-center justify-center gap-3 overflow-hidden rounded-full font-semibold whitespace-nowrap will-change-transform focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${SIZES[size]} ${v.base} ${full ? "w-full" : fullMobile ? "w-full sm:w-auto" : ""}`}
-      >
-        <span
-          data-fill
-          aria-hidden="true"
-          style={HIDDEN_FILL}
-          className={`absolute inset-0 -z-10 rounded-full ${v.fill}`}
-        />
-        {leading}
-        <span>{children}</span>
-        {arrow && (
-          <span data-arrow aria-hidden="true" className="inline-flex">
-            <ArrowRight className="size-[18px] rtl:-scale-x-100" />
-          </span>
-        )}
-      </a>
+      {href ? (
+        <a
+          ref={btn as RefObject<HTMLAnchorElement>}
+          href={href}
+          onClick={onClick}
+          className={classes}
+        >
+          {contenu}
+        </a>
+      ) : (
+        <button
+          ref={btn as RefObject<HTMLButtonElement>}
+          type="button"
+          onClick={onClick}
+          aria-haspopup={popup ? "dialog" : undefined}
+          className={classes}
+        >
+          {contenu}
+        </button>
+      )}
     </span>
   );
 }

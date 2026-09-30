@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useId, useState } from "react";
-import { ArrowLink } from "../components/buttons";
 import { EASE_OUT, Reveal, SplitReveal } from "../components/motion";
 import { useLangue } from "../i18n";
 import { ScrollTrigger } from "../lib/gsap";
@@ -67,7 +66,6 @@ export function Faq() {
   const { t } = useLangue();
   const questions = t.faq.questions;
   const [ouverts, setOuverts] = useState<Set<number>>(new Set());
-  const tousOuverts = ouverts.size === questions.length;
   const basculer = (i: number) =>
     setOuverts((prev) => {
       const next = new Set(prev);
@@ -78,17 +76,6 @@ export function Faq() {
   // Deux colonnes équilibrées (2 + 2 pour 4 questions).
   const parColonne = Math.ceil(questions.length / 2);
   const colonnes = [questions.slice(0, parColonne), questions.slice(parColonne)];
-  const toutVoir = (
-    <ArrowLink
-      href="#faq"
-      onClick={(e) => {
-        e.preventDefault();
-        setOuverts(tousOuverts ? new Set() : new Set(questions.map((_, i) => i)));
-      }}
-    >
-      {t.faq.toutVoir}
-    </ArrowLink>
-  );
 
   return (
     <section
@@ -101,7 +88,6 @@ export function Faq() {
           <SplitReveal as="p" mode="chars" className="eyebrow text-muted font-extrabold">
             {t.faq.surtitre}
           </SplitReveal>
-          <div className="hidden lg:block">{toutVoir}</div>
         </div>
 
         {/* Colonne du titre à sa largeur naturelle (« FAQ » ≈ maquette, arabe sur 2 lignes). */}
@@ -133,7 +119,6 @@ export function Faq() {
             ))}
           </div>
         </div>
-        <div className="mt-8 lg:hidden">{toutVoir}</div>
       </div>
     </section>
   );

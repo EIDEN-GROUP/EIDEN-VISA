@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { IconButton } from "../components/buttons";
-import { EUFlag, PostalStamp } from "../components/decor";
+import { EUFlag } from "../components/decor";
 import { Reveal, SplitReveal } from "../components/motion";
 import { LIENS } from "../content";
 import { useLangue } from "../i18n";
@@ -59,7 +59,7 @@ export function Destination() {
             </SplitReveal>
           </div>
 
-          {/* Marge de fin large en xl : le tampon postal se loge entre la flèche et la photo. */}
+          {/* Marge de fin large en xl : le tampon Schengen se loge entre la flèche et la photo. */}
           <IconButton
             href={LIENS.evaluer}
             tone="outline-brand"
@@ -69,8 +69,11 @@ export function Destination() {
           />
 
           <div className="relative h-[190px] sm:h-[161px]">
-            <PostalStamp
-              className="tilt absolute end-[calc(100%-14px)] top-1/2 hidden h-[122px] w-[112px] -translate-y-1/2 text-brand/35 xl:block"
+            <img
+              src="/images/tampon-schengen-rect.webp"
+              alt=""
+              aria-hidden="true"
+              className="tilt absolute end-[calc(100%-22px)] top-1/2 hidden w-[150px] -translate-y-1/2 opacity-55 xl:block"
               style={{ "--tilt": "-10deg" } as CSSProperties}
             />
             <div className="relative h-full overflow-hidden rounded-r-lg ">
