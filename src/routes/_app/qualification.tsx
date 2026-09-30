@@ -6,6 +6,7 @@ import {
   TREE,
   getFixedCase,
   buildCourtSejour,
+  buildLongSejour,
   type Profile,
   type CaseResult,
 } from "@/lib/visa-rules";
@@ -130,12 +131,13 @@ function Qualification() {
   }, [emblaApi, history.length, nodeKey]);
 
   function goToResult(key: string, nextProfile: Profile) {
-    const caseKey = key === "DYNAMIC" ? "DYNAMIC" : key;
     const c =
-      caseKey === "DYNAMIC"
+      key === "DYNAMIC"
         ? buildCourtSejour(nextProfile)
-        : (getFixedCase(caseKey) ?? buildCourtSejour(nextProfile));
-    setResult({ caseKey, c });
+        : key === "DYNAMIC_LS"
+          ? buildLongSejour(nextProfile)
+          : (getFixedCase(key) ?? buildCourtSejour(nextProfile));
+    setResult({ caseKey: key, c });
   }
 
   function choose(opt: NonNullable<(typeof node)["opts"]>[number]) {
@@ -247,6 +249,8 @@ function Qualification() {
       decision: "en_attente",
       decisionDate: null,
       decisionMotif: null,
+      recuRemis: false,
+      recuLe: null,
       franceVisasFait: false,
       franceVisasRef: null,
       franceVisasLe: null,

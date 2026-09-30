@@ -101,6 +101,8 @@ export const dossiers = pgTable("dossiers", {
   decisionDate: text("decision_date"),
   // Jalons faits hors de l'app (portail France-Visas, centre de dépôt) : l'agent les déclare,
   // la référence saisie tient lieu de preuve.
+  recuRemis: boolean("recu_remis").notNull().default(false),
+  recuLe: text("recu_le"),
   franceVisasFait: boolean("france_visas_fait").notNull().default(false),
   franceVisasRef: text("france_visas_ref"),
   franceVisasLe: text("france_visas_le"),

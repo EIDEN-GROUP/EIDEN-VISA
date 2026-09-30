@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDossiersPage, useCurrentUser, type DateRange } from "@/lib/store";
 import { DateRangeFilter } from "@/components/filters/date-range-filter";
-import { completion, ETAPES } from "@/lib/dossier-model";
-import { NiveauBadge, DecisionBadge } from "@/components/dossier/badges";
+import { completion, checklistEtape, ETAPES } from "@/lib/dossier-model";
+import { DecisionBadge } from "@/components/dossier/badges";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -208,7 +208,7 @@ function DossiersList() {
                 <TableHead className="ref">Pièces</TableHead>
                 <TableHead className="ref">Pays</TableHead>
                 <TableHead className="ref">Upload</TableHead>
-                <TableHead className="ref px-5">Niveau</TableHead>
+                <TableHead className="ref px-5">À faire</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -257,7 +257,23 @@ function DossiersList() {
                       )}
                     </TableCell>
                     <TableCell className="px-5">
-                      <NiveauBadge level={d.niveau} />
+                      {(() => {
+                        const points = checklistEtape(d);
+                        const restants = points.filter((pt) => !pt.fait);
+                        if (points.length === 0) return <span className="ref">—</span>;
+                        if (restants.length === 0)
+                          return <span className="ref text-[var(--ok)]">Étape complète</span>;
+                        return (
+                          <div>
+                            <div className="ref text-muted-foreground">
+                              {points.length - restants.length}/{points.length}
+                            </div>
+                            <div className="max-w-48 truncate text-xs text-foreground">
+                              {restants[0]!.label}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 );

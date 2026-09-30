@@ -155,7 +155,7 @@ function useDossierMutations() {
   const setJalonMutation = useMutation({
     mutationFn: (vars: {
       id: string;
-      jalon: "france_visas" | "rdv";
+      jalon: "recu" | "france_visas" | "rdv";
       fait: boolean;
       reference?: string;
       date?: string;
@@ -241,7 +241,7 @@ function useDossierMutations() {
       setDecisionMutation.mutateAsync({ id, decision, ...(motif ? { motif } : {}) }),
     setJalon: (
       id: string,
-      jalon: "france_visas" | "rdv",
+      jalon: "recu" | "france_visas" | "rdv",
       fait: boolean,
       extra?: { reference?: string; date?: string },
     ) => setJalonMutation.mutateAsync({ id, jalon, fait, ...(extra ?? {}) }),
