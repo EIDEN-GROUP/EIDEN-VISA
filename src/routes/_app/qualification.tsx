@@ -20,7 +20,7 @@ import {
   type Modalite,
 } from "@/lib/dossier-model";
 import { useDossiers, useCurrentUser, ROLE_LABEL } from "@/lib/store";
-import { joursEntre, moisEntre } from "@/lib/date-calc";
+import { joursEntre, moisEntre, expirationParDefaut } from "@/lib/date-calc";
 import { NiveauBadge } from "@/components/dossier/badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -653,7 +653,15 @@ function Qualification() {
                   <Input
                     type="date"
                     value={passDelivrance}
-                    onChange={(e) => setPassDelivrance(e.target.value)}
+                    onChange={(e) => {
+                      setPassDelivrance(e.target.value);
+                      // Passeport marocain : 5 ans. Proposé seulement si l'agent n'a
+                      // pas déjà saisi une expiration à la main.
+                      if (!passExpiration) {
+                        const suggestion = expirationParDefaut(e.target.value);
+                        if (suggestion) setPassExpiration(suggestion);
+                      }
+                    }}
                   />
                 </div>
                 <div>
@@ -665,6 +673,9 @@ function Qualification() {
                     value={passExpiration}
                     onChange={(e) => setPassExpiration(e.target.value)}
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Pré-remplie à 5 ans après la délivrance (passeport marocain) — modifiable.
+                  </p>
                 </div>
                 {passExpiration && voyageFin && (
                   <div className="col-span-2 -mt-1">

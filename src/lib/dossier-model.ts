@@ -324,29 +324,51 @@ export function encaisse(d: Dossier) {
  * Validité du passeport : règle Schengen — il doit rester valable au moins 3 mois
  * après la date de retour prévue. `null` si on ne peut pas trancher (dates absentes).
  */
-export function passeportValiditeOk(d: Dossier): boolean | null {
-  const { passeportExpiration } = d.client;
-  if (!passeportExpiration) return null;
+/**
+ * État du passeport vis-à-vis du voyage. Un seul booléen mélangeait trois situations
+ * très différentes : périmé, expirant PENDANT le séjour, ou simplement sans les 3 mois
+ * de marge exigés après le retour. L'agent n'a pas le même message à passer au client.
+ */
+export type PasseportStatut =
+  "inconnu" | "expire" | "expire_pendant_sejour" | "marge_insuffisante" | "ok";
+
+export function passeportStatut(d: Dossier): PasseportStatut {
+  const { passeportExpiration, voyageFin } = d.client;
+  if (!passeportExpiration) return "inconnu";
   const exp = new Date(passeportExpiration);
-  if (Number.isNaN(exp.getTime())) return null;
+  if (Number.isNaN(exp.getTime())) return "inconnu";
 
-  // Un passeport déjà périmé est invalide, qu'on connaisse ou non les dates du voyage :
-  // ne rien signaler tant que les dates manquent laissait passer le cas le plus évident.
-  if (exp.getTime() < Date.now()) return false;
+  // Déjà périmé : vrai quelles que soient les dates du voyage, même absentes.
+  if (exp.getTime() < Date.now()) return "expire";
+  if (!voyageFin) return "inconnu";
 
-  const retour = d.client.voyageFin;
-  if (!retour) return null;
+  const retour = new Date(voyageFin);
+  if (Number.isNaN(retour.getTime())) return "inconnu";
+  if (exp.getTime() < retour.getTime()) return "expire_pendant_sejour";
+
   const minimum = new Date(retour);
   minimum.setMonth(minimum.getMonth() + 3);
-  return exp.getTime() >= minimum.getTime();
+  return exp.getTime() >= minimum.getTime() ? "ok" : "marge_insuffisante";
 }
 
-/** Le passeport est-il déjà périmé ? Distinct d'une marge de validité trop courte. */
+/** Date d'expiration minimale acceptable : retour + 3 mois. `null` si le retour est inconnu. */
+export function passeportExpirationMinimale(d: Dossier): string | null {
+  const { voyageFin } = d.client;
+  if (!voyageFin) return null;
+  const min = new Date(voyageFin);
+  if (Number.isNaN(min.getTime())) return null;
+  min.setMonth(min.getMonth() + 3);
+  return min.toISOString().slice(0, 10);
+}
+
+export function passeportValiditeOk(d: Dossier): boolean | null {
+  const st = passeportStatut(d);
+  if (st === "inconnu") return null;
+  return st === "ok";
+}
+
 export function passeportPerime(d: Dossier): boolean {
-  const { passeportExpiration } = d.client;
-  if (!passeportExpiration) return false;
-  const exp = new Date(passeportExpiration);
-  return !Number.isNaN(exp.getTime()) && exp.getTime() < Date.now();
+  return passeportStatut(d) === "expire";
 }
 
 /** Un point à cocher pour l'étape en cours : ce qui doit être fait, et s'il l'est. */
@@ -437,13 +459,22 @@ export function alertes(d: Dossier): string[] {
   const out: string[] = [];
 
   // Passeport — pièce bloquante, indépendante de l'avancement du dossier.
-  if (passeportPerime(d))
+  const statutPasseport = passeportStatut(d);
+  const minimumPasseport = passeportExpirationMinimale(d);
+  const jusquAu = minimumPasseport
+    ? ` Il doit être valable jusqu'au ${new Date(minimumPasseport).toLocaleDateString("fr-FR")} au moins.`
+    : "";
+  if (statutPasseport === "expire")
     out.push(
       "Passeport expiré : le client doit le faire renouveler avant toute démarche, aucune pièce du dossier ne peut compenser.",
     );
-  else if (passeportValiditeOk(d) === false)
+  else if (statutPasseport === "expire_pendant_sejour")
     out.push(
-      "Passeport insuffisamment valide : il doit rester valable au moins 3 mois après la date de retour prévue.",
+      `Le passeport expire PENDANT le séjour, avant même la date de retour prévue : renouvellement indispensable.${jusquAu}`,
+    );
+  else if (statutPasseport === "marge_insuffisante")
+    out.push(
+      `Passeport insuffisamment valide : il doit rester valable au moins 3 mois après le retour.${jusquAu}`,
     );
 
   if (d.caseKey === "tc3" && d.etape < 3)

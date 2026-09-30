@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDossier, useCurrentUser } from "@/lib/store";
-import { joursEntre, moisEntre } from "@/lib/date-calc";
+import { joursEntre, moisEntre, expirationParDefaut } from "@/lib/date-calc";
 import {
   alertes,
   checklistEtape,
   completion,
   encaisse,
-  passeportValiditeOk,
-  passeportPerime,
+  passeportStatut,
+  passeportExpirationMinimale,
   ETAPES,
   PACKS,
   CENTRES,
@@ -220,8 +220,13 @@ function DossierDetail() {
   // on gèle les panneaux de travail (pièces, pack, encaissement) pour éviter une
   // modification accidentelle d'un dossier déjà clos.
   const cloture = d.etape === 6;
-  const passeportOk = passeportValiditeOk(d);
-  const passeportExpire = passeportPerime(d);
+  const statutPasseport = passeportStatut(d);
+  const minimumPasseport = passeportExpirationMinimale(d);
+  const PASSEPORT_LABEL: Record<string, string> = {
+    expire: "Passeport expiré",
+    expire_pendant_sejour: "Expire pendant le séjour",
+    marge_insuffisante: "Validité insuffisante",
+  };
   const etapeCourante = ETAPES.find((e) => e.n === d.etape) ?? ETAPES[0];
   const checklist = checklistEtape(d);
   const restants = checklist.filter((pt) => !pt.fait).length;
@@ -702,13 +707,11 @@ function DossierDetail() {
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Passeport
                 </span>
-                {passeportOk === true && (
+                {statutPasseport === "ok" && (
                   <span className="ref text-[var(--ok)]">Validité conforme</span>
                 )}
-                {passeportOk === false && (
-                  <span className="ref text-[var(--stop)]">
-                    {passeportExpire ? "Passeport expiré" : "Validité insuffisante"}
-                  </span>
+                {PASSEPORT_LABEL[statutPasseport] && (
+                  <span className="ref text-[var(--stop)]">{PASSEPORT_LABEL[statutPasseport]}</span>
                 )}
               </div>
               {d.client.passeportNumero ? (
@@ -728,7 +731,7 @@ function DossierDetail() {
                     <dd
                       className={cn(
                         "text-sm font-medium",
-                        passeportOk === false ? "text-[var(--stop)]" : "text-foreground",
+                        PASSEPORT_LABEL[statutPasseport] ? "text-[var(--stop)]" : "text-foreground",
                       )}
                     >
                       {d.client.passeportExpiration
@@ -741,6 +744,12 @@ function DossierDetail() {
                 <p className="text-sm text-muted-foreground">
                   Passeport non renseigné — cliquez sur « Modifier » pour saisir le numéro et les
                   dates.
+                </p>
+              )}
+              {PASSEPORT_LABEL[statutPasseport] && minimumPasseport && (
+                <p className="mt-2 text-xs text-[var(--stop)]">
+                  Validité requise jusqu'au {new Date(minimumPasseport).toLocaleDateString("fr-FR")}{" "}
+                  (retour + 3 mois).
                 </p>
               )}
             </div>
@@ -1122,7 +1131,14 @@ function DossierDetail() {
               <Input
                 type="date"
                 value={editPassDelivrance}
-                onChange={(e) => setEditPassDelivrance(e.target.value)}
+                onChange={(e) => {
+                  setEditPassDelivrance(e.target.value);
+                  // Passeport marocain : 5 ans, proposé si l'expiration est encore vide.
+                  if (!editPassExpiration) {
+                    const suggestion = expirationParDefaut(e.target.value);
+                    if (suggestion) setEditPassExpiration(suggestion);
+                  }
+                }}
               />
             </div>
             <div>
@@ -1132,6 +1148,9 @@ function DossierDetail() {
                 value={editPassExpiration}
                 onChange={(e) => setEditPassExpiration(e.target.value)}
               />
+              <p className="mt-1 text-xs text-muted-foreground">
+                5 ans après la délivrance par défaut — modifiable.
+              </p>
             </div>
           </div>
           <DialogFooter>

@@ -21,3 +21,17 @@ export function moisEntre(debut: string, fin: string): number {
   const jours = joursEntre(debut, fin);
   return Math.round(((jours * 12) / 365) * 100) / 100;
 }
+
+/**
+ * Expiration par défaut d'un passeport marocain : 5 ans après la délivrance.
+ * Sert uniquement à pré-remplir la saisie — la date reste modifiable, car la durée
+ * diffère selon les cas (mineurs, passeports d'une autre nationalité).
+ * Renvoie une date ISO `AAAA-MM-JJ`, ou `null` si l'entrée est inexploitable.
+ */
+export function expirationParDefaut(delivrance: string, annees = 5): string | null {
+  if (!delivrance) return null;
+  const d = new Date(delivrance);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setFullYear(d.getFullYear() + annees);
+  return d.toISOString().slice(0, 10);
+}
