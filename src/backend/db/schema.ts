@@ -6,6 +6,7 @@ import type {
   PackKey,
   Modalite,
   QualificationReponse,
+  NoteAgent,
 } from "@/lib/dossier-model";
 import type { Level, Profile } from "@/lib/visa-rules";
 
@@ -92,6 +93,8 @@ export const dossiers = pgTable("dossiers", {
   pieces: jsonb("pieces").$type<Piece[]>().notNull().default([]),
   paiements: jsonb("paiements").$type<Paiement[]>().notNull().default([]),
   notes: jsonb("notes").$type<string[]>().notNull().default([]),
+  // Ce que l'équipe écrit elle-même sur le dossier, avec auteur et horodatage.
+  notesAgent: jsonb("notes_agent").$type<NoteAgent[]>().notNull().default([]),
   // Étape 6 du parcours : la décision du consulat, hors du contrôle
   // d'Eiden mais à suivre — c'est le vrai "après" du cycle, pas juste un dossier gelé.
   decision: text("decision")

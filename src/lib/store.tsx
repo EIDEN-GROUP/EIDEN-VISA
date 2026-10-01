@@ -17,6 +17,8 @@ import {
   changerCentre as changerCentreFn,
   setDecision as setDecisionFn,
   setJalon as setJalonFn,
+  ajouterNote as ajouterNoteFn,
+  supprimerNote as supprimerNoteFn,
   setUploadAutorisation as setUploadAutorisationFn,
   encaisser as encaisserFn,
   changerPack as changerPackFn,
@@ -162,6 +164,14 @@ function useDossierMutations() {
     }) => setJalonFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const ajouterNoteMutation = useMutation({
+    mutationFn: (vars: { id: string; texte: string }) => ajouterNoteFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
+  const supprimerNoteMutation = useMutation({
+    mutationFn: (vars: { id: string; index: number }) => supprimerNoteFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
   const assignerMutation = useMutation({
     mutationFn: (vars: { dossierId: string; assigneeUserId: string; note?: string | undefined }) =>
       assignDossierFn({
@@ -239,6 +249,8 @@ function useDossierMutations() {
       changerCentreMutation.mutateAsync({ id, centre }),
     setDecision: (id: string, decision: Decision, motif?: string) =>
       setDecisionMutation.mutateAsync({ id, decision, ...(motif ? { motif } : {}) }),
+    ajouterNote: (id: string, texte: string) => ajouterNoteMutation.mutateAsync({ id, texte }),
+    supprimerNote: (id: string, index: number) => supprimerNoteMutation.mutateAsync({ id, index }),
     setJalon: (
       id: string,
       jalon: "recu" | "france_visas" | "rdv",

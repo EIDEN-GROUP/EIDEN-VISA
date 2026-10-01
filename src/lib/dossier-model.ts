@@ -204,6 +204,17 @@ export const DECISION_LABEL: Record<Decision, string> = {
   refuse: "Visa refusé",
 };
 
+/**
+ * Note écrite par un agent sur un dossier. Distincte de `notes`, qui porte les
+ * observations générées par la qualification : ici c'est l'équipe qui parle, et on
+ * garde qui a écrit quoi et quand.
+ */
+export interface NoteAgent {
+  texte: string;
+  auteur: string;
+  date: string;
+}
+
 /** Une question posée à la qualification et la réponse donnée par ce client précis. */
 export interface QualificationReponse {
   question: string;
@@ -254,6 +265,8 @@ export interface Dossier {
   pieces: Piece[];
   paiements: Paiement[];
   notes: string[];
+  /** Notes libres de l'équipe, les plus récentes en tête. */
+  notesAgent: NoteAgent[];
   decision: Decision;
   decisionDate: string | null;
   /** Motif communiqué par le consulat en cas de refus — `null` sinon. */

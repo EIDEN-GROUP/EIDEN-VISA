@@ -273,6 +273,7 @@ export function buildSeed(): Dossier[] {
       decision: "en_attente",
       decisionDate: null,
       decisionMotif: null,
+      notesAgent: [],
       recuRemis: false,
       recuLe: null,
       franceVisasFait: false,

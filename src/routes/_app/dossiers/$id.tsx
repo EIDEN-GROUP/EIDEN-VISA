@@ -104,15 +104,23 @@ function grouperDetails(details: Record<string, string> | undefined) {
  * maintenant. Le bouton « Tout afficher » reste là pour les cas particuliers.
  */
 type Panneau =
-  "decision" | "jalons" | "client" | "qualif" | "pieces" | "paiements" | "centre" | "documents";
+  | "decision"
+  | "jalons"
+  | "client"
+  | "qualif"
+  | "pieces"
+  | "paiements"
+  | "centre"
+  | "documents"
+  | "notes";
 
 const PANNEAUX_ETAPE: Record<number, Panneau[]> = {
-  1: ["client", "qualif", "paiements"],
-  2: ["jalons", "pieces", "documents", "paiements", "client"],
-  3: ["jalons", "client", "qualif", "pieces"],
-  4: ["jalons", "centre", "client", "documents"],
-  5: ["jalons", "paiements", "pieces", "documents"],
-  6: ["decision", "client", "pieces", "documents"],
+  1: ["client", "qualif", "notes", "paiements"],
+  2: ["jalons", "pieces", "notes", "documents", "paiements", "client"],
+  3: ["jalons", "client", "qualif", "notes", "pieces"],
+  4: ["jalons", "centre", "notes", "client", "documents"],
+  5: ["jalons", "paiements", "notes", "pieces", "documents"],
+  6: ["decision", "client", "notes", "pieces", "documents"],
 };
 
 /**
@@ -137,6 +145,7 @@ const TOUS_PANNEAUX: Panneau[] = [
   "paiements",
   "centre",
   "documents",
+  "notes",
 ];
 
 /** Une ligne libellé / valeur, format partagé par les panneaux de lecture. */
@@ -172,6 +181,8 @@ function DossierDetail() {
     changerCentre,
     setDecision,
     setJalon,
+    ajouterNote,
+    supprimerNote,
     setUploadAutorisation,
     updateClient,
     supprimer,
@@ -184,6 +195,8 @@ function DossierDetail() {
   const [editTelephone, setEditTelephone] = useState("");
   const [editVille, setEditVille] = useState("");
   const [editNaissance, setEditNaissance] = useState("");
+  const [editVoyageDebut, setEditVoyageDebut] = useState("");
+  const [editVoyageFin, setEditVoyageFin] = useState("");
   const [editPassNumero, setEditPassNumero] = useState("");
   const [editPassDelivrance, setEditPassDelivrance] = useState("");
   const [editPassExpiration, setEditPassExpiration] = useState("");
@@ -191,6 +204,8 @@ function DossierDetail() {
   const [refusOpen, setRefusOpen] = useState(false);
   const [refusMotif, setRefusMotif] = useState("");
   const [toutAfficher, setToutAfficher] = useState(false);
+  const [noteTexte, setNoteTexte] = useState("");
+  const [noteEnCours, setNoteEnCours] = useState(false);
   const [fvRef, setFvRef] = useState("");
   const [rdvDate, setRdvDate] = useState("");
 
@@ -256,6 +271,8 @@ function DossierDetail() {
     setEditTelephone(d!.client.telephone);
     setEditVille(d!.client.ville);
     setEditNaissance(d!.client.naissance);
+    setEditVoyageDebut(d!.client.voyageDebut ?? "");
+    setEditVoyageFin(d!.client.voyageFin ?? "");
     setEditPassNumero(d!.client.passeportNumero ?? "");
     setEditPassDelivrance(d!.client.passeportDelivrance ?? "");
     setEditPassExpiration(d!.client.passeportExpiration ?? "");
@@ -270,6 +287,8 @@ function DossierDetail() {
       telephone: editTelephone.trim(),
       ville: editVille.trim(),
       naissance: editNaissance.trim(),
+      voyageDebut: editVoyageDebut || null,
+      voyageFin: editVoyageFin || null,
       passeportNumero: editPassNumero.trim() || null,
       passeportDelivrance: editPassDelivrance || null,
       passeportExpiration: editPassExpiration || null,
@@ -638,13 +657,88 @@ function DossierDetail() {
           </CardContent>
         </Card>
 
+        {/* Notes libres de l'équipe */}
+        {voir("notes") && (
+          <Card className="panel" style={{ order: rang("notes") }}>
+            <CardHeader>
+              <CardTitle className="text-lg">Notes de l'équipe</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ce que l'agent veut transmettre au suivant : un appel passé, une pièce promise, une
+                consigne du client. Signées et horodatées automatiquement.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <textarea
+                  value={noteTexte}
+                  onChange={(e) => setNoteTexte(e.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="Ex. Client rappelé le 30/09, apporte ses fiches de paie lundi."
+                  className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">{noteTexte.length}/2000</span>
+                  <Button
+                    size="sm"
+                    disabled={!noteTexte.trim() || noteEnCours}
+                    onClick={async () => {
+                      setNoteEnCours(true);
+                      try {
+                        await ajouterNote(d.id, noteTexte.trim());
+                        setNoteTexte("");
+                      } finally {
+                        setNoteEnCours(false);
+                      }
+                    }}
+                  >
+                    {noteEnCours ? "Ajout…" : "Ajouter la note"}
+                  </Button>
+                </div>
+              </div>
+
+              {d.notesAgent.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucune note pour l'instant.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {d.notesAgent.map((n, i) => (
+                    <li
+                      key={`${n.date}-${i}`}
+                      className="rounded-xl border border-border bg-muted/30 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <span className="ref text-muted-foreground">
+                          {n.auteur} · {n.date}
+                        </span>
+                        <button
+                          onClick={() => supprimerNote(d.id, i)}
+                          className="text-muted-foreground hover:text-[var(--stop)]"
+                          aria-label="Supprimer cette note"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <p className="mt-1 whitespace-pre-line text-sm text-foreground">{n.texte}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Informations saisies à l'ouverture du dossier */}
         <Card className="panel" style={{ order: rang("client") }}>
-          <CardHeader>
-            <CardTitle className="text-lg">Informations du client</CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Saisies à l'ouverture du dossier — modifiables via « Modifier ».
-            </p>
+          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2">
+            <div>
+              <CardTitle className="text-lg">Informations du client</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Saisies à l'ouverture du dossier, modifiables à tout moment.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={openEdit}>
+              <Pencil className="h-3.5 w-3.5" /> Modifier
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -1101,6 +1195,28 @@ function DossierDetail() {
                 value={editNaissance}
                 onChange={(e) => setEditNaissance(e.target.value)}
                 placeholder="JJ/MM/AAAA"
+              />
+            </div>
+            <div className="col-span-2 mt-1 border-t border-border pt-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Séjour envisagé
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Départ souhaité</label>
+              <Input
+                type="date"
+                value={editVoyageDebut}
+                onChange={(e) => setEditVoyageDebut(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Retour souhaité</label>
+              <Input
+                type="date"
+                value={editVoyageFin}
+                min={editVoyageDebut || undefined}
+                onChange={(e) => setEditVoyageFin(e.target.value)}
               />
             </div>
             <div className="col-span-2 mt-1 border-t border-border pt-3">

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { eq, desc, and, or, ilike, gte, lte, sql, count as sqlCount, type SQL } from "drizzle-orm";
 import { db } from "@/backend/db/client";
-import { dossiers as dossiersTable } from "@/backend/db/schema";
+import { dossiers as dossiersTable, users } from "@/backend/db/schema";
 import { requireUserId, requireCeo, requireCeoOrReception } from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
 import {
@@ -71,6 +71,7 @@ function rowToDossier(row: DossierRow): Dossier {
     pieces: row.pieces,
     paiements: row.paiements,
     notes: row.notes,
+    notesAgent: row.notesAgent,
     decision: row.decision,
     decisionDate: row.decisionDate,
     decisionMotif: row.decisionMotif,
@@ -767,6 +768,46 @@ export const setJalon = createServerFn({ method: "POST" })
     );
   });
 
+/**
+ * Ajoute une note d'équipe. L'auteur et la date viennent du serveur : une note dont on
+ * pourrait changer la signature ou l'horodatage ne vaudrait rien comme trace.
+ */
+export const ajouterNote = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), texte: z.string().min(1).max(2000) }))
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const [row, auteur] = await Promise.all([
+      db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) }),
+      db.query.users.findFirst({ where: eq(users.id, userId) }),
+    ]);
+    if (!row) throw new Error("Dossier introuvable.");
+    const note = {
+      texte: data.texte.trim(),
+      auteur: auteur?.nom ?? "Agent",
+      date: new Date().toLocaleString("fr-FR"),
+    };
+    // Les plus récentes en tête : c'est ce qu'on veut lire en ouvrant le dossier.
+    await db
+      .update(dossiersTable)
+      .set({ notesAgent: [note, ...row.notesAgent] })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity("dossier.note", `Note ajoutée : ${note.texte.slice(0, 120)}`, data.id);
+  });
+
+export const supprimerNote = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), index: z.number().min(0) }))
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+    if (!row) throw new Error("Dossier introuvable.");
+    const restantes = row.notesAgent.filter((_, i) => i !== data.index);
+    await db
+      .update(dossiersTable)
+      .set({ notesAgent: restantes })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity("dossier.note_suppression", "Note d'équipe supprimée", data.id);
+  });
+
 export const updateClient = createServerFn({ method: "POST" })
   .validator(
     z.object({
@@ -776,6 +817,8 @@ export const updateClient = createServerFn({ method: "POST" })
         telephone: z.string().min(1),
         ville: z.string().min(1),
         naissance: z.string(),
+        voyageDebut: z.string().nullable().default(null),
+        voyageFin: z.string().nullable().default(null),
         passeportNumero: z.string().nullable().default(null),
         passeportDelivrance: z.string().nullable().default(null),
         passeportExpiration: z.string().nullable().default(null),
@@ -794,6 +837,8 @@ export const updateClient = createServerFn({ method: "POST" })
         clientTelephone: data.client.telephone,
         clientVille: data.client.ville,
         clientNaissance: data.client.naissance,
+        clientVoyageDebut: data.client.voyageDebut,
+        clientVoyageFin: data.client.voyageFin,
         clientPasseportNumero: data.client.passeportNumero,
         clientPasseportDelivrance: data.client.passeportDelivrance,
         clientPasseportExpiration: data.client.passeportExpiration,
