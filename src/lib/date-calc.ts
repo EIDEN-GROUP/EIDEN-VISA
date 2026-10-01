@@ -37,11 +37,12 @@ export function expirationParDefaut(delivrance: string, annees = 5): string | nu
 }
 
 /**
- * Nombre de mois révolus entre une date passée et aujourd'hui, en mois CALENDAIRES
+ * Nombre de mois révolus entre une date passée et une date de référence, en mois
+ * CALENDAIRES
  * (pas l'approximation jours×12/365 de `moisEntre`, faite pour des durées de séjour) :
  * la règle des 59 mois se compte en mois réels. `null` si la date est inexploitable.
  */
-export function moisDepuis(dateISO: string, reference: Date = new Date()): number | null {
+export function moisDepuis(dateISO: string, reference: Date): number | null {
   if (!dateISO) return null;
   const d = new Date(dateISO);
   if (Number.isNaN(d.getTime())) return null;
@@ -55,8 +56,8 @@ export function moisDepuis(dateISO: string, reference: Date = new Date()): numbe
 /** Seuil Schengen : un visa obtenu il y a moins de 59 mois doit être joint au dossier. */
 export const SEUIL_VISA_MOIS = 59;
 
-/** Nombre de jours révolus depuis une date passée. `null` si la date est inexploitable. */
-export function joursDepuis(dateISO: string, reference: Date = new Date()): number | null {
+/** Nombre de jours révolus entre une date passée et une date de référence. */
+export function joursDepuis(dateISO: string, reference: Date): number | null {
   if (!dateISO) return null;
   const d = new Date(dateISO);
   if (Number.isNaN(d.getTime())) return null;

@@ -77,25 +77,32 @@ function familyRelated(caseKey: string, profile: Profile) {
 }
 
 /**
- * Ancienneté du dernier visa : on affiche le calcul, pas une conclusion. C'est l'agent
- * qui tranche à la question des 59 mois posée plus loin — le système lui évite seulement
- * de compter les mois de tête.
+ * Écart entre deux dates saisies par l'agent. La date du jour est un champ du
+ * formulaire, pas l'horloge du poste : c'est l'agent qui la renseigne.
  */
-function Calcul59Mois({ valeur }: { valeur: string }) {
-  const mois = moisDepuis(valeur);
-  const jours = joursDepuis(valeur);
+function Calcul59Mois({
+  obtention,
+  reference,
+}: {
+  obtention: string | undefined;
+  reference: string | undefined;
+}) {
+  if (!obtention || !reference) return null;
+  const ref = new Date(reference);
+  if (Number.isNaN(ref.getTime())) return null;
+  const mois = moisDepuis(obtention, ref);
+  const jours = joursDepuis(obtention, ref);
   if (mois === null || jours === null) return null;
+
   return (
-    <div className="mt-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs">
-      <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-muted-foreground">
-        <span>Aujourd'hui : {new Date().toLocaleDateString("fr-FR")}</span>
-        <span>Visa obtenu le : {new Date(valeur).toLocaleDateString("fr-FR")}</span>
-      </div>
-      {mois < 0 ? (
-        <div className="mt-1 font-medium text-[var(--stop)]">Date dans le futur — à corriger.</div>
+    <div className="mt-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs sm:col-span-2">
+      {jours < 0 ? (
+        <div className="font-medium text-[var(--stop)]">
+          La date d'obtention est postérieure à la date du jour — à corriger.
+        </div>
       ) : (
-        <div className="mt-1 font-medium text-foreground">
-          Ancienneté : {mois} mois · {jours} jours{" "}
+        <div className="font-medium text-foreground">
+          Écart : {mois} mois · {jours} jours{" "}
           <span className="font-normal text-muted-foreground">
             ({mois >= SEUIL_VISA_MOIS ? "≥" : "<"} {SEUIL_VISA_MOIS} mois)
           </span>
@@ -409,11 +416,21 @@ function Qualification() {
                                   setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))
                                 }
                               />
-                              {f.calcul === "visa_59_mois" && fieldValues[f.key] && (
-                                <Calcul59Mois valeur={fieldValues[f.key]!} />
-                              )}
                             </div>
                           ))}
+                          <Calcul59Mois
+                            obtention={
+                              fieldValues[
+                                node.fields.find((f) => f.calcul === "visa_59_mois")?.key ?? ""
+                              ]
+                            }
+                            reference={
+                              fieldValues[
+                                node.fields.find((f) => f.calcul === "visa_59_mois_reference")
+                                  ?.key ?? ""
+                              ]
+                            }
+                          />
                         </div>
                         <Button onClick={submitFields} className="mt-2 w-full">
                           Continuer
