@@ -25,6 +25,7 @@ import {
   moisEntre,
   expirationParDefaut,
   moisDepuis,
+  joursDepuis,
   SEUIL_VISA_MOIS,
 } from "@/lib/date-calc";
 import { NiveauBadge } from "@/components/dossier/badges";
@@ -76,28 +77,28 @@ function familyRelated(caseKey: string, profile: Profile) {
 }
 
 /**
- * Ancienneté du dernier visa : l'agent n'a plus à compter les mois de tête pour
- * répondre à la question des 59 mois posée plus loin.
+ * Ancienneté du dernier visa : on affiche le calcul, pas une conclusion. C'est l'agent
+ * qui tranche à la question des 59 mois posée plus loin — le système lui évite seulement
+ * de compter les mois de tête.
  */
 function Calcul59Mois({ valeur }: { valeur: string }) {
   const mois = moisDepuis(valeur);
-  if (mois === null) return null;
-  const dansLeSeuil = mois < SEUIL_VISA_MOIS;
+  const jours = joursDepuis(valeur);
+  if (mois === null || jours === null) return null;
   return (
     <div className="mt-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs">
       <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-muted-foreground">
         <span>Aujourd'hui : {new Date().toLocaleDateString("fr-FR")}</span>
         <span>Visa obtenu le : {new Date(valeur).toLocaleDateString("fr-FR")}</span>
       </div>
-      <div className="mt-1 font-medium text-foreground">
-        Ancienneté : {mois} mois
-        {mois < 0 && " (date dans le futur — à corriger)"}
-      </div>
-      {mois >= 0 && (
-        <div className={dansLeSeuil ? "mt-0.5 text-[var(--warn)]" : "mt-0.5 text-[var(--ok)]"}>
-          {dansLeSeuil
-            ? `Moins de ${SEUIL_VISA_MOIS} mois : joindre la copie de l'ancien visa avec les cachets d'entrée/sortie.`
-            : `Plus de ${SEUIL_VISA_MOIS} mois : l'ancien visa n'est pas à joindre.`}
+      {mois < 0 ? (
+        <div className="mt-1 font-medium text-[var(--stop)]">Date dans le futur — à corriger.</div>
+      ) : (
+        <div className="mt-1 font-medium text-foreground">
+          Ancienneté : {mois} mois · {jours} jours{" "}
+          <span className="font-normal text-muted-foreground">
+            ({mois >= SEUIL_VISA_MOIS ? "≥" : "<"} {SEUIL_VISA_MOIS} mois)
+          </span>
         </div>
       )}
     </div>
@@ -193,14 +194,6 @@ function Qualification() {
       ...profile,
       details: { ...profile.details, ...fieldValues },
     };
-
-    // Une date saisie répond déjà à la question des 59 mois : on la dérive plutôt que
-    // de laisser l'agent la recalculer de tête plus loin dans le questionnaire.
-    const champ59 = node.fields.find((f) => f.calcul === "visa_59_mois");
-    if (champ59) {
-      const mois = moisDepuis(fieldValues[champ59.key] ?? "");
-      if (mois !== null && mois >= 0) nextProfile.visaHist = mois < SEUIL_VISA_MOIS;
-    }
     setProfile(nextProfile);
     const label = node.fields
       .map((f) => fieldValues[f.key])

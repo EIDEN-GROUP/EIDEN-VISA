@@ -54,3 +54,11 @@ export function moisDepuis(dateISO: string, reference: Date = new Date()): numbe
 
 /** Seuil Schengen : un visa obtenu il y a moins de 59 mois doit être joint au dossier. */
 export const SEUIL_VISA_MOIS = 59;
+
+/** Nombre de jours révolus depuis une date passée. `null` si la date est inexploitable. */
+export function joursDepuis(dateISO: string, reference: Date = new Date()): number | null {
+  if (!dateISO) return null;
+  const d = new Date(dateISO);
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.floor((reference.getTime() - d.getTime()) / 86_400_000);
+}
