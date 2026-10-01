@@ -1146,6 +1146,8 @@ export interface TreeField {
   label: string;
   placeholder?: string;
   type?: "text" | "date";
+  /** Calcul affiché sous le champ par l'écran de qualification (ex. règle des 59 mois). */
+  calcul?: "visa_59_mois";
 }
 export interface TreeNode {
   q: string;
@@ -1180,7 +1182,15 @@ export const TREE: Record<string, TreeNode> = {
   },
   q3: {
     q: "Quand avez-vous obtenu votre dernier visa ?",
-    fields: [{ key: "q3_date_dernier_visa", label: "Date d'obtention", type: "date" }],
+    help: "Le système calcule l'ancienneté : un visa de moins de 59 mois doit être joint au dossier.",
+    fields: [
+      {
+        key: "q3_date_dernier_visa",
+        label: "Date d'obtention",
+        type: "date",
+        calcul: "visa_59_mois",
+      },
+    ],
     next: "q4",
   },
   q4: {
