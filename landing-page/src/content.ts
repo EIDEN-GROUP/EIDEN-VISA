@@ -35,21 +35,26 @@ export const CONTACT = {
 
 /**
  * Demande rapide (bouton flottant). Libellés : `t.demande.visas` / `t.demande.pays`.
- * Types de visa : intitulés du formulaire harmonisé Schengen (« Objet principal du
- * voyage ») ; « conjoint » = membre de famille d'un ressortissant UE / EEE / Suisse ;
- * « travail » = visa national de long séjour (D).
+ * Types de visa, dans l'ordre d'affichage : « conjointUe » = conjoint ou parent d'un
+ * ressortissant UE ; « familleFrancais » = enfant ou parent étranger de Français ;
+ * « travail » et « conjointFrLong » = visa national de long séjour (D).
  */
 export const TYPES_VISA = [
-  "conjoint",
-  "tourisme",
+  "conjointUe",
   "famille",
+  "tourisme",
   "travail",
+  "familleFrancais",
+  "conjointFrCourt",
+  "conjointFrLong",
+  "mariage",
+  "chauffeur",
   "etudes",
   "medical",
 ] as const;
 export type TypeVisa = (typeof TYPES_VISA)[number];
 /** Long séjour : seule une date de départ prévue a du sens (pas de date de retour). */
-export const VISAS_LONG_SEJOUR: readonly TypeVisa[] = ["travail", "etudes"];
+export const VISAS_LONG_SEJOUR: readonly TypeVisa[] = ["travail", "conjointFrLong", "etudes"];
 /** Hors `SCOPE` (src/lib/visa-rules.ts de l'app) : santé écartée au lancement, études → Campus France. */
 export const VISAS_HORS_OFFRE: readonly TypeVisa[] = ["etudes", "medical"];
 

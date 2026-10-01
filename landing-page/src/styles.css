@@ -1,14 +1,5 @@
 @import "tailwindcss";
 
-/*
- * Landing page Eiden Visa : charte de la maquette "Le monde vous attend" :
- * crème chaud, encre marine, rouge passeport. Polices : Newsreader (titres),
- * DM Sans (texte), La Belle Aurore (manuscrit), Playfair Display (logo).
- * En arabe, chaque pile bascule sur Amiri / IBM Plex Sans Arabic / Aref Ruqaa
- * (glyphes absents des polices latines).
- * Copie autonome : la landing ne dépend d'aucun fichier de l'app.
- */
-
 @theme {
   --font-serif: "Newsreader", "Amiri", "Times New Roman", serif;
   --font-sans: "DM Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
@@ -35,10 +26,6 @@
 /* Téléphones peu hauts (iPhone SE…) : hero compacté pour tenir dans l'écran. */
 @custom-variant court (@media (max-height: 740px) and (max-width: 1023.98px));
 
-/*
- * Part de la carte « Votre destination » qui chevauche le bas du hero : la moitié de la
- * carte horizontale (161 px d'image + 2 × 14 px de marge), donc centrée sur la jonction.
- */
 :root {
   --carte-chevauche: 95px;
 }
@@ -123,6 +110,15 @@
     html {
       scrollbar-color: rgb(11 26 48 / 0.35) var(--color-cream);
     }
+  }
+
+  /* Barre de la page masquée pendant le loader et jusqu'au premier défilement
+     (`scroll-vu` posé par App.tsx) ; le défilement lui-même reste actif. */
+  html:not(.scroll-vu) {
+    scrollbar-width: none;
+  }
+  html:not(.scroll-vu)::-webkit-scrollbar {
+    display: none;
   }
 }
 

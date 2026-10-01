@@ -32,6 +32,15 @@ export function App() {
     return () => cancelAnimationFrame(raf);
   }, [langue, intro]);
 
+  // Barre de défilement de la page : masquée (styles.css) jusqu'au premier défilement
+  // après le loader.
+  useEffect(() => {
+    if (intro !== "fini") return;
+    const montrer = () => document.documentElement.classList.add("scroll-vu");
+    window.addEventListener("scroll", montrer, { once: true, passive: true });
+    return () => window.removeEventListener("scroll", montrer);
+  }, [intro]);
+
   return (
     <MotionConfig reducedMotion="user">
       <SmoothScroll>

@@ -5,7 +5,7 @@ export const fr = {
   meta: {
     title: "EIDEN Visa | Le monde vous attend",
     description:
-      "EIDEN Visa vous accompagne dans la préparation de votre dossier de visa Schengen, avec un accompagnement personnalisé et une expertise complète jusqu'à la prise de votre rendez-vous.",
+      "EIDEN Visa vous accompagne dans la préparation de votre dossier de visa Schengen, avec un accompagnement professionnel et personnalisé et une expertise complète jusqu'à la prise de votre rendez-vous.",
   },
   loader: {
     slogan: "Le monde vous attend",
@@ -32,7 +32,7 @@ export const fr = {
     surtitre: "Simplifiez vos démarches",
     titre: ["Le monde", "vous attend."],
     texte:
-      "EIDEN Visa vous accompagne dans la préparation de votre dossier de visa Schengen, avec un accompagnement personnalisé et une expertise complète jusqu'à la prise de votre rendez-vous.",
+      "EIDEN Visa vous accompagne dans la préparation de votre dossier de visa Schengen, avec un accompagnement professionnel et personnalisé et une expertise complète jusqu'à la prise de votre rendez-vous.",
     evaluer: "Évaluer mon dossier",
     commentCaMarche: "Voir comment ça marche",
     script: ["Vos projets", "sans frontières"],
@@ -78,7 +78,7 @@ export const fr = {
     avantages: [
       {
         titre: "Dossier complet",
-        texte: "Évitez les oublis et les pièces manquantes.",
+        texte: "Évitez les erreurs et les pièces manquantes.",
         alt: "Une conseillère étudie un dossier avec une cliente",
       },
       {
@@ -169,8 +169,7 @@ export const fr = {
       {
         nom: "Meriem A.",
         visa: "Visa visite familiale",
-        texte:
-          "Service de qualité, un vrai suivi du début à la fin.",
+        texte: "Service de qualité, un vrai suivi du début à la fin.",
       },
     ],
   },
@@ -240,13 +239,19 @@ export const fr = {
     },
     packIndecis: "Je ne sais pas encore",
     facultatif: "facultatif",
+    requis: "champ obligatoire",
     datesAide: "Si vos dates sont déjà connues.",
     datesAideLong: "Long séjour : seule la date de départ prévue est utile.",
     visas: {
-      conjoint: "Conjoint de ressortissant UE / EEE / Suisse",
-      tourisme: "Tourisme",
-      famille: "Visite à la famille ou à des amis",
-      travail: "Travail (visa long séjour)",
+      conjointUe: "Conjoint ou parent de ressortissant UE",
+      famille: "Visite familiale",
+      tourisme: "Tourisme / privé",
+      travail: "Travail",
+      familleFrancais: "Enfant ou parent étranger de Français",
+      conjointFrCourt: "Conjoint de Français (court séjour)",
+      conjointFrLong: "Conjoint de Français (long séjour)",
+      mariage: "En vue de mariage",
+      chauffeur: "Chauffeur routier",
       etudes: "Études",
       medical: "Raisons médicales",
     },

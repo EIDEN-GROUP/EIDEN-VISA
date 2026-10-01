@@ -3,13 +3,17 @@ import { useLenis } from "lenis/react";
 import {
   ArrowLeft,
   ArrowRight,
+  Baby,
   Briefcase,
+  CalendarHeart,
   Camera,
   Check,
   ChevronDown,
   CircleHelp,
+  Gem,
   Globe,
   GraduationCap,
+  Heart,
   HeartHandshake,
   Info,
   Lock,
@@ -19,6 +23,7 @@ import {
   Plane,
   Plus,
   Stethoscope,
+  Truck,
   Users,
   X,
   Zap,
@@ -180,6 +185,7 @@ const CHAMP =
 function Bloc({
   id,
   label,
+  requis,
   facultatif,
   aide,
   erreur,
@@ -188,6 +194,8 @@ function Bloc({
 }: {
   id: string;
   label: string;
+  /** Astérisque rouge + mention pour lecteur d'écran, sur les champs obligatoires. */
+  requis?: string;
   facultatif?: string;
   aide?: string;
   erreur?: string;
@@ -201,7 +209,17 @@ function Bloc({
         htmlFor={id}
         className="flex items-baseline justify-between gap-2 text-[13px] font-bold text-ink-soft"
       >
-        {label}
+        <span>
+          {label}
+          {requis && (
+            <>
+              <span aria-hidden="true" className="ms-0.5 text-brand">
+                *
+              </span>
+              <span className="sr-only"> ({requis})</span>
+            </>
+          )}
+        </span>
         {facultatif && <span className="text-[11.5px] font-medium text-muted">{facultatif}</span>}
       </label>
       <div className="mt-1.5">{children}</div>
@@ -235,10 +253,15 @@ type OptionListe = {
 
 /** Pictogramme de chaque type de visa dans la liste déroulante. */
 const ICONES_VISA: Record<TypeVisa, LucideIcon> = {
-  conjoint: HeartHandshake,
-  tourisme: Camera,
+  conjointUe: HeartHandshake,
   famille: Users,
+  tourisme: Camera,
   travail: Briefcase,
+  familleFrancais: Baby,
+  conjointFrCourt: Heart,
+  conjointFrLong: CalendarHeart,
+  mariage: Gem,
+  chauffeur: Truck,
   etudes: GraduationCap,
   medical: Stethoscope,
 };
@@ -792,7 +815,12 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
               >
                 {etape === 0 && (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Bloc id={id("nom")} label={D.champs.nom} erreur={erreurs.nom}>
+                    <Bloc
+                      id={id("nom")}
+                      label={D.champs.nom}
+                      requis={D.requis}
+                      erreur={erreurs.nom}
+                    >
                       <input
                         {...attrs("nom")}
                         autoComplete="family-name"
@@ -802,7 +830,12 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         className={CHAMP}
                       />
                     </Bloc>
-                    <Bloc id={id("prenom")} label={D.champs.prenom} erreur={erreurs.prenom}>
+                    <Bloc
+                      id={id("prenom")}
+                      label={D.champs.prenom}
+                      requis={D.requis}
+                      erreur={erreurs.prenom}
+                    >
                       <input
                         {...attrs("prenom")}
                         autoComplete="given-name"
@@ -833,6 +866,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                     <Bloc
                       id={id("telephone")}
                       label={D.champs.telephone}
+                      requis={D.requis}
                       erreur={erreurs.telephone}
                     >
                       <input
@@ -855,6 +889,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                     <Bloc
                       id={id("typeVisa")}
                       label={D.champs.typeVisa}
+                      requis={D.requis}
                       erreur={erreurs.typeVisa}
                       className="sm:col-span-2"
                     >
@@ -921,6 +956,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                     <Bloc
                       id={id("destination")}
                       label={D.champs.destination}
+                      requis={D.requis}
                       erreur={erreurs.destination}
                       className="sm:col-span-2"
                     >
@@ -959,7 +995,12 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         onChange={(v) => maj("pack", v as Donnees["pack"])}
                       />
                     </Bloc>
-                    <Bloc id={id("ville")} label={D.champs.ville} erreur={erreurs.ville}>
+                    <Bloc
+                      id={id("ville")}
+                      label={D.champs.ville}
+                      requis={D.requis}
+                      erreur={erreurs.ville}
+                    >
                       <input
                         {...attrs("ville")}
                         autoComplete="address-level2"
