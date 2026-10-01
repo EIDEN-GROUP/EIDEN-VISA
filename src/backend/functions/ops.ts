@@ -162,17 +162,17 @@ export const getAnalytics = createServerFn({ method: "GET" }).handler(async () =
                      group by 1) t),
       rol as (select json_agg(json_build_object('role', role, 'agents', a, 'dossiers', d, 'actifs', ac)) v
               from (select coalesce(u.role, 'non_attribue') role, count(distinct u.id)::int a,
-                           count(dd.id)::int d, (count(dd.id) filter (where dd.etape < 6))::int ac
+                           count(dd.id)::int d, (count(dd.id) filter (where dd.etape < 5))::int ac
                     from dossiers dd left join users u on u.id = dd.agent_user_id group by 1) t),
       agt as (select json_agg(json_build_object('nom', nom, 'role', role, 'dossiers', d, 'actifs', ac) order by d desc) v
               from (select coalesce(u.nom, 'Non attribué') nom, coalesce(u.role, 'non_attribue') role,
-                           count(dd.id)::int d, (count(dd.id) filter (where dd.etape < 6))::int ac
+                           count(dd.id)::int d, (count(dd.id) filter (where dd.etape < 5))::int ac
                     from dossiers dd left join users u on u.id = dd.agent_user_id
                     group by 1, 2 order by 3 desc limit 12) t),
       act as (select json_agg(json_build_object('k', action, 'n', c) order by c desc) v
               from (select action, count(*)::int c from activity_log
                     where created_at >= now() - interval '30 days' group by 1) t),
-      kp as (select (count(*))::int total, (count(*) filter (where etape < 6))::int actifs,
+      kp as (select (count(*))::int total, (count(*) filter (where etape < 5))::int actifs,
                     (count(*) filter (where decision = 'approuve'))::int approuve,
                     (count(*) filter (where decision = 'refuse'))::int refuse
              from dossiers),
@@ -294,7 +294,7 @@ export const fetchUserProfile = createServerOnlyFn(async (id: string) => {
         mine as (select * from dossiers where agent_user_id = ${id}),
         kp as (select
                  (count(*))::int dossiers,
-                 (count(*) filter (where etape < 6))::int actifs,
+                 (count(*) filter (where etape < 5))::int actifs,
                  (count(*) filter (where decision = 'approuve'))::int approuve,
                  (count(*) filter (where decision = 'refuse'))::int refuse
                from mine),

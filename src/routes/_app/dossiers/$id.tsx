@@ -115,12 +115,11 @@ type Panneau =
   | "notes";
 
 const PANNEAUX_ETAPE: Record<number, Panneau[]> = {
-  1: ["client", "qualif", "notes", "paiements"],
-  2: ["jalons", "pieces", "notes", "documents", "paiements", "client"],
-  3: ["jalons", "client", "qualif", "notes", "pieces"],
-  4: ["jalons", "centre", "notes", "client", "documents"],
-  5: ["jalons", "paiements", "notes", "pieces", "documents"],
-  6: ["decision", "client", "notes", "pieces", "documents"],
+  1: ["jalons", "client", "qualif", "notes", "paiements"],
+  2: ["jalons", "client", "qualif", "notes", "paiements", "documents"],
+  3: ["jalons", "centre", "notes", "client", "documents"],
+  4: ["jalons", "pieces", "documents", "notes", "paiements", "client"],
+  5: ["decision", "client", "notes", "pieces", "documents"],
 };
 
 /**
@@ -128,12 +127,11 @@ const PANNEAUX_ETAPE: Record<number, Panneau[]> = {
  * l'agent à chercher lequel le concerne : on ne montre que celui de son étape.
  */
 const JALONS_ETAPE: Record<number, ("recu" | "france_visas" | "rdv")[]> = {
-  1: [],
-  2: ["recu"],
-  3: ["france_visas"],
+  1: ["recu"],
+  2: ["france_visas"],
+  3: ["rdv"],
   4: ["rdv"],
-  5: ["rdv"],
-  6: [],
+  5: [],
 };
 
 const TOUS_PANNEAUX: Panneau[] = [
@@ -234,7 +232,7 @@ function DossierDetail() {
   // Étape 6 = décision du consulat : le cycle Eiden Visa est terminé pour ce dossier,
   // on gèle les panneaux de travail (pièces, pack, encaissement) pour éviter une
   // modification accidentelle d'un dossier déjà clos.
-  const cloture = d.etape === 6;
+  const cloture = d.etape === 5;
   const statutPasseport = passeportStatut(d);
   const minimumPasseport = passeportExpirationMinimale(d);
   const PASSEPORT_LABEL: Record<string, string> = {
@@ -343,7 +341,7 @@ function DossierDetail() {
             <div className="flex items-center gap-3">
               <h1 className="page-title">{d.client.nom}</h1>
               <NiveauBadge level={d.niveau} />
-              {d.etape === 6 && <ClotureBadge />}
+              {d.etape === 5 && <ClotureBadge />}
             </div>
             <p className="ref mt-1 text-muted-foreground">{d.id}</p>
             <p className="mt-2 text-sm text-muted-foreground">

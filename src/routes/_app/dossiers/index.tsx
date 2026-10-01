@@ -237,10 +237,10 @@ function DossiersList() {
                       {d.titre}
                     </TableCell>
                     <TableCell className="text-sm text-foreground">
-                      {d.etape === 6 ? (
+                      {d.etape === 5 ? (
                         <DecisionBadge decision={d.decision} />
                       ) : (
-                        `Étape ${d.etape}/6`
+                        `Étape ${d.etape}/5`
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">

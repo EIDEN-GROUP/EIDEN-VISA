@@ -19,30 +19,21 @@ export const ETAPES = [
     key: "reception",
     label: "Réception et diagnostic",
     detail:
-      "Le client est reçu en agence. La réception explique le service, vérifie l'éligibilité de base et fait signer la clause de non-garantie.",
+      "Le client est reçu en agence. La réception explique le service, vérifie l'éligibilité de base, fait signer la clause de non-garantie et remet le reçu listant les pièces à rapporter.",
     encaissement: "Gratuit",
     role: "Réception",
   },
   {
     n: 2,
-    key: "rassemblement",
-    label: "Rassemblement du dossier",
+    key: "france_visas",
+    label: "Création du dossier sur France-Visas / RCPC",
     detail:
-      "Le client réunit ses pièces et l'équipe vérifie chaque document un par un. Toute pièce manquante ou non conforme est signalée ici.",
+      "Création du compte et saisie du dossier sur le portail France-Visas, à partir des réponses de la qualification. Édition du récépissé (RCPC).",
     encaissement: "Acompte selon la modalité choisie",
     role: "Back office",
   },
   {
     n: 3,
-    key: "france_visas",
-    label: "Création du dossier sur France-Visas",
-    detail:
-      "Création du compte et saisie du dossier sur le portail France-Visas, à partir des réponses de la qualification.",
-    encaissement: "—",
-    role: "Back office",
-  },
-  {
-    n: 4,
     key: "rdv",
     label: "Prise de rendez-vous sur TLScontact",
     detail:
@@ -51,16 +42,16 @@ export const ETAPES = [
     role: "Back office",
   },
   {
-    n: 5,
-    key: "confirmation_rdv",
-    label: "Confirmation du rendez-vous",
+    n: 4,
+    key: "rassemblement",
+    label: "Rassemblement du dossier",
     detail:
-      "Le rendez-vous est confirmé et le dossier scellé est remis au client, qui se présentera lui-même au centre.",
+      "Le client réunit ses pièces et l'équipe vérifie chaque document un par un avant la date du rendez-vous. Le dossier scellé lui est ensuite remis.",
     encaissement: "Solde du palier choisi",
-    role: "Réception",
+    role: "Back office",
   },
   {
-    n: 6,
+    n: 5,
     key: "decision",
     label: "Visa approuvé ou refusé",
     detail:
@@ -411,48 +402,42 @@ export function checklistEtape(d: Dossier): PointEtape[] {
           label: "Coordonnées du client complètes",
           fait: Boolean(d.client.nom && d.client.telephone && d.client.ville && d.client.naissance),
         },
-      ];
-    case 2:
-      return [
         {
           label: "Reçu remis au client",
           fait: d.recuRemis,
           aide: "C'est le reçu qui indique au client les pièces à rapporter.",
         },
-        {
-          label: "Téléversement autorisé",
-          fait: d.uploadAutorise,
-          aide: "Un responsable (CEO ou Réception) doit autoriser le dossier.",
-        },
+      ];
+    case 2:
+      return [
         { label: "Passeport renseigné", fait: Boolean(d.client.passeportNumero) },
-        { label: piecesLabel, fait: piecesOk },
+        { label: "Dossier créé sur France-Visas", fait: d.franceVisasFait },
+        { label: "Numéro France-Visas / RCPC enregistré", fait: Boolean(d.franceVisasRef) },
         ...(d.modalitePaiement === "acompte" && acompte
           ? [{ label: "Acompte de 50 % encaissé", fait: acompte.encaisse }]
           : []),
       ];
     case 3:
       return [
-        { label: piecesLabel, fait: piecesOk },
-        { label: "Dossier créé sur France-Visas", fait: d.franceVisasFait },
-        { label: "Numéro France-Visas enregistré", fait: Boolean(d.franceVisasRef) },
-      ];
-    case 4:
-      return [
         { label: "Dossier France-Visas confirmé", fait: d.franceVisasFait },
         { label: `Rendez-vous pris · ${d.centre}`, fait: d.rdvPris },
         { label: "Date du rendez-vous enregistrée", fait: Boolean(d.rdvDate) },
       ];
-    case 5:
+    case 4:
       return [
-        { label: "Rendez-vous confirmé", fait: d.rdvPris && Boolean(d.rdvDate) },
-        { label: "Solde encaissé", fait: soldeOk },
+        {
+          label: "Téléversement autorisé",
+          fait: d.uploadAutorise,
+          aide: "Un responsable (CEO ou Réception) doit autoriser le dossier.",
+        },
         {
           label: piecesLabel,
           fait: piecesOk,
           aide: "Le dossier remis au client doit être complet : le centre peut refuser le dépôt.",
         },
+        { label: "Solde encaissé", fait: soldeOk },
       ];
-    case 6:
+    case 5:
       return [
         { label: "Décision du consulat enregistrée", fait: d.decision !== "en_attente" },
         ...(d.decision === "refuse"
@@ -490,7 +475,7 @@ export function alertes(d: Dossier): string[] {
       `Passeport insuffisamment valide : il doit rester valable au moins 3 mois après le retour.${jusquAu}`,
     );
 
-  if (d.caseKey === "tc3" && d.etape < 3)
+  if (d.caseKey === "tc3" && d.etape < 2)
     out.push(
       "Autorisation de travail employeur à vérifier avant toute autre pièce, sinon le dossier est bloqué.",
     );
@@ -500,12 +485,14 @@ export function alertes(d: Dossier): string[] {
     );
 
   // Incohérences d'ordre : une étape franchie sans que la précédente soit acquise.
-  if (d.etape >= 3 && !d.recuRemis)
-    out.push("Reçu non remis au client alors que le dossier a dépassé le rassemblement.");
-  if (d.etape >= 4 && !d.franceVisasFait)
+  if (d.etape >= 2 && !d.recuRemis)
+    out.push("Reçu non remis au client alors que le dossier a quitté la réception.");
+  if (d.etape >= 3 && !d.franceVisasFait)
     out.push("Rendez-vous engagé alors que le dossier n'est pas créé sur France-Visas.");
-  if (d.etape >= 5 && !d.rdvPris)
-    out.push("Dossier remis au client alors qu'aucun rendez-vous n'est enregistré.");
+  if (d.etape >= 4 && !d.rdvPris)
+    out.push("Rassemblement engagé alors qu'aucun rendez-vous n'est enregistré au centre.");
+  if (d.etape >= 5 && d.decision === "en_attente")
+    out.push("Décision du consulat non enregistrée : à saisir dès que le client la reçoit.");
 
   return out;
 }

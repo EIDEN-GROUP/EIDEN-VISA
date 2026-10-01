@@ -157,7 +157,7 @@ export const listAlertesDossiers = createServerFn({ method: "GET" }).handler(asy
   const rows = await db
     .select()
     .from(dossiersTable)
-    .where(sql`${dossiersTable.etape} < 6`)
+    .where(sql`${dossiersTable.etape} < 5`)
     .orderBy(desc(dossiersTable.createdAt))
     .limit(300);
   return rows.map(rowToDossier);
@@ -221,12 +221,12 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       db
         .select({ n: sqlCount() })
         .from(dossiersTable)
-        .where(and(sql`${dossiersTable.etape} < 6`, ...range)),
+        .where(and(sql`${dossiersTable.etape} < 5`, ...range)),
       db
         .select({ n: sqlCount() })
         .from(dossiersTable)
         .where(
-          and(sql`${dossiersTable.etape} < 6`, eq(dossiersTable.uploadAutorise, false), ...range),
+          and(sql`${dossiersTable.etape} < 5`, eq(dossiersTable.uploadAutorise, false), ...range),
         ),
       db.execute(sql`
         select coalesce(sum((p->>'montant')::numeric), 0) as total
@@ -481,18 +481,18 @@ export const avancerEtape = createServerFn({ method: "POST" })
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     if (!row) throw new Error("Dossier introuvable.");
     const etape =
-      data.direction === "avancer" ? Math.min(6, row.etape + 1) : Math.max(1, row.etape - 1);
+      data.direction === "avancer" ? Math.min(5, row.etape + 1) : Math.max(1, row.etape - 1);
     await db.update(dossiersTable).set({ etape }).where(eq(dossiersTable.id, data.id));
-    if (etape === 6 && row.etape !== 6)
+    if (etape === 5 && row.etape !== 5)
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
 export const setEtape = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), etape: z.number().min(1).max(6) }))
+  .validator(z.object({ id: z.string(), etape: z.number().min(1).max(5) }))
   .handler(async ({ data }) => {
     await requireUserId();
     await db.update(dossiersTable).set({ etape: data.etape }).where(eq(dossiersTable.id, data.id));
-    if (data.etape === 6)
+    if (data.etape === 5)
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
@@ -606,7 +606,7 @@ export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async
       select d.id, d.client_nom as nom, d.etape,
         coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) as montant
       from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
-      where d.etape >= 5
+      where d.etape >= 4
       group by d.id, d.client_nom, d.etape
       having coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and coalesce(p->>'echeance', 'solde') = 'solde'), 0) > 0
       order by d.etape desc
