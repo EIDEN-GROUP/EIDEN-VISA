@@ -238,6 +238,7 @@ export const fr = {
       pack: "Choisissez un pack",
     },
     packIndecis: "Je ne sais pas encore",
+    suggestionsEmail: "Touchez pour compléter :",
     facultatif: "facultatif",
     requis: "champ obligatoire",
     datesAide: "Si vos dates sont déjà connues.",

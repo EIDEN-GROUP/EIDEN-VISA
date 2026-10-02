@@ -3,6 +3,7 @@ import { useLenis } from "lenis/react";
 import {
   ArrowLeft,
   ArrowRight,
+  AtSign,
   Baby,
   Briefcase,
   CalendarHeart,
@@ -107,6 +108,30 @@ function aujourdhui() {
 }
 
 const jjmmaaaa = (iso: string) => iso.split("-").reverse().join("/");
+
+/** Domaines proposés à la complétion de l'e-mail (les plus courants d'abord). */
+const DOMAINES_EMAIL = [
+  "gmail.com",
+  "hotmail.com",
+  "hotmail.fr",
+  "outlook.com",
+  "yahoo.fr",
+  "icloud.com",
+] as const;
+
+/** Complétions `local@domaine` selon la frappe : sans @ → tous les domaines ;
+ * @ partiel → ceux qui commencent pareil ; adresse complète ou espace → rien. */
+function suggestionsEmail(valeur: string): string[] {
+  const v = valeur.trim();
+  if (!v || v.includes(" ")) return [];
+  const at = v.indexOf("@");
+  if (at === -1) return DOMAINES_EMAIL.map((d) => `${v}@${d}`);
+  const local = v.slice(0, at);
+  const frag = v.slice(at + 1).toLowerCase();
+  if (!local || !/^[^\s@]+$/.test(local)) return [];
+  if (!frag) return DOMAINES_EMAIL.map((d) => `${local}@${d}`);
+  return DOMAINES_EMAIL.filter((d) => d.startsWith(frag) && d !== frag).map((d) => `${local}@${d}`);
+}
 
 /** Brouillon local : fermer la popup puis la rouvrir retrouve tout ce qui était saisi. */
 const CLE_BROUILLON = "eiden-demande-v1";
@@ -689,6 +714,8 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
   const horsOffre = d.typeVisa !== "" && VISAS_HORS_OFFRE.includes(d.typeVisa);
   const jour = aujourdhui();
   const lien = `${LIENS.whatsapp}?text=${encodeURIComponent(message(d, t))}`;
+  // Complétion du domaine e-mail : recalculée à chaque frappe, coût négligeable.
+  const propositionsEmail = suggestionsEmail(d.email);
   const optionsVisa: OptionListe[] = TYPES_VISA.map((v) => ({
     valeur: v,
     libelle: D.visas[v],
@@ -984,6 +1011,29 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         onChange={(e) => maj("email", e.target.value)}
                         className={`${CHAMP} rtl:text-end`}
                       />
+                      {propositionsEmail.length > 0 && (
+                        <div
+                          role="group"
+                          aria-label={D.suggestionsEmail}
+                          dir="ltr"
+                          className="mt-2 flex flex-wrap items-center gap-1.5"
+                        >
+                          <span className="text-[12px] font-semibold text-muted">
+                            {D.suggestionsEmail}
+                          </span>
+                          {propositionsEmail.map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => maj("email", s)}
+                              className="inline-flex min-h-9 items-center gap-1 rounded-full bg-card px-3 text-[13px] font-semibold text-ink-soft ring-1 ring-line transition hover:bg-sand hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                            >
+                              <AtSign className="size-3.5 text-brand" />
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </Bloc>
                     <Bloc
                       id={id("telephone")}

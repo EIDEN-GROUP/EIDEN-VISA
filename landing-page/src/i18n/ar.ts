@@ -220,6 +220,7 @@ export const ar: Dictionnaire = {
       pack: "اختر باقة",
     },
     packIndecis: "لم أقرر بعد",
+    suggestionsEmail: "المس للإكمال:",
     facultatif: "اختياري",
     requis: "حقل إلزامي",
     datesAide: "إذا كانت تواريخك معروفة مسبقًا.",
