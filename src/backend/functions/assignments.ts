@@ -18,8 +18,8 @@ export const listAssignableUsers = createServerFn({ method: "GET" }).handler(asy
 export const assignDossier = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      dossierId: z.string(),
-      assigneeUserId: z.string(),
+      dossierId: z.string().min(1).max(32),
+      assigneeUserId: z.string().min(1).max(64),
       note: z.string().max(280).optional(),
     }),
   )
@@ -59,7 +59,7 @@ export const assignDossier = createServerFn({ method: "POST" })
   });
 
 export const unassignDossier = createServerFn({ method: "POST" })
-  .validator(z.object({ dossierId: z.string() }))
+  .validator(z.object({ dossierId: z.string().min(1).max(32) }))
   .handler(async ({ data }) => {
     await requireUserId();
     const dossier = await db.query.dossiers.findFirst({ where: eq(dossiers.id, data.dossierId) });
@@ -99,7 +99,7 @@ export const listMyNotifications = createServerFn({ method: "GET" }).handler(asy
 });
 
 export const markNotificationsRead = createServerFn({ method: "POST" })
-  .validator(z.object({ ids: z.array(z.string()).optional() }))
+  .validator(z.object({ ids: z.array(z.string().min(1).max(64)).max(100).optional() }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     const where =

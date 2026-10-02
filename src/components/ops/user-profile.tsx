@@ -537,12 +537,12 @@ export function UserProfile({ id, onBack }: { id: string; onBack: () => void }) 
           </p>
           <Input
             type="text"
-            placeholder="6 caractères minimum"
+            placeholder="12 caractères minimum"
             value={newPw}
             onChange={(e) => setNewPw(e.target.value)}
           />
           <DialogFooter>
-            <Button disabled={busy || newPw.length < 6} onClick={savePw}>
+            <Button disabled={busy || newPw.length < 12} onClick={savePw}>
               Réinitialiser
             </Button>
           </DialogFooter>

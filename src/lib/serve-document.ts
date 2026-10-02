@@ -36,12 +36,20 @@ const serveDocumentAuthenticated = requestHandler(async (request: Request): Prom
   if (!row) return new Response("Document introuvable.", { status: 404 });
 
   const bytes = Buffer.from(row.dataBase64, "base64");
+  // Contenu non-PDF ("autre") : téléchargement forcé en type opaque — jamais `inline`
+  // avec le mimeType stocké, sinon un HTML/SVG téléversé s'exécuterait sur l'origine
+  // de l'app (XSS stocké). Les emplacements consulaires restent en aperçu `inline`.
+  const isPdfSlot = row.type !== "autre";
+  const safeName = row.filename.replace(/["\r\n\\]/g, "").slice(0, 120) || "document";
+  const disposition = `${isPdfSlot ? "inline" : "attachment"}; filename="${safeName}"; filename*=UTF-8''${encodeURIComponent(safeName)}`;
   return new Response(bytes, {
     headers: {
-      "content-type": row.mimeType,
-      "content-disposition": `inline; filename="${row.filename.replace(/"/g, "")}"`,
+      "content-type": isPdfSlot ? "application/pdf" : "application/octet-stream",
+      "content-disposition": disposition,
       "content-length": String(bytes.length),
       "cache-control": "private, no-store",
+      "x-content-type-options": "nosniff",
+      "cross-origin-resource-policy": "same-origin",
     },
   });
 });

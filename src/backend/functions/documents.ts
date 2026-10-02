@@ -3,12 +3,18 @@ import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { documents as documentsTable, dossiers as dossiersTable } from "@/backend/db/schema";
-import { requireUserId } from "@/backend/functions/auth";
+import { requireUserId, requireRoles } from "@/backend/functions/auth";
 
 const documentType = z.enum(["france_tls", "espagne_bls", "autre"]);
 
 /** Borne serveur alignée sur le panneau d'upload (10 Mo) — ne jamais faire confiance au file.type du client. */
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+/** Base64 ≈ +33 % : borne d'entrée pour refuser les corps absurdes avant décodage. */
+const MAX_BASE64_CHARS = 15_000_000;
+
+/** Types actifs (HTML/SVG/JS/XML) : jamais stockés — ils s'exécuteraient à l'ouverture. */
+const ACTIVE_MIME =
+  /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|.*javascript.*|.*ecmascript.*|text\/xml|application\/xsl\+xml)$/i;
 
 function decodeBase64(dataBase64: string): Buffer {
   if (!/^[\w+/=]+$/.test(dataBase64)) throw new Error("Fichier invalide (encodage base64).");
@@ -58,12 +64,16 @@ export const listDocuments = createServerFn({ method: "GET" })
 export const uploadDocument = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      dossierId: z.string(),
+      dossierId: z.string().min(1).max(64),
       type: documentType,
       // Nom/nom proposé, la validation réelle du contenu se fait dans le handler.
-      filename: z.string().min(1),
-      mimeType: z.string().min(1),
-      dataBase64: z.string().min(1),
+      filename: z.string().min(1).max(120),
+      mimeType: z
+        .string()
+        .min(1)
+        .max(100)
+        .regex(/^[-+\w.]+\/[-+\w.]+$/, "Type MIME invalide."),
+      dataBase64: z.string().min(1).max(MAX_BASE64_CHARS),
     }),
   )
   .handler(async ({ data }) => {
@@ -81,7 +91,10 @@ export const uploadDocument = createServerFn({ method: "POST" })
       );
 
     // Garde de contenu : les deux emplacements consulaires (France/TLS, Espagne/BLS) exigent
-    // un vrai PDF ; "autre" accepte tout type de fichier, seule la taille est vérifiée.
+    // un vrai PDF ; "autre" accepte tout type de fichier SAUF le contenu actif (HTML/SVG/JS),
+    // qui s'exécuterait dans le navigateur à l'ouverture (XSS stocké, voir serve-document.ts).
+    if (ACTIVE_MIME.test(data.mimeType))
+      throw new Error("Ce type de fichier n'est pas accepté (contenu actif).");
     if (data.type === "autre") {
       validateAnyUpload(data.dataBase64);
     } else {
@@ -103,8 +116,17 @@ export const uploadDocument = createServerFn({ method: "POST" })
   });
 
 export const deleteDocument = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string().min(1).max(64) }))
   .handler(async ({ data }) => {
-    await requireUserId();
+    // Destruction : CEO ou Réception, sur un dossier existant (pas d'id orphelin).
+    await requireRoles("ceo", "reception");
+    const doc = await db.query.documents.findFirst({
+      where: eq(documentsTable.id, data.id),
+    });
+    if (!doc) throw new Error("Document introuvable.");
+    const dossier = await db.query.dossiers.findFirst({
+      where: eq(dossiersTable.id, doc.dossierId),
+    });
+    if (!dossier) throw new Error("Dossier introuvable.");
     await db.delete(documentsTable).where(eq(documentsTable.id, data.id));
   });

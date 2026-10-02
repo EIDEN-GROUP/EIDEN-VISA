@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: eidenvisa
       POSTGRES_DB: eidenvisa
     ports:
-      - "5435:5432"
+      # Bouclé sur localhost : la DB de dev n'est jamais exposée au réseau local.
+      - "127.0.0.1:5435:5432"
     volumes:
       - eidenvisa_db:/var/lib/postgresql/data
 

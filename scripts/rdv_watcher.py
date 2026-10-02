@@ -30,12 +30,15 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import ipaddress
 import os
 import re
+import socket
 import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import psycopg2
 import psycopg2.extras
@@ -47,6 +50,8 @@ USER_AGENT = os.environ.get(
     "Mozilla/5.0 (compatible; EidenVisaRdvWatcher/1.0; +readonly availability check)",
 )
 REQUEST_TIMEOUT = 20
+# Garde-fou : on ne hache jamais plus de 2 Mo (page piégée géante = DoS mémoire).
+MAX_BYTES = 2_000_000
 
 # Mots-clés génériques indiquant "aucun créneau" sur la plupart des sites de RDV
 # consulaires. Purement informatif : le vrai signal est le hash du contenu qui change,
@@ -74,14 +79,47 @@ def get_database_url() -> str:
     raise SystemExit("DATABASE_URL introuvable (variable d'env ou .env).")
 
 
+def host_est_public(host: str) -> bool:
+    """Revérifie après résolution DNS (l'écran d'ajout filtre déjà les littéraux,
+    mais un nom peut se ré-écrire vers de l'interne entre-temps : rebinding)."""
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        return False
+    for info in infos:
+        try:
+            ip = ipaddress.ip_address(info[4][0].split("%")[0])
+        except ValueError:
+            return False
+        if not ip.is_global:
+            return False
+    return True
+
+
 def fetch_page(url: str) -> str:
+    try:
+        host = urlparse(url).hostname or ""
+    except ValueError:
+        raise requests.RequestException(f"URL invalide : {url}")
+    if urlparse(url).scheme != "https" or not host_est_public(host):
+        raise requests.RequestException(f"URL non autorisée (intranet/interne) : {host}")
     resp = requests.get(
         url,
         headers={"User-Agent": USER_AGENT},
         timeout=REQUEST_TIMEOUT,
+        stream=True,
     )
     resp.raise_for_status()
-    return resp.text
+    morceaux: list[bytes] = []
+    total = 0
+    for bloc in resp.iter_content(chunk_size=65536, decode_unicode=False):
+        if not isinstance(bloc, bytes):
+            continue
+        total += len(bloc)
+        if total > MAX_BYTES:
+            raise requests.RequestException("Page trop volumineuse, ignorée.")
+        morceaux.append(bloc)
+    return b"".join(morceaux).decode(resp.encoding or "utf-8", errors="replace")
 
 
 def normalize(html: str) -> str:

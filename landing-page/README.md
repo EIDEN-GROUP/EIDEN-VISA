@@ -70,11 +70,13 @@ puis lisible depuis l'onglet Website Contacts du BMS — sans toucher au code du
 (config env uniquement, comme les autres sources `CONTACT_SOURCE_*`).
 
 1. Créer un projet Supabase, exécuter `supabase/schema.sql` (SQL Editor) : RLS active,
-   rôle `anon` en INSERT seul (aucune lecture navigateur possible).
+   rôle `anon` en INSERT seul **avec plafonds de longueur** (aucune lecture navigateur
+   possible ; rejouer le script après un `ALTER` si la table existe déjà).
 2. Renseigner les variables (local : copier `.env.example` vers `.env` ; prod : dashboard
    Vercel) : navigateur `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` ; **serveur
    uniquement, sans préfixe `VITE_`** : `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` +
-   `CONTACTS_FEED_API_KEY` (chaîne aléatoire longue, partagée avec le BMS).
+   `CONTACTS_FEED_API_KEY` (**≥ 32 caractères aléatoires**, `openssl rand -hex 32`,
+   partagée avec le BMS ; en dessous le flux répond 503).
 3. Déployer la landing (la fonction `api/contacts-feed.ts` part avec le site).
 4. Côté BMS (server `.env`, pas de code) :
    `CONTACT_SOURCE_N_NAME=Eiden Visa Landing`,
@@ -83,15 +85,31 @@ puis lisible depuis l'onglet Website Contacts du BMS — sans toucher au code du
    Le tableau BMS dérive ses colonnes de la première ligne ; sans Supabase configuré,
    l'envoi reste WhatsApp seul (dégradation gracieuse, aucun message d'erreur).
 
+Contrat du flux (durci) : GET seul, clé comparée à temps constant, frein par IP
+(best-effort en serverless), colonnes minimales (**sans** `page_url`/`user_agent`),
+limite 100 (défaut 50), timeout amont 5 s, erreurs génériques (aucun oracle de
+configuration). Champs bornés des deux côtés (`maxLength` UI + `save-contact.ts` +
+`CHECK` SQL). Rétention 13 mois : requête fournie en bas de `schema.sql`
+(service_role uniquement). Rotation de clé : changer des deux côtés
+(Vercel landing + serveur BMS) puis redéployer.
+
 **EN:** every quick request is saved to Supabase (`landing_contacts`, same content as the
 WhatsApp message plus locale, URL and user-agent), then readable from the BMS Website
 Contacts tab — no BMS code change (env-only config, like other `CONTACT_SOURCE_*`).
 Run `supabase/schema.sql` (RLS on, `anon` INSERT-only, no browser reads), set browser
 vars `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` and **server-only** vars
-`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `CONTACTS_FEED_API_KEY` (random string
-shared with the BMS), deploy, then point a BMS `CONTACT_SOURCE_N_*` triple at
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `CONTACTS_FEED_API_KEY` (**≥ 32 random
+chars**, `openssl rand -hex 32`, shared with the BMS; shorter keys make the feed
+answer 503), deploy, then point a BMS `CONTACT_SOURCE_N_*` triple at
 `https://<landing-domain>/api/contacts-feed`. Without Supabase configured, submit stays
 WhatsApp-only (graceful, no error shown).
+
+Feed contract (hardened): GET-only, timing-safe key compare, per-IP brake
+(best-effort serverless), minimal columns (**no** `page_url`/`user_agent`), limit 100
+(default 50), 5 s upstream timeout, generic errors. Length caps on both sides
+(UI `maxLength` + `save-contact.ts` + SQL `CHECK`s). 13-month retention query at the
+bottom of `schema.sql` (service_role only). Key rotation: change on both sides
+(landing Vercel + BMS server), then redeploy.
 
 ## Règles / Rules
 

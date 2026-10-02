@@ -22,27 +22,52 @@ export type ContactPayload = {
   userAgent: string;
 };
 
+/** Plafonds alignés sur les CHECK SQL (schema.sql) : refusés en 400 si dépassés. */
+const MAX = {
+  nom: 120,
+  prenom: 120,
+  email: 160,
+  telephone: 120,
+  typeVisa: 32,
+  depart: 32,
+  retour: 32,
+  destination: 32,
+  pack: 32,
+  ville: 120,
+  langue: 8,
+  message: 4000,
+  pageUrl: 2000,
+  userAgent: 1000,
+} as const;
+
+const coupe = (v: string, n: number) => (v.length > n ? null : v);
+
 export async function saveContact(payload: ContactPayload): Promise<boolean> {
   try {
     const db = supabaseContacts();
     if (!db) return false;
-    const { error } = await db.from("landing_contacts").insert({
-      nom: payload.nom,
-      prenom: payload.prenom,
-      email: payload.email,
-      telephone: payload.telephone,
-      type_visa: payload.typeVisa,
-      depart: payload.depart,
-      retour: payload.retour,
-      destination: payload.destination,
-      pack: payload.pack,
-      ville: payload.ville,
-      demandeurs: payload.demandeurs,
-      langue: payload.langue,
-      message: payload.message,
-      page_url: payload.pageUrl,
-      user_agent: payload.userAgent,
-    });
+    const ligne = {
+      nom: coupe(payload.nom, MAX.nom),
+      prenom: coupe(payload.prenom, MAX.prenom),
+      email: coupe(payload.email, MAX.email),
+      telephone: coupe(payload.telephone, MAX.telephone),
+      type_visa: coupe(payload.typeVisa, MAX.typeVisa),
+      depart: coupe(payload.depart, MAX.depart),
+      retour: coupe(payload.retour, MAX.retour),
+      destination: coupe(payload.destination, MAX.destination),
+      pack: coupe(payload.pack, MAX.pack),
+      ville: coupe(payload.ville, MAX.ville),
+      demandeurs:
+        Number.isInteger(payload.demandeurs) && payload.demandeurs >= 1 && payload.demandeurs <= 20
+          ? payload.demandeurs
+          : null,
+      langue: coupe(payload.langue, MAX.langue),
+      message: coupe(payload.message, MAX.message),
+      page_url: coupe(payload.pageUrl, MAX.pageUrl),
+      user_agent: coupe(payload.userAgent, MAX.userAgent),
+    };
+    if (Object.values(ligne).some((v) => v === null)) return false;
+    const { error } = await db.from("landing_contacts").insert(ligne);
     return !error;
   } catch {
     return false;

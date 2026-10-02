@@ -125,7 +125,8 @@ function chargerBrouillon(): { donnees: Donnees; etape: number } | null {
       etape?: unknown;
     };
     const b = parsed.donnees ?? {};
-    const texte = (v: unknown) => (typeof v === "string" ? v : "");
+    // Plafond anti-bombe : un brouillon trafiqué ne doit pas gonfler le DOM.
+    const texte = (v: unknown) => (typeof v === "string" ? v.slice(0, 4000) : "");
     const typeVisa = texte(b.typeVisa);
     const destination = texte(b.destination);
     const pack = texte(b.pack);
@@ -942,6 +943,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                       <input
                         {...attrs("nom")}
                         autoComplete="family-name"
+                        maxLength={120}
                         placeholder={D.exemples.nom}
                         value={d.nom}
                         onChange={(e) => maj("nom", e.target.value)}
@@ -957,6 +959,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                       <input
                         {...attrs("prenom")}
                         autoComplete="given-name"
+                        maxLength={120}
                         placeholder={D.exemples.prenom}
                         value={d.prenom}
                         onChange={(e) => maj("prenom", e.target.value)}
@@ -975,6 +978,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         dir="ltr"
                         autoComplete="email"
                         inputMode="email"
+                        maxLength={160}
                         placeholder={D.exemples.email}
                         value={d.email}
                         onChange={(e) => maj("email", e.target.value)}
@@ -993,6 +997,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         dir="ltr"
                         autoComplete="tel"
                         inputMode="tel"
+                        maxLength={120}
                         placeholder={D.exemples.telephone}
                         value={d.telephone}
                         onChange={(e) => maj("telephone", e.target.value)}
@@ -1122,6 +1127,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                       <input
                         {...attrs("ville")}
                         autoComplete="address-level2"
+                        maxLength={120}
                         placeholder={D.exemples.ville}
                         value={d.ville}
                         onChange={(e) => maj("ville", e.target.value)}

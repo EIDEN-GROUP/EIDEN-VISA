@@ -1,13 +1,16 @@
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, count as sqlCount } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { users, activityLog, dossiers } from "@/backend/db/schema";
 import { getAuthSession } from "@/backend/auth";
 import { requireCeo } from "@/backend/functions/auth";
 
 const roleEnum = z.enum(["ceo", "reception", "preparation", "back_office"]);
+
+/** Photos acceptées : JPEG/PNG/WebP (pas de SVG — contenu actif). */
+const PHOTO_MIME = /^data:image\/(jpeg|png|webp);base64,/;
 
 /**
  * Écrit une ligne d'activité — appelé depuis les mutations métier (dossiers, paiements...).
@@ -49,9 +52,9 @@ export const listUsers = createServerFn({ method: "GET" }).handler(async () => {
 export const createUser = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      email: z.string().email(),
-      password: z.string().min(6),
-      nom: z.string().min(1),
+      email: z.string().email().max(160),
+      password: z.string().min(12).max(200),
+      nom: z.string().min(1).max(120),
       role: roleEnum,
     }),
   )
@@ -71,9 +74,19 @@ export const createUser = createServerFn({ method: "POST" })
   });
 
 export const updateUserRole = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), role: roleEnum }))
+  .validator(z.object({ id: z.string().min(1).max(64), role: roleEnum }))
   .handler(async ({ data }) => {
-    await requireCeo();
+    const ceo = await requireCeo();
+    // Garde-fous anti-lockout : ni auto-rétrogradation, ni dernier CEO rétrogradé.
+    if (data.id === ceo.id && data.role !== "ceo")
+      throw new Error("Impossible de retirer votre propre rôle CEO.");
+    const cible = await db.query.users.findFirst({ where: eq(users.id, data.id) });
+    if (!cible) throw new Error("Compte introuvable.");
+    if (cible.role === "ceo" && data.role !== "ceo") {
+      const lignes = await db.select({ n: sqlCount() }).from(users).where(eq(users.role, "ceo"));
+      if (Number(lignes[0]?.n ?? 0) <= 1)
+        throw new Error("Impossible : c'est le dernier compte CEO.");
+    }
     await db.update(users).set({ role: data.role }).where(eq(users.id, data.id));
     await logActivity(
       "utilisateur.role",
@@ -82,7 +95,7 @@ export const updateUserRole = createServerFn({ method: "POST" })
   });
 
 export const deleteUser = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string().min(1).max(64) }))
   .handler(async ({ data }) => {
     const ceo = await requireCeo();
     if (data.id === ceo.id) throw new Error("Impossible de supprimer votre propre compte CEO.");
@@ -225,7 +238,7 @@ export const getAnalytics = createServerFn({ method: "GET" }).handler(async () =
 const MAX_PHOTO_BYTES = 1_500_000; // ~1,5 Mo de data URL — largement assez pour un avatar.
 
 export const getUser = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string().min(1).max(64) }))
   .handler(async ({ data }) => {
     await requireCeo();
     const u = await db.query.users.findFirst({ where: eq(users.id, data.id) });
@@ -241,7 +254,13 @@ export const getUser = createServerFn({ method: "GET" })
   });
 
 export const updateUser = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), nom: z.string().min(1), email: z.string().email() }))
+  .validator(
+    z.object({
+      id: z.string().min(1).max(64),
+      nom: z.string().min(1).max(120),
+      email: z.string().email().max(160),
+    }),
+  )
   .handler(async ({ data }) => {
     await requireCeo();
     const email = data.email.toLowerCase();
@@ -253,12 +272,14 @@ export const updateUser = createServerFn({ method: "POST" })
   });
 
 export const setUserPhoto = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), photoBase64: z.string().nullable() }))
+  .validator(
+    z.object({ id: z.string().min(1).max(64), photoBase64: z.string().max(1_500_000).nullable() }),
+  )
   .handler(async ({ data }) => {
     await requireCeo();
     if (data.photoBase64) {
-      if (!data.photoBase64.startsWith("data:image/"))
-        throw new Error("Le fichier n'est pas une image.");
+      if (!PHOTO_MIME.test(data.photoBase64))
+        throw new Error("Seules les images JPEG, PNG ou WebP sont acceptées.");
       if (data.photoBase64.length > MAX_PHOTO_BYTES)
         throw new Error("Image trop lourde (max ~1 Mo).");
     }
@@ -270,11 +291,17 @@ export const setUserPhoto = createServerFn({ method: "POST" })
   });
 
 export const resetUserPassword = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), password: z.string().min(6) }))
+  .validator(z.object({ id: z.string().min(1).max(64), password: z.string().min(12).max(200) }))
   .handler(async ({ data }) => {
     await requireCeo();
+    const cible = await db.query.users.findFirst({ where: eq(users.id, data.id) });
+    if (!cible) throw new Error("Compte introuvable.");
     const passwordHash = await bcrypt.hash(data.password, 12);
-    await db.update(users).set({ passwordHash }).where(eq(users.id, data.id));
+    // Révoque les sessions existantes : le compte doit se reconnecter partout.
+    await db
+      .update(users)
+      .set({ passwordHash, sessionVersion: cible.sessionVersion + 1 })
+      .where(eq(users.id, data.id));
     await logActivity(
       "utilisateur.motdepasse",
       `Mot de passe réinitialisé pour l'utilisateur ${data.id}`,
@@ -407,7 +434,7 @@ export const fetchUserProfile = createServerOnlyFn(async (id: string) => {
 });
 
 export const getUserProfile = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string().min(1).max(64) }))
   .handler(async ({ data }) => {
     await requireCeo();
     return fetchUserProfile(data.id);

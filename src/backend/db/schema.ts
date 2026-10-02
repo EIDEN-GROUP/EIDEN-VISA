@@ -18,6 +18,9 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   nom: text("nom").notNull(),
   role: text("role").$type<Role>().notNull().default("reception"),
+  /** Incrémenté à chaque changement de mot de passe : invalide les cookies volés
+   * (le cookie porte `v`, voir AuthSessionData ; requireUserId compare). */
+  sessionVersion: integer("session_version").notNull().default(0),
   /** Photo de profil, image encodée en data URL base64 (comme les documents). Nullable. */
   photoBase64: text("photo_base64"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -3,7 +3,12 @@ import { z } from "zod";
 import { eq, desc, and, or, ilike, gte, lte, sql, count as sqlCount, type SQL } from "drizzle-orm";
 import { db } from "@/backend/db/client";
 import { dossiers as dossiersTable, users } from "@/backend/db/schema";
-import { requireUserId, requireCeo, requireCeoOrReception } from "@/backend/functions/auth";
+import {
+  requireUserId,
+  requireCeo,
+  requireCeoOrReception,
+  requireRoles,
+} from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
 import {
   PACKS,
@@ -16,10 +21,15 @@ import {
 import type { Profile } from "@/lib/visa-rules";
 
 /** Filtre de date partagé : "dossiers ouverts entre le X et le Y", sur la vraie colonne
- * `created_at` (timestamp) — pas sur `ouvert_le`, un texte français non fiable à trier/filtrer. */
+ * `created_at` (timestamp) — pas sur `ouvert_le`, un texte français non fiable à trier/filtrer.
+ * Refuse les dates non analysables (400) au lieu de laisser `Invalid Date` exploser en SQL. */
+const dateInput = z
+  .string()
+  .max(32)
+  .refine((s) => !Number.isNaN(Date.parse(s)), "Date invalide.");
 const dateRangeInput = z.object({
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
+  dateFrom: dateInput.optional(),
+  dateTo: dateInput.optional(),
 });
 function dateRangeConditions(data: {
   dateFrom?: string | undefined;
@@ -101,7 +111,7 @@ export const listDossiersPage = createServerFn({ method: "GET" })
     z.object({
       page: z.number().min(1).default(1),
       pageSize: z.number().min(1).max(200).default(50),
-      search: z.string().optional(),
+      search: z.string().max(120).optional(),
       niveau: z.enum(["tous", "standard", "attention", "complexe"]).default("tous"),
       pays: z.enum(["tous", "france", "espagne"]).default("tous"),
       mine: z.boolean().default(false),
@@ -307,31 +317,34 @@ export const getPackCounts = createServerFn({ method: "GET" })
   });
 
 export const getDossier = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string().min(1).max(32) }))
   .handler(async ({ data }) => {
     await requireUserId();
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     return row ? rowToDossier(row) : null;
   });
 
+/** Champs d'identité bornés : le client ne doit pouvoir ni vider ni gonfler la fiche. */
+const clientInput = z.object({
+  nom: z.string().min(1).max(120),
+  telephone: z.string().min(1).max(120),
+  ville: z.string().min(1).max(120),
+  naissance: z.string().max(120),
+  voyageDebut: z.string().max(32).nullable().default(null),
+  voyageFin: z.string().max(32).nullable().default(null),
+  passeportNumero: z.string().max(64).nullable().default(null),
+  passeportDelivrance: z.string().max(64).nullable().default(null),
+  passeportExpiration: z.string().max(64).nullable().default(null),
+  passeportLieu: z.string().max(120).nullable().default(null),
+});
+
 const dossierInput = z.object({
-  id: z.string(),
-  client: z.object({
-    nom: z.string(),
-    telephone: z.string(),
-    ville: z.string(),
-    naissance: z.string(),
-    voyageDebut: z.string().nullable().default(null),
-    voyageFin: z.string().nullable().default(null),
-    passeportNumero: z.string().nullable().default(null),
-    passeportDelivrance: z.string().nullable().default(null),
-    passeportExpiration: z.string().nullable().default(null),
-    passeportLieu: z.string().nullable().default(null),
-  }),
-  agent: z.string(),
-  assigneeUserId: z.string().nullable().default(null),
-  ouvertLe: z.string(),
-  caseKey: z.string(),
+  id: z.string().min(1).max(32),
+  client: clientInput,
+  agent: z.string().min(1).max(120),
+  assigneeUserId: z.string().max(64).nullable().default(null),
+  ouvertLe: z.string().min(1).max(32),
+  caseKey: z.string().min(1).max(32),
   profile: z.object({
     base: z
       .enum([
@@ -395,29 +408,43 @@ const dossierInput = z.object({
     lsLogement: z.enum(["propriete", "location", "heberge", "autre"]).optional(),
     lsStageEtudiant: z.boolean().optional(),
     lsConvention: z.boolean().optional(),
-    details: z.record(z.string()).optional(),
+    details: z
+      .record(z.string().max(500))
+      .refine((v) => Object.keys(v).length <= 100, "Trop de détails.")
+      .optional(),
   }),
-  titre: z.string(),
-  categorie: z.string(),
+  titre: z.string().min(1).max(160),
+  categorie: z.string().min(1).max(160),
   niveau: z.enum(["standard", "attention", "complexe"]),
   pack: z.enum(["base", "voyage", "global"]),
   modalitePaiement: z.enum(["comptant", "acompte"]).default("comptant"),
-  etape: z.number(),
-  centre: z.string(),
-  pieces: z.array(
-    z.object({ label: z.string(), source: z.enum(["officiel", "eiden"]), fourni: z.boolean() }),
-  ),
-  paiements: z.array(
-    z.object({
-      libelle: z.string(),
-      montant: z.number(),
-      date: z.string().nullable(),
-      encaisse: z.boolean(),
-      echeance: z.enum(["acompte", "solde", "option"]).optional(),
-    }),
-  ),
-  notes: z.array(z.string()),
-  qualification: z.array(z.object({ question: z.string(), reponse: z.string() })).default([]),
+  etape: z.number().int().min(1).max(5),
+  centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
+  pieces: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(200),
+        source: z.enum(["officiel", "eiden"]),
+        fourni: z.boolean(),
+      }),
+    )
+    .max(200),
+  paiements: z
+    .array(
+      z.object({
+        libelle: z.string().min(1).max(160),
+        montant: z.number().int().min(0).max(10_000_000),
+        date: z.string().max(32).nullable(),
+        encaisse: z.boolean(),
+        echeance: z.enum(["acompte", "solde", "option"]).optional(),
+      }),
+    )
+    .max(50),
+  notes: z.array(z.string().max(2000)).max(200),
+  qualification: z
+    .array(z.object({ question: z.string().max(2000), reponse: z.string().max(2000) }))
+    .max(200)
+    .default([]),
 });
 
 export const createDossier = createServerFn({ method: "POST" })
@@ -465,30 +492,35 @@ export const createDossier = createServerFn({ method: "POST" })
   });
 
 export const togglePiece = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), index: z.number() }))
+  .validator(z.object({ id: z.string().min(1).max(32), index: z.number().int().min(0) }))
   .handler(async ({ data }) => {
     await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    const pieces = row.pieces.map((p, i) => (i === data.index ? { ...p, fourni: !p.fourni } : p));
-    await db.update(dossiersTable).set({ pieces }).where(eq(dossiersTable.id, data.id));
+    await db.transaction(async (tx) => {
+      const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!row) throw new Error("Dossier introuvable.");
+      const pieces = row.pieces.map((p, i) => (i === data.index ? { ...p, fourni: !p.fourni } : p));
+      await tx.update(dossiersTable).set({ pieces }).where(eq(dossiersTable.id, data.id));
+    });
   });
 
 export const avancerEtape = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), direction: z.enum(["avancer", "reculer"]) }))
+  .validator(z.object({ id: z.string().min(1).max(32), direction: z.enum(["avancer", "reculer"]) }))
   .handler(async ({ data }) => {
     await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    const etape =
-      data.direction === "avancer" ? Math.min(5, row.etape + 1) : Math.max(1, row.etape - 1);
-    await db.update(dossiersTable).set({ etape }).where(eq(dossiersTable.id, data.id));
-    if (etape === 5 && row.etape !== 5)
+    const { etape, avant } = await db.transaction(async (tx) => {
+      const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!row) throw new Error("Dossier introuvable.");
+      const etape =
+        data.direction === "avancer" ? Math.min(5, row.etape + 1) : Math.max(1, row.etape - 1);
+      await tx.update(dossiersTable).set({ etape }).where(eq(dossiersTable.id, data.id));
+      return { etape, avant: row.etape };
+    });
+    if (etape === 5 && avant !== 5)
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
 export const setEtape = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), etape: z.number().min(1).max(5) }))
+  .validator(z.object({ id: z.string().min(1).max(32), etape: z.number().min(1).max(5) }))
   .handler(async ({ data }) => {
     await requireUserId();
     await db.update(dossiersTable).set({ etape: data.etape }).where(eq(dossiersTable.id, data.id));
@@ -500,7 +532,7 @@ export const setEtape = createServerFn({ method: "POST" })
 export const changerCentre = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      id: z.string(),
+      id: z.string().min(1).max(32),
       centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
     }),
   )
@@ -514,7 +546,7 @@ export const changerCentre = createServerFn({ method: "POST" })
 
 /** Autorise (ou bloque) le téléversement de documents sur un dossier — CEO ou Réception. */
 export const setUploadAutorisation = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), autorise: z.boolean() }))
+  .validator(z.object({ id: z.string().min(1).max(32), autorise: z.boolean() }))
   .handler(async ({ data }) => {
     await requireCeoOrReception();
     await db
@@ -528,54 +560,63 @@ export const setUploadAutorisation = createServerFn({ method: "POST" })
     );
   });
 
+/** L'argent ne transite que par les rôles qui encaissent : CEO, Réception, Back office. */
 export const encaisser = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), index: z.number() }))
+  .validator(z.object({ id: z.string().min(1).max(32), index: z.number().int().min(0) }))
   .handler(async ({ data }) => {
-    await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    const paiements = row.paiements.map((p, i) =>
-      i === data.index ? { ...p, encaisse: true, date: p.date ?? "aujourd'hui" } : p,
-    );
-    await db.update(dossiersTable).set({ paiements }).where(eq(dossiersTable.id, data.id));
-    const p = row.paiements[data.index];
-    if (p)
+    await requireRoles("ceo", "reception", "back_office");
+    const ligne = await db.transaction(async (tx) => {
+      const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!row) throw new Error("Dossier introuvable.");
+      const paiements = row.paiements.map((p, i) =>
+        i === data.index ? { ...p, encaisse: true, date: p.date ?? "aujourd'hui" } : p,
+      );
+      await tx.update(dossiersTable).set({ paiements }).where(eq(dossiersTable.id, data.id));
+      return row.paiements[data.index] ?? null;
+    });
+    if (ligne)
       await logActivity(
         "paiement.encaissement",
-        `${p.montant} MAD encaissés (${p.libelle})`,
+        `${ligne.montant} MAD encaissés (${ligne.libelle})`,
         data.id,
       );
   });
 
 export const changerPack = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), pack: z.enum(["base", "voyage", "global"]) }))
+  .validator(
+    z.object({ id: z.string().min(1).max(32), pack: z.enum(["base", "voyage", "global"]) }),
+  )
   .handler(async ({ data }) => {
-    await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    // On régénère l'échéancier (acompte + solde, ou solde comptant) selon le nouveau pack
-    // et la modalité en cours : les lignes déjà encaissées et les options à la carte sont
-    // conservées telles quelles, seules les lignes dues sont recalculées.
-    const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement);
-    await db
-      .update(dossiersTable)
-      .set({ pack: data.pack, paiements })
-      .where(eq(dossiersTable.id, data.id));
+    await requireRoles("ceo", "reception", "back_office");
+    await db.transaction(async (tx) => {
+      const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!row) throw new Error("Dossier introuvable.");
+      // On régénère l'échéancier (acompte + solde, ou solde comptant) selon le nouveau pack
+      // et la modalité en cours : les lignes déjà encaissées et les options à la carte sont
+      // conservées telles quelles, seules les lignes dues sont recalculées.
+      const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement);
+      await tx
+        .update(dossiersTable)
+        .set({ pack: data.pack, paiements })
+        .where(eq(dossiersTable.id, data.id));
+    });
     await logActivity("paiement.pack", `Pack changé -> ${PACKS[data.pack].label}`, data.id);
   });
 
 /** Le client choisit de régler comptant ou par acompte de 50 % — régénère l'échéancier dû. */
 export const setModalitePaiement = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), modalite: z.enum(["comptant", "acompte"]) }))
+  .validator(z.object({ id: z.string().min(1).max(32), modalite: z.enum(["comptant", "acompte"]) }))
   .handler(async ({ data }) => {
-    await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite);
-    await db
-      .update(dossiersTable)
-      .set({ modalitePaiement: data.modalite, paiements })
-      .where(eq(dossiersTable.id, data.id));
+    await requireRoles("ceo", "reception", "back_office");
+    await db.transaction(async (tx) => {
+      const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!row) throw new Error("Dossier introuvable.");
+      const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite);
+      await tx
+        .update(dossiersTable)
+        .set({ modalitePaiement: data.modalite, paiements })
+        .where(eq(dossiersTable.id, data.id));
+    });
     await logActivity(
       "paiement.modalite",
       `Modalité de paiement -> ${MODALITE_LABEL[data.modalite]}`,
@@ -672,13 +713,13 @@ export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async
 export const setDecision = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      id: z.string(),
+      id: z.string().min(1).max(32),
       decision: z.enum(["en_attente", "approuve", "refuse"]),
       motif: z.string().max(500).optional(),
     }),
   )
   .handler(async ({ data }) => {
-    await requireUserId();
+    await requireRoles("ceo", "back_office");
     const decisionDate =
       data.decision === "en_attente" ? null : new Date().toLocaleDateString("fr-FR");
     // Le motif n'a de sens que sur un refus : on le purge dans les autres cas plutôt que
@@ -706,17 +747,21 @@ export const setDecision = createServerFn({ method: "POST" })
 export const setJalon = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      id: z.string(),
+      id: z.string().min(1).max(32),
       jalon: z.enum(["recu", "france_visas", "rdv"]),
       fait: z.boolean(),
       reference: z.string().max(120).optional(),
-      date: z.string().optional(),
+      date: z.string().max(32).optional(),
     }),
   )
   .handler(async ({ data }) => {
     await requireUserId();
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     if (!row) throw new Error("Dossier introuvable.");
+    // Date brute refusée si elle n'est pas un ISO jour : la colonne rdv_date pilote
+    // l'affichage et ne doit pas accueillir de texte libre.
+    const rdvDate =
+      data.fait && data.date && /^\d{4}-\d{2}-\d{2}$/.test(data.date) ? data.date : null;
     const horodatage = data.fait ? new Date().toLocaleDateString("fr-FR") : null;
 
     if (data.jalon === "recu") {
@@ -755,7 +800,7 @@ export const setJalon = createServerFn({ method: "POST" })
       .update(dossiersTable)
       .set({
         rdvPris: data.fait,
-        rdvDate: data.fait ? data.date || null : null,
+        rdvDate,
         rdvLe: horodatage,
       })
       .where(eq(dossiersTable.id, data.id));
@@ -787,43 +832,38 @@ export const ajouterNote = createServerFn({ method: "POST" })
       date: new Date().toLocaleString("fr-FR"),
     };
     // Les plus récentes en tête : c'est ce qu'on veut lire en ouvrant le dossier.
-    await db
-      .update(dossiersTable)
-      .set({ notesAgent: [note, ...row.notesAgent] })
-      .where(eq(dossiersTable.id, data.id));
+    await db.transaction(async (tx) => {
+      const frais = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!frais) throw new Error("Dossier introuvable.");
+      await tx
+        .update(dossiersTable)
+        .set({ notesAgent: [note, ...frais.notesAgent] })
+        .where(eq(dossiersTable.id, data.id));
+    });
     await logActivity("dossier.note", `Note ajoutée : ${note.texte.slice(0, 120)}`, data.id);
   });
 
 export const supprimerNote = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string(), index: z.number().min(0) }))
+  .validator(z.object({ id: z.string().min(1).max(32), index: z.number().int().min(0) }))
   .handler(async ({ data }) => {
     await requireUserId();
-    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
-    if (!row) throw new Error("Dossier introuvable.");
-    const restantes = row.notesAgent.filter((_, i) => i !== data.index);
-    await db
-      .update(dossiersTable)
-      .set({ notesAgent: restantes })
-      .where(eq(dossiersTable.id, data.id));
+    await db.transaction(async (tx) => {
+      const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+      if (!row) throw new Error("Dossier introuvable.");
+      const restantes = row.notesAgent.filter((_, i) => i !== data.index);
+      await tx
+        .update(dossiersTable)
+        .set({ notesAgent: restantes })
+        .where(eq(dossiersTable.id, data.id));
+    });
     await logActivity("dossier.note_suppression", "Note d'équipe supprimée", data.id);
   });
 
 export const updateClient = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      id: z.string(),
-      client: z.object({
-        nom: z.string().min(1),
-        telephone: z.string().min(1),
-        ville: z.string().min(1),
-        naissance: z.string(),
-        voyageDebut: z.string().nullable().default(null),
-        voyageFin: z.string().nullable().default(null),
-        passeportNumero: z.string().nullable().default(null),
-        passeportDelivrance: z.string().nullable().default(null),
-        passeportExpiration: z.string().nullable().default(null),
-        passeportLieu: z.string().nullable().default(null),
-      }),
+      id: z.string().min(1).max(32),
+      client: clientInput,
     }),
   )
   .handler(async ({ data }) => {
@@ -848,9 +888,10 @@ export const updateClient = createServerFn({ method: "POST" })
   });
 
 export const deleteDossier = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string().min(1).max(32) }))
   .handler(async ({ data }) => {
-    await requireUserId();
+    // Destruction + cascade documents : CEO uniquement, avec trace.
+    await requireCeo();
     const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
     if (!row) throw new Error("Dossier introuvable.");
     await db.delete(dossiersTable).where(eq(dossiersTable.id, data.id));

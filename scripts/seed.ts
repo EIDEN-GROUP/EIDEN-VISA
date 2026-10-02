@@ -15,6 +15,9 @@ async function main() {
   const db = drizzle(client, { schema });
 
   const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+  // Compte bootstrap en CEO : sans lui, /ops (réservé CEO) est inatteignable après
+  // un db:setup frais (le défaut DB est "reception"). Installations existantes :
+  // passer le compte en CEO via /ops ou SQL (voir README §12).
   await db
     .insert(schema.users)
     .values({
@@ -22,6 +25,7 @@ async function main() {
       email: process.env.ADMIN_EMAIL.toLowerCase(),
       passwordHash,
       nom: "Accueil Eiden Visa",
+      role: "ceo",
     })
     .onConflictDoNothing({ target: schema.users.email });
 

@@ -372,7 +372,7 @@ function MyProfile() {
               </label>
               <Input
                 type="password"
-                placeholder="6 caractères minimum"
+                placeholder="12 caractères minimum"
                 value={pwNouveau}
                 onChange={(e) => setPwNouveau(e.target.value)}
               />
@@ -380,7 +380,7 @@ function MyProfile() {
             {pwError && <p className="text-sm text-[var(--stop)]">{pwError}</p>}
           </div>
           <DialogFooter>
-            <Button disabled={busy || !pwActuel || pwNouveau.length < 6} onClick={savePw}>
+            <Button disabled={busy || !pwActuel || pwNouveau.length < 12} onClick={savePw}>
               Changer
             </Button>
           </DialogFooter>

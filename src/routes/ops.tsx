@@ -4,7 +4,7 @@ import {
   useCurrentUser,
   useOpsUsers,
   useActivity,
-  useDossiers,
+  useAlertesDossiers,
   usePaiementsSuivi,
   useAnalytics,
   ROLE_LABEL,
@@ -215,7 +215,8 @@ function Ops() {
 
   const { users, creer, changerRole } = useOpsUsers();
   const { activity } = useActivity();
-  const { dossiers } = useDossiers();
+  // Borné (300 actifs) : la synthèse n'a jamais besoin de la table entière.
+  const { dossiers } = useAlertesDossiers();
   const { suivi } = usePaiementsSuivi();
   const queryClient = useQueryClient();
 
@@ -396,7 +397,7 @@ function Ops() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="6 caractères min."
+                placeholder="12 caractères min."
               />
             </div>
             <div className="col-span-2">
@@ -417,7 +418,7 @@ function Ops() {
           </div>
           <DialogFooter>
             <Button
-              disabled={!nom.trim() || !email.trim() || password.length < 6}
+              disabled={!nom.trim() || !email.trim() || password.length < 12}
               onClick={onCreate}
             >
               Créer
@@ -431,7 +432,7 @@ function Ops() {
 
 /* ------------------------------- Sections -------------------------------- */
 
-type AlerteRow = { d: ReturnType<typeof useDossiers>["dossiers"][number]; a: string[] };
+type AlerteRow = { d: ReturnType<typeof useAlertesDossiers>["dossiers"][number]; a: string[] };
 type Suivi = ReturnType<typeof usePaiementsSuivi>["suivi"];
 type Activity = ReturnType<typeof useActivity>["activity"];
 
