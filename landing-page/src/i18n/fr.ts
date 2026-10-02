@@ -13,8 +13,8 @@ export const fr = {
   },
   nav: {
     accueil: "Accueil",
-    services: "Nos services",
     visa: "Méthodes",
+    services: "Nos services",
     packs: "Nos packs",
     faq: "FAQ",
   },

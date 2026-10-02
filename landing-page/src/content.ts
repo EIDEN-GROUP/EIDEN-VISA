@@ -92,7 +92,7 @@ export const PAYS_SCHENGEN = [
 ] as const;
 
 /** Ancres des sections, dans l'ordre du menu (libellés : `t.nav`). */
-export const NAV = ["accueil", "services", "visa", "packs", "faq"] as const;
+export const NAV = ["accueil", "visa", "services", "packs", "faq"] as const;
 
 export const HERO_ICONES: LucideIcon[] = [UserRound, Clock, House];
 

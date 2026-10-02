@@ -330,6 +330,21 @@
   background: linear-gradient(to left, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 85%);
   filter: blur(1.5px);
 }
+/* Sens arabe : vol miroir (droite → gauche). Le masque part du bord droit
+   (inclinaison -100deg, symétrique du 100deg). Les traînées sont retournées avec
+   l'avion par le `scaleX: -1` — aucune surcharge ici (sinon double miroir). */
+[dir="rtl"] .loader-rideau {
+  -webkit-mask-image: linear-gradient(
+    -100deg,
+    transparent calc(var(--cut) - var(--plume)),
+    #000 var(--cut)
+  );
+  mask-image: linear-gradient(
+    -100deg,
+    transparent calc(var(--cut) - var(--plume)),
+    #000 var(--cut)
+  );
+}
 
 /* Méthode : halo qui pulse autour de l'étape où l'avion vient d'arriver. */
 @keyframes eiden-pulse {

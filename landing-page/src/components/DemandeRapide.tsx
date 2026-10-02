@@ -55,6 +55,7 @@ import {
 import { useLangue } from "../i18n";
 import type { Dictionnaire } from "../i18n/fr";
 import { useIntroPrete } from "../lib/intro";
+import { saveContact } from "../lib/save-contact";
 import { EASE_OUT } from "./motion";
 
 type Textes = Dictionnaire["demande"];
@@ -106,6 +107,66 @@ function aujourdhui() {
 }
 
 const jjmmaaaa = (iso: string) => iso.split("-").reverse().join("/");
+
+/** Brouillon local : fermer la popup puis la rouvrir retrouve tout ce qui était saisi. */
+const CLE_BROUILLON = "eiden-demande-v1";
+
+function estValeur<T extends readonly string[]>(liste: T, v: string): v is T[number] {
+  return (liste as readonly string[]).includes(v);
+}
+
+/** Relit le brouillon en validant chaque champ ; null si absent ou illisible. */
+function chargerBrouillon(): { donnees: Donnees; etape: number } | null {
+  try {
+    const brut = window.localStorage.getItem(CLE_BROUILLON);
+    if (!brut) return null;
+    const parsed = JSON.parse(brut) as {
+      donnees?: Partial<Record<Champ, unknown>>;
+      etape?: unknown;
+    };
+    const b = parsed.donnees ?? {};
+    const texte = (v: unknown) => (typeof v === "string" ? v : "");
+    const typeVisa = texte(b.typeVisa);
+    const destination = texte(b.destination);
+    const pack = texte(b.pack);
+    const donnees: Donnees = {
+      ...VIDE,
+      nom: texte(b.nom),
+      prenom: texte(b.prenom),
+      email: texte(b.email),
+      telephone: texte(b.telephone),
+      typeVisa: estValeur(TYPES_VISA, typeVisa) ? typeVisa : "",
+      depart: texte(b.depart),
+      retour: texte(b.retour),
+      destination:
+        destination === "plusieurs" || estValeur(PAYS_SCHENGEN, destination) ? destination : "",
+      pack: pack === "indecis" || estValeur(PACK_IDS, pack) ? pack : "",
+      ville: texte(b.ville),
+      demandeurs:
+        typeof b.demandeurs === "number"
+          ? Math.min(MAX_DEMANDEURS, Math.max(1, Math.floor(b.demandeurs)))
+          : 1,
+    };
+    // Long séjour : pas de date de retour.
+    if (estLong(donnees.typeVisa)) donnees.retour = "";
+    const etape =
+      typeof parsed.etape === "number"
+        ? Math.min(ETAPES.length - 1, Math.max(0, Math.floor(parsed.etape)))
+        : 0;
+    return { donnees, etape };
+  } catch {
+    return null;
+  }
+}
+
+/** Oublie le brouillon (après un envoi réussi). Silencieux si indisponible. */
+function effacerBrouillon() {
+  try {
+    window.localStorage.removeItem(CLE_BROUILLON);
+  } catch {
+    /* stockage indisponible : le formulaire marche sans */
+  }
+}
 
 function valider(d: Donnees, champs: Champ[], e: Textes["erreurs"]): Erreurs {
   const err: Erreurs = {};
@@ -246,8 +307,9 @@ function Bloc({
 type OptionListe = {
   valeur: string;
   libelle: string;
-  /** Pictogramme dans une tuile, ou à défaut un code court (ex. code pays). */
+  /** Pictogramme dans une tuile, drapeau rond, ou à défaut un code court (ex. code pays). */
   icone?: LucideIcon;
+  drapeau?: string;
   code?: string;
 };
 
@@ -268,6 +330,23 @@ const ICONES_VISA: Record<TypeVisa, LucideIcon> = {
 
 function Tuile({ option, choisie }: { option: OptionListe; choisie: boolean }) {
   const Icone = option.icone;
+  // Drapeau ondulant du pays (sélecteur de destination) : vague réelle via le
+  // filtre SVG partagé #drapeau-vague + reflet de plis de tissu. Le filtre est
+  // statique (aucune animation, aucun coût continu) ; sans lui, le drapeau
+  // reste un simple rectangle avec son reflet.
+  if (option.drapeau)
+    return (
+      <span aria-hidden="true" className="relative h-5 w-7 shrink-0">
+        <img
+          src={option.drapeau}
+          alt=""
+          draggable={false}
+          className="h-full w-full rounded-[5px] object-cover ring-1 ring-line"
+          style={{ filter: "url(#drapeau-vague)" }}
+        />
+        <span className="pointer-events-none absolute inset-0 rounded-[5px] bg-gradient-to-r from-white/30 via-transparent to-black/20" />
+      </span>
+    );
   if (!Icone && !option.code) return null;
   return (
     <span
@@ -593,9 +672,15 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
   const fermerRef = useRef(fermer);
   fermerRef.current = fermer;
 
-  const [etape, setEtape] = useState(0);
+  const [brouillonInitial] = useState(chargerBrouillon);
+  const [etape, setEtape] = useState(brouillonInitial?.etape ?? 0);
   const [sens, setSens] = useState(1);
-  const [d, setD] = useState<Donnees>(() => ({ ...VIDE, pack: pack ?? "" }));
+  const [d, setD] = useState<Donnees>(() => ({
+    ...VIDE,
+    ...brouillonInitial?.donnees,
+    // Un pack choisi via un CTA (« Choisir ce pack ») prime sur le brouillon.
+    pack: pack ?? brouillonInitial?.donnees?.pack ?? "",
+  }));
   const [erreurs, setErreurs] = useState<Erreurs>({});
 
   const mobile = useMemo(() => window.matchMedia("(max-width: 639px)").matches, []);
@@ -673,6 +758,16 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     return () => clearTimeout(minuterie);
   }, [etape, mobile]);
 
+  // Brouillon local : chaque saisie est conservée ; rouvrir la popup retrouve
+  // tout (champs + étape). Silencieux si le stockage est indisponible.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CLE_BROUILLON, JSON.stringify({ version: 1, etape, donnees: d }));
+    } catch {
+      /* stockage indisponible : le formulaire marche sans */
+    }
+  }, [d, etape]);
+
   const maj = <C extends Champ>(c: C, v: Donnees[C]) => {
     setD((p) => ({
       ...p,
@@ -688,7 +783,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     carte.current?.querySelector("[data-lenis-prevent]")?.scrollTo({ top: 0 });
   };
 
-  const suivant = () => {
+  const suivant = async () => {
     const err = valider(d, ETAPES[etape]!, D.erreurs);
     const premier = Object.keys(err)[0];
     if (premier) {
@@ -696,7 +791,30 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       carte.current?.querySelector<HTMLElement>(`#${CSS.escape(id(premier as Champ))}`)?.focus();
       return;
     }
-    if (etape === ETAPES.length - 1) window.open(lien, "_blank", "noopener,noreferrer");
+    if (etape === ETAPES.length - 1) {
+      // Sauvegarde Supabase en arrière-plan (silencieuse en cas d'échec),
+      // puis ouverture WhatsApp comme avant — les deux portent le même contenu.
+      await saveContact({
+        nom: d.nom.trim(),
+        prenom: d.prenom.trim(),
+        email: d.email.trim(),
+        telephone: d.telephone.trim(),
+        typeVisa: d.typeVisa,
+        depart: d.depart,
+        retour: long ? "" : d.retour,
+        destination: d.destination,
+        pack: d.pack,
+        ville: d.ville.trim(),
+        demandeurs: d.demandeurs,
+        langue,
+        message: message(d, t),
+        pageUrl: window.location.href,
+        userAgent: window.navigator.userAgent,
+      }).catch(() => false);
+      // Envoi réussi : le brouillon est oublié, la prochaine ouverture repart de zéro.
+      effacerBrouillon();
+      window.open(lien, "_blank", "noopener,noreferrer");
+    }
     aller(etape + 1);
   };
 
@@ -790,7 +908,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
           noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            suivant();
+            void suivant();
           }}
           className="flex min-h-0 flex-1 flex-col"
         >
@@ -968,7 +1086,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                           ...pays.map(([code, nom]) => ({
                             valeur: code,
                             libelle: nom,
-                            code: code.toUpperCase(),
+                            drapeau: `/images/flags/${code}.svg`,
                           })),
                         ]}
                         placeholder={D.exemples.destination}
@@ -1201,6 +1319,28 @@ export function DemandeRapide({ children }: { children: ReactNode }) {
 
   return (
     <ContexteDemande.Provider value={ouvrir}>
+      {/* Filtre SVG partagé des drapeaux : vague statique (feTurbulence +
+          feDisplacementMap), montée une seule fois pour toute la landing. */}
+      <svg aria-hidden="true" focusable="false" className="absolute size-0">
+        <defs>
+          <filter id="drapeau-vague" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.018 0.035"
+              numOctaves="1"
+              seed="7"
+              result="bruit"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="bruit"
+              scale="2.2"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        </defs>
+      </svg>
       {children}
       <div className="pointer-events-none fixed end-4 bottom-4 z-30 flex items-start sm:end-6 sm:bottom-6">
         {/* Étiquette de bagage : papier kraft, écriture manuscrite, œillet et fil vers le
