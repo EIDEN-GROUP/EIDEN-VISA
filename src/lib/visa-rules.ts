@@ -55,7 +55,9 @@ export interface Profile {
   duree?: "court" | "long";
   /** Q22 — où le demandeur séjourne pendant le voyage. */
   hebergement?: "hotel" | "personne" | "autre";
-  /** Moyen de transport — pose la pièce « billet aller-retour » sur le bon support. */
+  /** Moyen de transport — pose la pièce « billet aller-retour » sur le bon support.
+   *  « avion » / « bateau » sont proposés ; « autobus » n'est plus proposé mais reste
+   *  dans le type pour les dossiers enregistrés avant le retrait. */
   transport?: "avion" | "autobus" | "bateau";
   /** En vue de mariage : certificat de la mairie (bans publiés sans opposition) disponible. */
   bansCertificat?: boolean;
@@ -418,7 +420,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     level: "attention",
     docs: [
       "Convention de stage signée entre l'employeur étranger, l'entreprise en France et le stagiaire",
-      "Pré-réservation du billet aller-retour (avion, autobus ou bateau)",
+      "Pré-réservation du billet aller-retour (avion ou bateau)",
       "Justificatifs de ressources équivalents au SMIC brut mensuel",
       "Attestation d'accueil (hébergement chez un particulier) ou réservation d'hôtel ou justificatif de location/propriété d'un bien immobilier",
       "Attestation d'assurance médicale de voyage",
@@ -467,13 +469,15 @@ const PASSEPORT_FORMULAIRE = [
 ];
 const ASSURANCE_VOYAGE = "Assurance voyage";
 
-/** Pièce transport — précise le support choisi quand le demandeur l'a indiqué. */
+/** Pièce transport — précise le support choisi quand le demandeur l'a indiqué.
+ *  « avion » et « bateau » sont les seuls supports proposés au questionnaire ; « autobus »
+ *  n'est plus posé mais reste lu pour les dossiers créés avant le retrait. */
 function transportDoc(t?: Profile["transport"]): string {
   const support =
     t === "avion" ? "avion" : t === "autobus" ? "autobus" : t === "bateau" ? "bateau" : null;
   return support
     ? `Pré-réservation ou réservation du billet aller-retour (${support})`
-    : "Pré-réservation ou réservation du billet aller-retour (avion, autobus ou bateau)";
+    : "Pré-réservation ou réservation du billet aller-retour (avion ou bateau)";
 }
 
 function hebergementDoc(h?: Profile["hebergement"]): string {
@@ -1165,10 +1169,28 @@ export interface TreeNode {
   fieldsResult?: boolean;
 }
 
+/**
+ * Clés du bloc « personne hébergeante », posé EN DERNIER dans le questionnaire.
+ *
+ * L'hébergeant conditionne la pièce « attestation d'accueil » mais n'a rien à faire
+ * du motif, de la durée ni du financement : le poser ici, au milieu du tronc commun,
+ * interrompait le client pour des questions sans rapport avec ce qu'il venait de
+ * répondre. `hebergement` ne mémorise plus que le drapeau « chez une personne » et
+ * file vers `transport` ; c'est `goToResult` (qualification.tsx) qui, au terme de
+ * N'IMPORTE QUELLE branche, bascule sur `PERSONNE_QUI` puis revient résoudre le cas
+ * memorisé via `PERSONNE_FIN`.
+ *
+ * Un seul point d'entrée à instrumenter plutôt qu'une insertion dans les ~25 branches
+ * qui se terminent chacune sur un résultat : un motif oublié ne peut pas&display
+ * le bloc à moitié.
+ */
+export const PERSONNE_QUI = "personne_qui";
+export const PERSONNE_FIN = "personne_fin";
+
 export const TREE: Record<string, TreeNode> = {
   /* ============ ÉTAPE 1 — ANTÉCÉDENTS DE VISA ============ */
   start: {
-    q: "Avez-vous déjà obtenu un visa pour la France ?",
+    q: "Avez-vous déjà obtenu un visa Schengen au cours des 59 derniers mois ?",
     help: "Étape 1 — Antécédents de visa.",
     opts: [
       { l: "Oui", n: "q2", set: { visaAnterieur: true } },
@@ -1219,13 +1241,15 @@ export const TREE: Record<string, TreeNode> = {
     next: "hebergement",
   },
 
-  /* ============ HÉBERGEMENT / FINANCEMENT — communes, avant le motif ============ */
+  /* ============ HÉBERGEMENT — commun, avant le motif ============ */
   hebergement: {
     q: "Où allez-vous séjourner pendant votre voyage ?",
     help: "Question commune posée avant le motif du voyage : elle s'applique à toutes les branches court séjour.",
     opts: [
       { l: "Hôtel / hébergement touristique", n: "hotel_fields", set: { hebergement: "hotel" } },
-      { l: "Chez une personne", n: "personne_qui", set: { hebergement: "personne" } },
+      // « Chez une personne » ne déclenche plus les questions d'hébergeant ici : elles sont
+      // posées en dernier, une fois le dossier qualifié (voir PERSONNE_QUI).
+      { l: "Chez une personne", n: "transport", set: { hebergement: "personne" } },
       { l: "Autre (logement personnel)", n: "transport", set: { hebergement: "autre" } },
     ],
   },
@@ -1246,6 +1270,10 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Non", n: "transport" },
     ],
   },
+  /* ============ PERSONNE HÉBERGEANTE — bloc différé, posé EN DERNIER ============
+     Ces quatre nœuds ne sont PAS dans le tronc commun : `hebergement` saute par-dessus,
+     et `goToResult` (qualification.tsx) y revient au terme de la branche. Ils restent
+     déclarés ici, entre `hebergement` et `transport`, pour rester lisibles. */
   personne_qui: {
     q: "Chez qui allez-vous séjourner ?",
     opts: [
@@ -1268,21 +1296,26 @@ export const TREE: Record<string, TreeNode> = {
   personne_nationalite: {
     q: "Cette personne est-elle de nationalité française ?",
     opts: [
-      { l: "Oui", n: "transport" },
+      { l: "Oui", n: "personne_fields2" },
       { l: "Non", n: "personne_fields2" },
     ],
   },
   personne_fields2: {
     q: "Nationalité / statut de la personne hébergeante.",
     fields: [{ key: "personne_nat_statut", label: "Nationalité / statut" }],
-    next: "transport",
+    // Dernière question du questionnaire : on rend la main au cas mis de côté.
+    next: PERSONNE_FIN,
+    fieldsResult: true,
   },
+
+  /* ============ TRANSPORT / FINANCEMENT / DURÉE — communes, avant le motif ============ */
   transport: {
     q: "Quel est votre moyen de transport pour vous rendre en France ?",
     help: "Déclenche la pièce « pré-réservation ou réservation du billet aller-retour ».",
     opts: [
       { l: "Avion", n: "financement", set: { transport: "avion" } },
-      { l: "Autobus", n: "financement", set: { transport: "autobus" } },
+      // « Autobus » retiré du questionnaire (décision Eiden) — la valeur reste lisible
+      // dans le type pour les dossiers créés avant le retrait.
       { l: "Bateau", n: "financement", set: { transport: "bateau" } },
     ],
   },
