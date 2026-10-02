@@ -55,6 +55,7 @@ import {
 import { useLangue } from "../i18n";
 import type { Dictionnaire } from "../i18n/fr";
 import { useIntroPrete } from "../lib/intro";
+import { saveContact } from "../lib/save-contact";
 import { EASE_OUT } from "./motion";
 
 type Textes = Dictionnaire["demande"];
@@ -688,7 +689,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     carte.current?.querySelector("[data-lenis-prevent]")?.scrollTo({ top: 0 });
   };
 
-  const suivant = () => {
+  const suivant = async () => {
     const err = valider(d, ETAPES[etape]!, D.erreurs);
     const premier = Object.keys(err)[0];
     if (premier) {
@@ -696,7 +697,28 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       carte.current?.querySelector<HTMLElement>(`#${CSS.escape(id(premier as Champ))}`)?.focus();
       return;
     }
-    if (etape === ETAPES.length - 1) window.open(lien, "_blank", "noopener,noreferrer");
+    if (etape === ETAPES.length - 1) {
+      // Sauvegarde Supabase en arrière-plan (silencieuse en cas d'échec),
+      // puis ouverture WhatsApp comme avant — les deux portent le même contenu.
+      await saveContact({
+        nom: d.nom.trim(),
+        prenom: d.prenom.trim(),
+        email: d.email.trim(),
+        telephone: d.telephone.trim(),
+        typeVisa: d.typeVisa,
+        depart: d.depart,
+        retour: long ? "" : d.retour,
+        destination: d.destination,
+        pack: d.pack,
+        ville: d.ville.trim(),
+        demandeurs: d.demandeurs,
+        langue,
+        message: message(d, t),
+        pageUrl: window.location.href,
+        userAgent: window.navigator.userAgent,
+      }).catch(() => false);
+      window.open(lien, "_blank", "noopener,noreferrer");
+    }
     aller(etape + 1);
   };
 
@@ -790,7 +812,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
           noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            suivant();
+            void suivant();
           }}
           className="flex min-h-0 flex-1 flex-col"
         >
