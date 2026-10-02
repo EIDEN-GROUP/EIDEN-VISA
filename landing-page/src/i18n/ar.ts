@@ -14,8 +14,8 @@ export const ar: Dictionnaire = {
   },
   nav: {
     accueil: "الرئيسية",
+    visa: "منهجيتنا",
     services: "خدماتنا",
-    visa: "أنواع التأشيرات",
     packs: "باقاتنا",
     faq: "الأسئلة الشائعة",
   },

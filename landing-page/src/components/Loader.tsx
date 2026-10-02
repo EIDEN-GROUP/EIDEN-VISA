@@ -1,6 +1,7 @@
 // Écran d'ouverture : un ciel au coucher du soleil couvre la page, puis un avion le
-// traverse de gauche à droite. Derrière lui, le ciel est découpé comme un rideau
-// (masque à bord fondu) et la landing apparaît.
+// traverse (de gauche à droite ; miroir droite → gauche en arabe, voir `rtl`
+// ci-dessous et les surcharges `[dir="rtl"]` dans styles.css). Derrière lui, le ciel
+// est découpé comme un rideau (masque à bord fondu) et la landing apparaît.
 import { useLenis } from "lenis/react";
 import { useEffect, useRef } from "react";
 import { useLangue } from "../i18n";
@@ -82,17 +83,22 @@ export function Loader({ onReady, onDone }: Props) {
       const duree = gsap.utils.clamp(1.9, 2.8, distance / 880);
       const rtl = document.documentElement.dir === "rtl";
 
+      // En arabe le vol est miroir (droite → gauche) : la queue est à droite et le
+      // masque (orienté -100deg, compté depuis le bord droit) compte depuis la droite.
       const couper = () => {
         const r = avion.getBoundingClientRect();
-        rideau.style.setProperty("--cut", `${r.left + r.width * BORD_RIDEAU}px`);
+        const queue = rtl ? r.right - r.width * BORD_RIDEAU : r.left + r.width * BORD_RIDEAU;
+        rideau.style.setProperty("--cut", `${rtl ? vw - queue : queue}px`);
       };
 
       gsap.set(avion, {
         visibility: "visible",
-        x: -w * 1.1,
+        x: rtl ? vw + w * 0.1 : -w * 1.1,
         y: depart - h / 2,
-        rotate: 3,
-        scale: 0.82,
+        rotate: rtl ? -3 : 3,
+        // Miroir : l'image regarde vers la gauche. `scale` seul réécrirait scaleX
+        // pendant le vol, d'où scaleX/scaleY explicites (valeurs miroirs de 0.82→1.06).
+        ...(rtl ? { scaleX: -0.82, scaleY: 0.82 } : { scale: 0.82 }),
       });
       couper();
 
@@ -104,10 +110,10 @@ export function Loader({ onReady, onDone }: Props) {
           },
         })
         .to(avion, {
-          x: vw + w * 0.15,
+          x: rtl ? -w * 1.15 : vw + w * 0.15,
           y: arrivee - h / 2,
-          rotate: -4,
-          scale: 1.06,
+          rotate: rtl ? 4 : -4,
+          ...(rtl ? { scaleX: -1.06, scaleY: 1.06 } : { scale: 1.06 }),
           duration: duree,
           ease: "sine.inOut",
           onUpdate: couper,
@@ -194,7 +200,9 @@ export function Loader({ onReady, onDone }: Props) {
         aria-hidden="true"
         className="invisible absolute top-0 left-0 w-[clamp(280px,52vw,900px)] will-change-transform"
       >
-        {/* Traînées de condensation, sorties des réacteurs, derrière l'avion. */}
+        {/* Traînées de condensation, sorties des réacteurs, derrière l'avion.
+            Elles sont DANS le bloc avion : le `scaleX: -1` arabe les retourne
+            avec l'image, donc aucune surcharge RTL ici (sinon double miroir). */}
         <span data-trainee className="loader-trainee top-[63%] right-[54%]" />
         <span data-trainee className="loader-trainee top-[72%] right-[26%]" />
         <img

@@ -39,12 +39,13 @@ npm run preview    # sert dist/ sur http://localhost:5181
 | `src/lib/gsap.ts`                                | Plugins GSAP + `replayOnScroll` (rejoue les animations en descendant **et** en remontant).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `src/styles.css`                                 | Tokens couleur/typo de la maquette (crème, marine, rouge `#ae0a1a`) ; tampons Schengen en filigrane (`.filigrane-rond` sur `main` : grand, mi-page à droite ; `.filigrane-hero` : gauche du hero ; `.filigrane-rect` : bas de FAQ).                                                                                                                                                                                                                                                                                                                                                                                 |
 | `index.html`                                     | `<title>`, meta description, polices Google (Newsreader, DM Sans, La Belle Aurore, Playfair Display).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `public/images/`                                 | Photos (webp) issues de cosmos.so ; `public/` : favicon, apple-touch-icon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `public/images/`                                 | Photos (webp) issues de cosmos.so ; `public/` : favicon, apple-touch-icon. Drapeaux des destinations : `public/images/flags/*.svg` (29 SVG 1:1, source flagcdn.com — voir Règles).                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## Animations
 
 - **FR :** loader au chargement (ciel + marque, puis un avion traverse l'écran et découpe
-  le ciel comme un rideau pour révéler la page ; le scroll est figé pendant le vol). La
+  le ciel comme un rideau pour révéler la page — de gauche à droite, **miroir de droite
+  à gauche en arabe** ; le scroll est figé pendant le vol). La
   barre de défilement de la page reste masquée pendant le loader et jusqu'au premier
   défilement (classe `scroll-vu` sur `<html>`, posée par `App.tsx`). Au
   scroll, chaque bloc, texte et bouton a une **entrée et une sortie visibles** dans les deux
@@ -53,7 +54,7 @@ npm run preview    # sert dist/ sur http://localhost:5181
   en pointillés (GSAP MotionPath), pause hors écran. `prefers-reduced-motion` : pas de loader, pas de Lenis, textes
   affichés directement.
 - **EN:** opening loader (sky + wordmark, then a plane flies across and cuts the sky like a
-  curtain to reveal the page; scroll locked during the flight). The page scrollbar stays
+  curtain to reveal the page — left to right, **mirrored right to left in Arabic**; scroll locked during the flight). The page scrollbar stays
   hidden during the loader and until the first scroll (`scroll-vu` class on `<html>`, set by
   `App.tsx`). On scroll, every block, text
   and button has a **visible entrance and exit** in both directions; the hero fades out with
@@ -113,3 +114,10 @@ WhatsApp-only (graceful, no error shown).
   `VITE_` (fonction `api/*` côté serveur uniquement) ; le navigateur ne voit que la clé
   anon en INSERT seul. / Secrets are never `VITE_`-prefixed; the browser only sees the
   INSERT-only anon key.
+- Demande rapide : chaque destination affiche son **drapeau ondulant** (`OptionListe.drapeau`
+  → `public/images/flags/`, vague via le filtre SVG partagé `#drapeau-vague` + reflet de
+  plis, les autres sélecteurs gardent tuiles icône/code) ; le
+  **brouillon est persisté** en `localStorage` (`eiden-demande-v1`, champs + étape,
+  validé à la relecture, oublié après un envoi réussi) — aucune donnée ne transite hors
+  l'envoi WhatsApp/Supabase déjà existant. / Destination shows a waving flag per country;
+  the draft persists in `localStorage` and is cleared after a successful send.
