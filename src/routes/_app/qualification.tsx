@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   TREE,
+  PERSONNE_FIN,
+  PERSONNE_QUI,
   getFixedCase,
   buildCourtSejour,
   buildLongSejour,
@@ -121,6 +123,11 @@ function Qualification() {
   const [profile, setProfile] = useState<Profile>({});
   const [history, setHistory] = useState<Step[]>([]);
   const [result, setResult] = useState<{ caseKey: string; c: CaseResult } | null>(null);
+  /** Cas atteint en fin de branche, mis de côté le temps de poser les questions
+   *  d'hébergeant (dernier bloc du questionnaire). `enCours` = bloc en cours de saisie ;
+   *  `false` = cas déjà résolu, la clé est gardée pour que « Revenir sur la dernière
+   *  question » redonne le même résultat. */
+  const [cas, setCas] = useState<{ key: string; enCours: boolean } | null>(null);
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
   const [ville, setVille] = useState("");
@@ -173,14 +180,38 @@ function Qualification() {
     emblaApi.scrollTo(history.length);
   }, [emblaApi, history.length, nodeKey]);
 
+  /**
+   * Unique point d'arrivée vers un résultat : `opt.r` (choix) ou `node.fieldsResult`
+   * (saisie) y aboutissent tous les deux.
+   *
+   * C'est ici qu'est posé le bloc « personne hébergeante » EN DERNIER. Quand la branche
+   * se termine chez un particulier, le résultat n'est pas affiché tout de suite : on met
+   * le cas en attente et on enchaîne sur `PERSONNE_QUI`. `PERSONNE_FIN` referme la boucle.
+   * Un seul point à instrumenter plutôt qu'une insertion dans chaque branche terminale :
+   * impossible d'oublier un motif, donc impossible de laisser un dossier sans la pièce
+   * « attestation d'accueil ».
+   */
   function goToResult(key: string, nextProfile: Profile) {
+    // Chez un particulier : on ne montre pas encore le résultat, on pose les questions
+    // d'hébergeant en dernier. `enCours` empêche la boucle infinie (PERSONNE_FIN rend
+    // la main au cas mémorisé, sans se re-déclencher lui-même).
+    if (key !== PERSONNE_FIN && nextProfile.hebergement === "personne" && !cas?.enCours) {
+      setCas({ key, enCours: true });
+      setResult(null);
+      setNodeKey(PERSONNE_QUI);
+      return;
+    }
+    const finalKey = key === PERSONNE_FIN ? (cas?.key ?? key) : key;
     const c =
-      key === "DYNAMIC"
+      finalKey === "DYNAMIC"
         ? buildCourtSejour(nextProfile)
-        : key === "DYNAMIC_LS"
+        : finalKey === "DYNAMIC_LS"
           ? buildLongSejour(nextProfile)
-          : (getFixedCase(key) ?? buildCourtSejour(nextProfile));
-    setResult({ caseKey: key, c });
+          : (getFixedCase(finalKey) ?? buildCourtSejour(nextProfile));
+    // La clé reste mémorisée après résolution : « Revenir sur la dernière question »
+    // puis revalider doit redonner le MÊME cas, pas un repli sur le court séjour.
+    setCas({ key: finalKey, enCours: false });
+    setResult({ caseKey: finalKey, c });
   }
 
   function choose(opt: NonNullable<(typeof node)["opts"]>[number]) {
@@ -221,6 +252,7 @@ function Qualification() {
     setProfile({});
     setHistory([]);
     setResult(null);
+    setCas(null);
     setFieldValues({});
     setCentre(CENTRES[0]);
     setModalite("comptant");
