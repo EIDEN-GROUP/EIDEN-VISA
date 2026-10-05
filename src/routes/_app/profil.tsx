@@ -225,7 +225,7 @@ function MyProfile() {
                       fontSize: 12,
                     }}
                     cursor={{ fill: "var(--muted)" }}
-                    formatter={(v: number, _n, p) => [`${v} dossier(s)`, p.payload.label]}
+                    formatter={(v, _n, p) => [`${v} dossier(s)`, p.payload.label]}
                   />
                   <Bar dataKey="n" fill="var(--primary)" radius={[4, 4, 0, 0]} barSize={26}>
                     <LabelList

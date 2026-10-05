@@ -52,11 +52,14 @@ function DossiersList() {
 
   // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête —
   // à l'échelle réelle (potentiellement des millions de lignes) une requête par lettre serait intenable.
+  // La page retombe à 1 quand la requête effective change (dans le délai, pas dans un effet).
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    const t = setTimeout(() => {
+      setDebouncedQ(q.trim());
+      setPage(1);
+    }, 300);
     return () => clearTimeout(t);
   }, [q]);
-  useEffect(() => setPage(1), [debouncedQ, niveau, range, mine]);
 
   const params = useMemo(
     () => ({ page, pageSize: PAGE_SIZE, search: debouncedQ || undefined, niveau, range, mine }),
@@ -123,7 +126,13 @@ function DossiersList() {
             className="pl-9"
           />
         </div>
-        <Select value={niveau} onValueChange={(v) => setNiveau(v as typeof niveau)}>
+        <Select
+          value={niveau}
+          onValueChange={(v) => {
+            setNiveau(v as typeof niveau);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Niveau" />
           </SelectTrigger>
@@ -134,11 +143,20 @@ function DossiersList() {
             <SelectItem value="complexe">Cas complexe</SelectItem>
           </SelectContent>
         </Select>
-        <DateRangeFilter value={range} onChange={setRange} />
+        <DateRangeFilter
+          value={range}
+          onChange={(v) => {
+            setRange(v);
+            setPage(1);
+          }}
+        />
         {user && (
           <div className="flex items-center gap-1 rounded-full border border-border p-1">
             <button
-              onClick={() => setMine(false)}
+              onClick={() => {
+                setMine(false);
+                setPage(1);
+              }}
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-medium",
                 !mine
@@ -149,7 +167,10 @@ function DossiersList() {
               Tous les dossiers
             </button>
             <button
-              onClick={() => setMine(true)}
+              onClick={() => {
+                setMine(true);
+                setPage(1);
+              }}
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-medium",
                 mine
