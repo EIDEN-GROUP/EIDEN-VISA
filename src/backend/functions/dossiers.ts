@@ -449,7 +449,7 @@ const dossierInput = z.object({
     lsTranscrit: z.enum(["oui", "non", "na"]).optional(),
     lsViabilite: z.boolean().optional(),
     details: z
-      .record(z.string().max(500))
+      .record(z.string(), z.string().max(500))
       .refine((v) => Object.keys(v).length <= 100, "Trop de détails.")
       .optional(),
   }),

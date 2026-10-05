@@ -189,7 +189,7 @@ export function AnalyticsPanel() {
                 <Tooltip
                   contentStyle={tooltipStyle}
                   cursor={{ fill: "var(--muted)" }}
-                  formatter={(v: number, _n, p) => [`${v} dossier(s)`, `Rôle : ${p.payload.role}`]}
+                  formatter={(v, _n, p) => [`${v} dossier(s)`, `Rôle : ${p.payload.role}`]}
                 />
                 <Bar dataKey="n" fill={C.primary} radius={[0, 4, 4, 0]} barSize={16}>
                   <LabelList dataKey="n" position="right" fill={C.ink} fontSize={11} />
@@ -209,8 +209,8 @@ export function AnalyticsPanel() {
                 <YAxis allowDecimals={false} width={28} {...axis} />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  labelFormatter={fmtWeek}
-                  formatter={(v: number) => [`${v}`, "Ouvertures"]}
+                  labelFormatter={(label) => fmtWeek(String(label ?? ""))}
+                  formatter={(v) => [`${v}`, "Ouvertures"]}
                 />
                 <Line
                   type="monotone"
@@ -228,8 +228,8 @@ export function AnalyticsPanel() {
                 <YAxis width={44} {...axis} tickFormatter={(v: number) => `${v / 1000}k`} />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  labelFormatter={fmtWeek}
-                  formatter={(v: number) => [`${v.toLocaleString("fr-FR")} MAD`, "Encaissé"]}
+                  labelFormatter={(label) => fmtWeek(String(label ?? ""))}
+                  formatter={(v) => [`${Number(v).toLocaleString("fr-FR")} MAD`, "Encaissé"]}
                 />
                 <Line
                   type="monotone"
@@ -298,7 +298,7 @@ export function AnalyticsPanel() {
                 <Tooltip
                   contentStyle={tooltipStyle}
                   cursor={{ fill: "var(--muted)" }}
-                  formatter={(v: number, _n, p) => [`${v} dossier(s)`, roleLabel(p.payload.role)]}
+                  formatter={(v, _n, p) => [`${v} dossier(s)`, roleLabel(p.payload.role)]}
                 />
                 <Bar dataKey="dossiers" fill={C.info} radius={[0, 4, 4, 0]} barSize={14}>
                   <LabelList dataKey="dossiers" position="right" fill={C.ink} fontSize={11} />
@@ -375,8 +375,8 @@ function Donut({
           </Pie>
           <Tooltip
             contentStyle={tooltipStyle}
-            formatter={(v: number, n) => [
-              `${v} (${total ? Math.round((v / total) * 100) : 0} %)`,
+            formatter={(v, n) => [
+              `${v} (${total ? Math.round((Number(v) / total) * 100) : 0} %)`,
               n,
             ]}
           />

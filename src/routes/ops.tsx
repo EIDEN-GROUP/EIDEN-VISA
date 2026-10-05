@@ -208,6 +208,74 @@ function OpsDenied() {
 
 /* -------------------------------------------------------------------------- */
 
+/** Corps de navigation de l'espace Ops — défini au niveau module (jamais pendant
+ * le rendu) pour ne pas recréer un composant à chaque passe. */
+function NavContenu({
+  nav,
+  section,
+  go,
+  onLogout,
+  onPick,
+}: {
+  nav: {
+    key: OpsSection;
+    label: string;
+    icon: typeof LayoutDashboard;
+    badge?: number | undefined;
+  }[];
+  section: OpsSection;
+  go: (s: OpsSection, u?: string) => void;
+  onLogout: () => void;
+  onPick?: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col text-rail-foreground">
+      <div className="hidden items-center gap-3 px-5 py-5 md:flex">
+        <img src={sealEiden} alt="" className="h-8 w-8 rounded-full bg-white p-0.5" />
+        <div>
+          <div className="font-display text-base font-semibold leading-none">Eiden Visa</div>
+          <div className="ref mt-1 text-rail-muted">Espace Ops</div>
+        </div>
+      </div>
+      <nav className="flex-1 space-y-0.5 px-3 py-4 md:py-2">
+        {nav.map((item) => {
+          const Icon = item.icon;
+          const active = section === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => {
+                go(item.key);
+                onPick?.();
+              }}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                active
+                  ? "bg-rail-active font-medium text-rail-foreground"
+                  : "text-rail-muted hover:bg-rail-active/50",
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+              <span className="flex-1 text-left">{item.label}</span>
+              {item.badge ? (
+                <span className="rounded-full bg-[var(--stop)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {item.badge}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </nav>
+      <button
+        onClick={onLogout}
+        className="flex items-center gap-2 px-5 py-4 text-sm text-rail-muted hover:text-rail-foreground"
+      >
+        <LogOut className="h-4 w-4" strokeWidth={1.5} /> Se déconnecter
+      </button>
+    </div>
+  );
+}
+
 function Ops() {
   const { s: section, u: userId } = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -263,53 +331,6 @@ function Ops() {
     { key: "activite", label: "Activité", icon: ScrollText },
   ];
 
-  const NavBody = ({ onPick }: { onPick?: () => void }) => (
-    <div className="flex h-full flex-col text-rail-foreground">
-      <div className="hidden items-center gap-3 px-5 py-5 md:flex">
-        <img src={sealEiden} alt="" className="h-8 w-8 rounded-full bg-white p-0.5" />
-        <div>
-          <div className="font-display text-base font-semibold leading-none">Eiden Visa</div>
-          <div className="ref mt-1 text-rail-muted">Espace Ops</div>
-        </div>
-      </div>
-      <nav className="flex-1 space-y-0.5 px-3 py-4 md:py-2">
-        {NAV.map((item) => {
-          const Icon = item.icon;
-          const active = section === item.key;
-          return (
-            <button
-              key={item.key}
-              onClick={() => {
-                go(item.key);
-                onPick?.();
-              }}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                active
-                  ? "bg-rail-active font-medium text-rail-foreground"
-                  : "text-rail-muted hover:bg-rail-active/50",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.badge ? (
-                <span className="rounded-full bg-[var(--stop)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  {item.badge}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </nav>
-      <button
-        onClick={onLogout}
-        className="flex items-center gap-2 px-5 py-4 text-sm text-rail-muted hover:text-rail-foreground"
-      >
-        <LogOut className="h-4 w-4" strokeWidth={1.5} /> Se déconnecter
-      </button>
-    </div>
-  );
-
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background md:flex-row">
       {/* Barre supérieure mobile */}
@@ -329,14 +350,20 @@ function Ops() {
             side="left"
             className="w-64 border-0 bg-rail p-0 [&>button]:z-10 [&>button]:bg-rail-active/70 [&>button]:p-1.5 [&>button]:text-rail-foreground [&>button]:opacity-90 [&>button]:hover:opacity-100"
           >
-            <NavBody onPick={() => setNavOpen(false)} />
+            <NavContenu
+              nav={NAV}
+              section={section}
+              go={go}
+              onLogout={onLogout}
+              onPick={() => setNavOpen(false)}
+            />
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Sidebar fixe desktop */}
       <aside className="hidden w-60 shrink-0 bg-rail md:block">
-        <NavBody />
+        <NavContenu nav={NAV} section={section} go={go} onLogout={onLogout} />
       </aside>
 
       {/* Content */}
