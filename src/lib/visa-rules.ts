@@ -1580,6 +1580,8 @@ export interface TreeOption {
   n: string; // id du noeud suivant, "DYNAMIC" = résultat assemblé, ou clé de cas figé si r=true
   set?: Profile;
   r?: boolean;
+  /** Option exclusive d'un nœud `multi` : la cocher décoche les autres (« Tous les frais »). */
+  excl?: boolean;
 }
 /** Un champ de saisie libre (nom, date, adresse...) — sans incidence sur la checklist. */
 export interface TreeField {
@@ -1597,6 +1599,9 @@ export interface TreeNode {
   help?: string;
   /** Nœud à choix (boutons) — mutuellement exclusif avec `fields`. */
   opts?: TreeOption[];
+  /** Choix multiples : plusieurs options cochables, validées d'un « Continuer ». Toutes les
+   * options d'un nœud `multi` doivent mener au même nœud suivant. */
+  multi?: boolean;
   /** Nœud de saisie libre — un ou plusieurs champs texte, validés en un seul « Continuer ». */
   fields?: TreeField[];
   /** Nœud suivant après validation des `fields`. "DYNAMIC" ou une clé de cas figé sont acceptés
@@ -1794,11 +1799,13 @@ export const TREE: Record<string, TreeNode> = {
   },
   garant_frais: {
     q: "Quels frais prend-elle en charge ?",
+    help: "Plusieurs réponses possibles.",
+    multi: true,
     opts: [
       { l: "Transport", n: "duree" },
       { l: "Hébergement", n: "duree" },
       { l: "Nourriture", n: "duree" },
-      { l: "Tous les frais", n: "duree" },
+      { l: "Tous les frais", n: "duree", excl: true },
       { l: "Autre", n: "duree" },
     ],
   },

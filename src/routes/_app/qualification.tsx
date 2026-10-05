@@ -41,7 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import stampApproved from "@/assets/decorations/stamp-visa-approved.png";
 import stampName from "@/assets/decorations/stamp-name.png";
 import stampFamily from "@/assets/decorations/stamp-family.png";
@@ -155,7 +155,14 @@ function Qualification() {
   const [diapo, setDiapo] = useState(0);
   const [peutReculer, setPeutReculer] = useState(false);
   const [peutAvancer, setPeutAvancer] = useState(false);
-  const [histoOuverte, setHistoOuverte] = useState(false);
+  const [histoOuverte, setHistoOuverte] = useState(true);
+  /** Options cochées d'un nœud à choix multiples (indices dans `node.opts`). */
+  const [multiPick, setMultiPick] = useState<{ nodeKey: string; sel: number[] }>({
+    nodeKey: "",
+    sel: [],
+  });
+  // La sélection appartient à un nœud : changer de question la remet à zéro sans effet.
+  const multiSel = multiPick.nodeKey === nodeKey ? multiPick.sel : [];
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -226,6 +233,27 @@ function Qualification() {
     setNodeKey(opt.n);
   }
 
+  function toggleMulti(i: number) {
+    const opt = node.opts![i]!;
+    const sel = multiSel.includes(i)
+      ? multiSel.filter((x) => x !== i)
+      : opt.excl
+        ? [i]
+        : [...multiSel.filter((x) => !node.opts![x]!.excl), i];
+    setMultiPick({ nodeKey, sel });
+  }
+
+  function submitMulti() {
+    const picked = [...multiSel].sort((a, b) => a - b).map((i) => node.opts![i]!);
+    if (!picked.length) return;
+    choose({
+      l: picked.map((o) => o.l).join(", "),
+      n: picked[0]!.n,
+      ...(picked[0]!.r ? { r: true } : {}),
+      set: Object.assign({}, ...picked.map((o) => o.set ?? {})),
+    });
+  }
+
   function submitFields() {
     if (!node.fields || !node.next) return;
     const nextProfile: Profile = {
@@ -256,7 +284,7 @@ function Qualification() {
     setFieldValues({});
     setCentre(CENTRES[0]);
     setModalite("comptant");
-    setHistoOuverte(false);
+    setHistoOuverte(true);
   }
 
   function retour() {
@@ -353,6 +381,42 @@ function Qualification() {
           </Button>
         )}
       </div>
+
+      {/* Réponses données : toujours en haut, ouvertes par défaut, pour que l'agent voie
+          d'un coup d'œil ce qui a été répondu — pendant les questions comme sur le résultat. */}
+      {history.length > 0 && (
+        <div className="rounded-xl border border-border bg-muted/30">
+          <button
+            onClick={() => setHistoOuverte((o) => !o)}
+            className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
+          >
+            <span className="text-sm font-medium text-foreground">
+              {history.length} réponse{history.length > 1 ? "s" : ""} donnée
+              {history.length > 1 ? "s" : ""}
+            </span>
+            <span className="flex items-center gap-1 text-xs text-primary">
+              {histoOuverte ? "Masquer" : "Voir le détail"}
+              <ChevronRight
+                className={cn("h-3.5 w-3.5 transition-transform", histoOuverte && "rotate-90")}
+              />
+            </span>
+          </button>
+          {histoOuverte && (
+            <div className="space-y-2 border-t border-border px-4 py-3">
+              {history.map((h, i) => (
+                <div key={i} className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="min-w-0 flex-1 text-sm text-muted-foreground">
+                    {TREE[h.nodeKey]!.q}
+                  </span>
+                  <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                    {h.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {!result && (
         <>
@@ -469,15 +533,41 @@ function Qualification() {
                         </Button>
                       </>
                     ) : (
-                      node.opts!.map((opt, i) => (
-                        <button
-                          key={i}
-                          onClick={() => choose(opt)}
-                          className="block w-full rounded-xl border border-border px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent"
-                        >
-                          {opt.l}
-                        </button>
-                      ))
+                      <>
+                        {node.opts!.map((opt, i) => {
+                          const coche = node.multi && multiSel.includes(i);
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => (node.multi ? toggleMulti(i) : choose(opt))}
+                              role={node.multi ? "checkbox" : undefined}
+                              aria-checked={node.multi ? coche : undefined}
+                              className={cn(
+                                "flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent",
+                                coche ? "border-primary bg-accent" : "border-border",
+                              )}
+                            >
+                              <span
+                                aria-hidden
+                                className={cn(
+                                  "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                                  coche
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-muted-foreground/40",
+                                )}
+                              >
+                                {coche && <Check className="h-3 w-3" />}
+                              </span>
+                              {opt.l}
+                            </button>
+                          );
+                        })}
+                        {node.multi && (
+                          <Button onClick={submitMulti} disabled={multiSel.length === 0}>
+                            Continuer
+                          </Button>
+                        )}
+                      </>
                     )}
                     {history.length > 0 && (
                       <Button variant="ghost" size="sm" onClick={retour} className="mt-2">
@@ -494,42 +584,6 @@ function Qualification() {
 
       {result && (
         <div className="space-y-6">
-          {/* Le résultat arrive en premier : plus besoin de faire défiler toutes les
-              réponses pour le voir. Elles restent consultables juste en dessous. */}
-          {history.length > 0 && (
-            <div className="rounded-xl border border-border bg-muted/30">
-              <button
-                onClick={() => setHistoOuverte((o) => !o)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
-              >
-                <span className="text-sm font-medium text-foreground">
-                  {history.length} réponse{history.length > 1 ? "s" : ""} donnée
-                  {history.length > 1 ? "s" : ""}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-primary">
-                  {histoOuverte ? "Masquer" : "Voir le détail"}
-                  <ChevronRight
-                    className={cn("h-3.5 w-3.5 transition-transform", histoOuverte && "rotate-90")}
-                  />
-                </span>
-              </button>
-              {histoOuverte && (
-                <div className="space-y-2 border-t border-border px-4 py-3">
-                  {history.map((h, i) => (
-                    <div key={i} className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="min-w-0 flex-1 text-sm text-muted-foreground">
-                        {TREE[h.nodeKey]!.q}
-                      </span>
-                      <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                        {h.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           <Card className="panel">
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
