@@ -6,7 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
-  type ErrorRouteComponent,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -35,7 +35,7 @@ function NotFoundComponent() {
   );
 }
 
-const ErrorComponent: ErrorRouteComponent = ({ error, reset }) => {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -71,7 +71,7 @@ const ErrorComponent: ErrorRouteComponent = ({ error, reset }) => {
       </div>
     </div>
   );
-};
+}
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
