@@ -183,12 +183,14 @@ function DossierDetail() {
     supprimerNote,
     setUploadAutorisation,
     updateClient,
+    updateOrigine,
     supprimer,
   } = useDossier(id);
   const { user: me } = useCurrentUser();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editOrigine, setEditOrigine] = useState<"site" | "direct" | null>(null);
   const [editNom, setEditNom] = useState("");
   const [editTelephone, setEditTelephone] = useState("");
   const [editVille, setEditVille] = useState("");
@@ -265,6 +267,7 @@ function DossierDetail() {
   const voirJalon = (k: "recu" | "france_visas" | "rdv") => toutAfficher || jalonsEtape.includes(k);
 
   function openEdit() {
+    setEditOrigine(d!.profile.origine ?? null);
     setEditNom(d!.client.nom);
     setEditTelephone(d!.client.telephone);
     setEditVille(d!.client.ville);
@@ -292,6 +295,7 @@ function DossierDetail() {
       passeportExpiration: editPassExpiration || null,
       passeportLieu: editPassLieu.trim() || null,
     });
+    if (editOrigine && editOrigine !== d!.profile.origine) await updateOrigine(d!.id, editOrigine);
     setEditOpen(false);
   }
 
@@ -748,6 +752,16 @@ function DossierDetail() {
                 <Ligne label="Date de naissance" valeur={d.client.naissance} />
                 <Ligne label="Téléphone" valeur={d.client.telephone} />
                 <Ligne label="Ville" valeur={d.client.ville} />
+                <Ligne
+                  label="Origine"
+                  valeur={
+                    d.profile.origine === "site"
+                      ? "Vient du site (landing)"
+                      : d.profile.origine === "direct"
+                        ? "Directement chez nous"
+                        : "Non renseignée"
+                  }
+                />
               </dl>
             </div>
             <div>
@@ -1163,6 +1177,31 @@ function DossierDetail() {
             <DialogTitle>Modifier les informations du client</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium text-muted-foreground">Origine du client</label>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Origine">
+                {(
+                  [
+                    { v: "site", l: "Vient du site" },
+                    { v: "direct", l: "Directement chez nous" },
+                  ] as const
+                ).map((o) => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    role="radio"
+                    aria-checked={editOrigine === o.v}
+                    onClick={() => setEditOrigine(o.v)}
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary hover:bg-accent",
+                      editOrigine === o.v ? "border-primary bg-accent" : "border-border",
+                    )}
+                  >
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
               <Input

@@ -26,6 +26,7 @@ import {
   getPaiementsSuivi,
   createDossier,
   updateClient as updateClientFn,
+  updateOrigine as updateOrigineFn,
   deleteDossier as deleteDossierFn,
 } from "@/backend/functions/dossiers";
 import {
@@ -199,6 +200,11 @@ function useDossierMutations() {
     mutationFn: (vars: { id: string; client: Dossier["client"] }) => updateClientFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const updateOrigineMutation = useMutation({
+    mutationFn: (vars: { id: string; origine: "site" | "direct" }) =>
+      updateOrigineFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDossierFn({ data: { id } }),
     onSuccess: invalidateAll,
@@ -265,6 +271,8 @@ function useDossierMutations() {
     ajouter: (d: Dossier) => ajouterMutation.mutateAsync(d),
     updateClient: (id: string, client: Dossier["client"]) =>
       updateClientMutation.mutateAsync({ id, client }),
+    updateOrigine: (id: string, origine: "site" | "direct") =>
+      updateOrigineMutation.mutateAsync({ id, origine }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
     setEtape: (id: string, etape: number) => setEtapeMutation.mutateAsync({ id, etape }),
   };

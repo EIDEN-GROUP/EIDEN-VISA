@@ -152,6 +152,9 @@ export interface Profile {
   lsTranscrit?: "oui" | "non" | "na";
   lsViabilite?: boolean;
 
+  /** Comment le client est arrivé : via le formulaire du site (landing) ou directement chez nous. */
+  origine?: "site" | "direct";
+
   /** Réponses en texte libre (noms, dates, adresses...) — sans incidence sur la checklist,
    * mais nécessaires pour compléter le dossier. Clé = TreeField.key, valeur = saisie brute. */
   details?: Record<string, string>;

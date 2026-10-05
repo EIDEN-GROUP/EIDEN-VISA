@@ -137,6 +137,7 @@ function Qualification() {
    *  `false` = cas déjà résolu, la clé est gardée pour que « Revenir sur la dernière
    *  question » redonne le même résultat. */
   const [cas, setCas] = useState<{ key: string; enCours: boolean } | null>(null);
+  const [origine, setOrigine] = useState<"site" | "direct" | null>(null);
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
   const [ville, setVille] = useState("");
@@ -305,6 +306,7 @@ function Qualification() {
     setResult(null);
     setCas(null);
     setFieldValues({});
+    setOrigine(null);
     setCentre(CENTRES[0]);
     setModalite("comptant");
     setHistoOuverte(true);
@@ -354,7 +356,7 @@ function Qualification() {
       assigneeUserId: null,
       ouvertLe: new Date().toLocaleDateString("fr-FR"),
       caseKey: result.caseKey,
-      profile,
+      profile: origine ? { ...profile, origine } : profile,
       // Le fil des questions réellement posées à CE client, figé ici : l'arbre évoluera,
       // la trace du dossier ne doit pas bouger avec lui.
       qualification: history.map((h) => ({
@@ -717,6 +719,51 @@ function Qualification() {
                   </p>
                 </div>
                 <div className="sm:col-span-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Origine du client
+                  </label>
+                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Origine">
+                    {(
+                      [
+                        { v: "site", l: "Vient du site", d: "Formulaire de la landing" },
+                        {
+                          v: "direct",
+                          l: "Directement chez nous",
+                          d: "Agence, téléphone, bouche à oreille",
+                        },
+                      ] as const
+                    ).map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        role="radio"
+                        aria-checked={origine === o.v}
+                        onClick={() => setOrigine(o.v)}
+                        className={cn(
+                          "flex items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors hover:border-primary hover:bg-accent",
+                          origine === o.v ? "border-primary bg-accent" : "border-border",
+                        )}
+                      >
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+                            origine === o.v
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-muted-foreground/40",
+                          )}
+                        >
+                          {origine === o.v && <Check className="h-3 w-3" />}
+                        </span>
+                        <span>
+                          <span className="block text-sm font-medium text-foreground">{o.l}</span>
+                          <span className="block text-xs text-muted-foreground">{o.d}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
                   <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
                   <Input
                     value={nom}
@@ -908,7 +955,7 @@ function Qualification() {
                 <div className="col-span-2 pt-2">
                   <Button
                     className="w-full"
-                    disabled={!nom || (dureeSejour !== null && dureeSejour <= 0)}
+                    disabled={!origine || !nom || (dureeSejour !== null && dureeSejour <= 0)}
                     onClick={creerDossier}
                   >
                     Créer le dossier
