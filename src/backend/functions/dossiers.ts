@@ -448,6 +448,7 @@ const dossierInput = z.object({
     lsStructure: z.boolean().optional(),
     lsTranscrit: z.enum(["oui", "non", "na"]).optional(),
     lsViabilite: z.boolean().optional(),
+    origine: z.enum(["site", "direct"]).optional(),
     details: z
       .record(z.string(), z.string().max(500))
       .refine((v) => Object.keys(v).length <= 100, "Trop de détails.")
@@ -925,6 +926,25 @@ export const updateClient = createServerFn({ method: "POST" })
         clientPasseportLieu: data.client.passeportLieu,
       })
       .where(eq(dossiersTable.id, data.id));
+  });
+
+/** Corrige l'origine du client (site / direct) — p.ex. une case cochée par erreur à la création. */
+export const updateOrigine = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string().min(1).max(32), origine: z.enum(["site", "direct"]) }))
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+    if (!row) throw new Error("Dossier introuvable.");
+    if (row.profile.origine === data.origine) return;
+    await db
+      .update(dossiersTable)
+      .set({ profile: { ...row.profile, origine: data.origine } })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "dossier.origine",
+      `Origine du client corrigée : ${data.origine === "site" ? "site (landing)" : "directement chez nous"} (${data.id})`,
+      data.id,
+    );
   });
 
 export const deleteDossier = createServerFn({ method: "POST" })
