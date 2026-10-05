@@ -51,7 +51,16 @@ export const Route = createFileRoute("/_app/qualification")({
   component: Qualification,
 });
 
-type Step = { nodeKey: string; label: string };
+/** Une réponse donnée. `avant` = profil avant cette réponse (pour le restaurer au retour),
+ *  `idx` = options choisies du nœud, `champs` = saisies d'un nœud à champs : de quoi
+ *  retrouver la réponse en revenant en arrière. */
+type Step = {
+  nodeKey: string;
+  label: string;
+  avant: Profile;
+  idx?: number[];
+  champs?: Record<string, string>;
+};
 
 const FAMILY_BASES: Profile["base"][] = [
   "visite_generale",
@@ -221,10 +230,18 @@ function Qualification() {
     setResult({ caseKey: finalKey, c });
   }
 
-  function choose(opt: NonNullable<(typeof node)["opts"]>[number]) {
+  function choose(opt: NonNullable<(typeof node)["opts"]>[number], idx?: number[]) {
     const nextProfile = { ...profile, ...(opt.set ?? {}) };
     setProfile(nextProfile);
-    setHistory((h) => [...h, { nodeKey, label: opt.l }]);
+    setHistory((h) => [
+      ...h,
+      {
+        nodeKey,
+        label: opt.l,
+        avant: profile,
+        idx: idx ?? [node.opts!.findIndex((o) => o === opt)],
+      },
+    ]);
 
     if (opt.r) {
       goToResult(opt.n, nextProfile);
@@ -246,12 +263,15 @@ function Qualification() {
   function submitMulti() {
     const picked = [...multiSel].sort((a, b) => a - b).map((i) => node.opts![i]!);
     if (!picked.length) return;
-    choose({
-      l: picked.map((o) => o.l).join(", "),
-      n: picked[0]!.n,
-      ...(picked[0]!.r ? { r: true } : {}),
-      set: Object.assign({}, ...picked.map((o) => o.set ?? {})),
-    });
+    choose(
+      {
+        l: picked.map((o) => o.l).join(", "),
+        n: picked[0]!.n,
+        ...(picked[0]!.r ? { r: true } : {}),
+        set: Object.assign({}, ...picked.map((o) => o.set ?? {})),
+      },
+      [...multiSel].sort((a, b) => a - b),
+    );
   }
 
   function submitFields() {
@@ -265,7 +285,10 @@ function Qualification() {
       .map((f) => fieldValues[f.key])
       .filter(Boolean)
       .join(" · ");
-    setHistory((h) => [...h, { nodeKey, label: label || "Renseigné" }]);
+    setHistory((h) => [
+      ...h,
+      { nodeKey, label: label || "Renseigné", avant: profile, champs: fieldValues },
+    ]);
     setFieldValues({});
 
     if (node.fieldsResult) {
@@ -292,7 +315,11 @@ function Qualification() {
     const prev = history[history.length - 1]!;
     setHistory((h) => h.slice(0, -1));
     setNodeKey(prev.nodeKey);
-    setFieldValues({});
+    // On retrouve la réponse donnée : option cochée, ou champs déjà saisis. Le profil revient
+    // à son état d'avant cette réponse, pour qu'une réponse différente ne laisse pas de trace.
+    setProfile(prev.avant);
+    setMultiPick({ nodeKey: prev.nodeKey, sel: prev.idx ?? [] });
+    setFieldValues(prev.champs ?? {});
     setResult(null);
   }
 
@@ -535,7 +562,7 @@ function Qualification() {
                     ) : (
                       <>
                         {node.opts!.map((opt, i) => {
-                          const coche = node.multi && multiSel.includes(i);
+                          const coche = multiSel.includes(i);
                           return (
                             <button
                               key={i}
