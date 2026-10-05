@@ -1,48 +1,66 @@
-import { Mail, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { CONTACT } from "../content";
 import { useLangue } from "../i18n";
 
-/** Mini pied de page aux couleurs de la marque : logo, téléphone, e-mail, droits. */
+const LIEN =
+  "flex w-fit gap-2 rounded-sm transition-colors duration-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+const ICONE = "mt-0.5 size-3.5 shrink-0 text-eu-star";
+
 export function Footer() {
   const { t } = useLangue();
-
-  const liens = [
-    {
-      href: CONTACT.telephoneLien,
-      label: t.footer.telephone,
-      texte: CONTACT.telephone,
-      Icone: Phone,
-    },
-    { href: `mailto:${CONTACT.email}`, label: t.footer.email, texte: CONTACT.email, Icone: Mail },
-  ];
+  const I = t.infos;
 
   return (
-    <footer className="bg-brand text-white">
-      {/* Marge de fin : les badges flottants (dock) occupent le coin bas, sur tous les écrans. */}
-      <div className="container-page flex flex-col gap-5 py-2 pe-24 sm:pe-28 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-        <ul className="flex flex-col gap-3 text-[14.5px] font-semibold sm:flex-row sm:items-center sm:gap-8">
-          {liens.map(({ href, label, texte, Icone }) => (
-            <li key={href}>
+    <footer className="bg-ink text-[12.5px] leading-[18px] font-medium text-white/85">
+      <div className="container-page pt-5 pb-2.5 sm:pb-3.5">
+        <div className="sm:pe-[15.5rem] lg:pe-[15rem] xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-x-8 xl:pe-[4.5rem] min-[100rem]:pe-0">
+          <a
+            href={CONTACT.carte}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${I.adresse} : ${I.adresseComplete} (${I.carte})`}
+            className={`${LIEN} xl:col-span-2`}
+          >
+            <MapPin aria-hidden="true" className={ICONE} />
+            {I.adresseComplete}
+          </a>
+
+          <p className="mt-2 flex gap-2">
+            <Clock aria-hidden="true" className={ICONE} />
+            <span className="sr-only">{`${I.horaires} : `}</span>
+            <span className="flex flex-wrap items-center gap-x-2">
+              <span>{I.horairesLignes[0]}</span>
+              <span aria-hidden="true" className="hidden h-3 w-px bg-white/30 lg:block" />
+              <span>{I.horairesLignes[1]}</span>
+            </span>
+          </p>
+
+          <ul className="mt-[60px] flex flex-col gap-0.5 sm:mt-1.5 sm:flex-row sm:flex-wrap sm:gap-x-7 sm:gap-y-1.5 xl:mt-0 xl:justify-self-end">
+            <li>
               <a
-                href={href}
-                aria-label={`${label} : ${texte}`}
-                className="group inline-flex items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                href={CONTACT.telephoneLien}
+                aria-label={`${I.telephone} : ${CONTACT.telephone}`}
+                className={LIEN}
               >
-                <span className="grid size-8 place-items-center rounded-full 5 transition-colors duration-300 group-hover:bg-white group-hover:text-brand">
-                  <Icone className="size-4" strokeWidth={2} />
-                </span>
-                <span
-                  dir="ltr"
-                  className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 group-hover:bg-[length:100%_1px]"
-                >
-                  {texte}
-                </span>
+                <Phone aria-hidden="true" className={ICONE} />
+                <span dir="ltr">{CONTACT.telephone}</span>
               </a>
             </li>
-          ))}
-        </ul>
+            <li>
+              <a
+                href={`mailto:${CONTACT.email}`}
+                aria-label={`${I.email} : ${CONTACT.email}`}
+                className={LIEN}
+              >
+                <Mail aria-hidden="true" className={ICONE} />
+                <span dir="ltr">{CONTACT.email}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
 
-        <p className="text-[12.5px] text-white/75">
+        <span aria-hidden="true" className="mt-2 block h-px bg-white/10 sm:mt-3.5" />
+        <p className="mt-2 pe-20 text-center text-[11px] leading-4 whitespace-nowrap text-white/55 sm:mt-2.5 sm:pe-0">
           © {new Date().getFullYear()} EIDEN Visa. {t.footer.droits}
         </p>
       </div>

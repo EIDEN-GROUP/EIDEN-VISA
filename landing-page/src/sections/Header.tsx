@@ -10,6 +10,7 @@ import { EASE_OUT } from "../components/motion";
 import { useIntroPrete } from "../lib/intro";
 import { LIENS, NAV } from "../content";
 import { LANGUES, useLangue } from "../i18n";
+import { Topbar } from "./Topbar";
 
 /** Sélecteur de langue (FR / العربية) du header. */
 function MenuLangue() {
@@ -108,10 +109,13 @@ const EASE_RIDEAU = [0.76, 0, 0.24, 1] as const;
 function MenuMobile({
   origine,
   active,
+  topbar,
   fermer,
 }: {
   origine: { x: number; y: number };
   active: string;
+  /** Barre d'informations visible (haut de page) : le menu commence plus bas. */
+  topbar: boolean;
   fermer: () => void;
 }) {
   const { t, langue, changerLangue } = useLangue();
@@ -148,7 +152,9 @@ function MenuMobile({
 
       <nav
         aria-label={t.header.navigationMobile}
-        className="container-page relative flex flex-1 flex-col overflow-y-auto pt-[100px] pb-[max(1.75rem,env(safe-area-inset-bottom))]"
+        className={`container-page relative flex flex-1 flex-col overflow-y-auto pb-[max(1.75rem,env(safe-area-inset-bottom))] ${
+          topbar ? "pt-[calc(100px+var(--topbar-h))]" : "pt-[100px]"
+        }`}
       >
         <motion.p
           initial={{ opacity: 0 }}
@@ -366,6 +372,7 @@ export function Header() {
           : "bg-transparent"
       }`}
     >
+      <Topbar repliee={scrolled} />
       <div
         className={`container-page grid grid-cols-[auto_1fr_auto] items-center transition-[height] duration-500 lg:ps-[4.25rem] ${
           scrolled ? "h-[70px]" : "h-[78px] lg:h-[92px]"
@@ -448,7 +455,9 @@ export function Header() {
       </div>
 
       <AnimatePresence>
-        {open && <MenuMobile origine={origine} active={active} fermer={fermer} />}
+        {open && (
+          <MenuMobile origine={origine} active={active} topbar={!scrolled} fermer={fermer} />
+        )}
       </AnimatePresence>
     </motion.header>
   );

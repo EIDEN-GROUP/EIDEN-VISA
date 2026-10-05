@@ -10,7 +10,8 @@ import { lancerIntro } from "../lib/intro";
 
 const CIEL = "/images/loader-bg.png";
 const AVION = "/images/loader-avion.webp";
-const A_PRECHARGER = [CIEL, AVION, "/images/hero.png"];
+const LOGO = "/images/logo-eiden-visa-blanc.webp";
+const A_PRECHARGER = [CIEL, AVION, LOGO, "/images/hero.png"];
 /** Le temps de lire la marque, même quand tout est déjà en cache (ms). */
 const TEMPS_MIN = 1400;
 /** Réseau lent : on n'attend jamais plus longtemps (ms). */
@@ -180,12 +181,13 @@ export function Loader({ onReady, onDone }: Props) {
           lang="fr"
           className="absolute inset-x-0 top-[26%] flex flex-col items-center text-center text-white sm:top-[24%]"
         >
-          <span className="font-logo text-[clamp(3.2rem,10vw,7rem)] leading-none tracking-[0.03em] [text-shadow:0_4px_30px_rgb(8_20_52/0.45)]">
-            EIDEN
-          </span>
-          <span className="mt-3 ps-[0.6em] text-[clamp(0.8rem,1.6vw,1.05rem)] font-bold tracking-[0.6em]">
-            VISA
-          </span>
+          <img
+            src={LOGO}
+            alt=""
+            width={1400}
+            height={416}
+            className="h-auto w-[clamp(250px,46vw,560px)] [filter:drop-shadow(0_4px_26px_rgb(8_20_52/0.45))]"
+          />
           <span
             lang={langue}
             className="mt-6 font-script text-[clamp(1.5rem,3.4vw,2.4rem)] text-white/90 [text-shadow:0_2px_18px_rgb(8_20_52/0.5)]"

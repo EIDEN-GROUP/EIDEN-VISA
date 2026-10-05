@@ -4,12 +4,14 @@ import { useId } from "react";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <span lang="fr" className={`flex flex-col items-center leading-none text-ink ${className}`}>
-      <span className="font-logo text-[30px] tracking-[0.02em] sm:text-[34px]">EIDEN</span>
-      <span className="mt-1.5 pl-[0.55em] text-[9.5px] font-bold tracking-[0.55em] sm:text-[10.5px]">
-        VISA
-      </span>
-    </span>
+    <img
+      src="/images/logo-eiden-visa.webp"
+      alt="EIDEN Visa"
+      width={900}
+      height={264}
+      draggable={false}
+      className={`block h-11 w-auto sm:h-[52px] ${className}`}
+    />
   );
 }
 

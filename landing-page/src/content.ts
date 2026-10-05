@@ -26,11 +26,16 @@ export const LIENS = {
   whatsapp: "https://wa.me/212777777428",
 };
 
-/** Coordonnées affichées dans le pied de page. */
+/**
+ * Coordonnées affichées dans la barre du haut et le pied de page (horaires et adresse :
+ * `t.infos`). `carte` = recherche Google Maps de l'adresse, à remplacer par le lien exact
+ * de la fiche de l'agence.
+ */
 export const CONTACT = {
   telephone: "+212 777 777 428",
   telephoneLien: "tel:+212777777428",
   email: "contact@eiden-group.com",
+  carte: "https://www.google.com/maps/search/?api=1&query=Technopole+1+Agadir+Bay+Agadir",
 };
 
 /**
@@ -112,7 +117,7 @@ export const AVANTAGES: {
   tampon?: boolean;
 }[] = [
   { icon: Users, image: "/images/04-etudiante.png", position: "50% 55%" },
-  { icon: FileSpreadsheet, image: "/images/02-passeport.png", position: "50% 40%" },
+  { icon: FileSpreadsheet, image: "/images/justificatifs.png", position: "50% 40%" },
   {
     icon: ShieldCheck,
     image: "/images/hero-3.webp",

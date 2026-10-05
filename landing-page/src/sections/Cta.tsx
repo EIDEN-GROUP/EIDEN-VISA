@@ -7,7 +7,7 @@ import { LIENS } from "../content";
 import { useLangue } from "../i18n";
 
 export function Cta() {
-  const { t } = useLangue();
+  const { t, langue } = useLangue();
   const ouvrirDemande = useDemande();
   const ref = useRef<HTMLElement>(null);
   // Photo en parallaxe : elle se pose (zoom arrière) pendant que la section entre.
@@ -26,7 +26,7 @@ export function Cta() {
         className="absolute inset-0 -z-20 overflow-hidden motion-safe:[animation:eiden-film-settle_2.4s_var(--ease-brand)_both]"
       >
         <motion.img
-          src="/images/world-1.png"
+          src={langue === "ar" ? "/images/world-1-ar.webp" : "/images/world-1.png"}
           alt=""
           loading="lazy"
           style={{ scale: photoScale, y: photoY }}

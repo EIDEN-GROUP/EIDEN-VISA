@@ -18,6 +18,7 @@ import {
   HeartHandshake,
   Info,
   Lock,
+  MapPin,
   Minus,
   NotebookPen,
   Package,
@@ -32,6 +33,7 @@ import {
 } from "lucide-react";
 import {
   createContext,
+  Fragment,
   useCallback,
   useContext,
   useEffect,
@@ -54,9 +56,10 @@ import {
   type TypeVisa,
 } from "../content";
 import { useLangue } from "../i18n";
-import type { Dictionnaire } from "../i18n/fr";
+import { fr, type Dictionnaire } from "../i18n/fr";
 import { useIntroPrete } from "../lib/intro";
 import { saveContact } from "../lib/save-contact";
+import { REGIONS_SUD, VILLES_IDS, type VilleId } from "../villes";
 import { EASE_OUT } from "./motion";
 
 type Textes = Dictionnaire["demande"];
@@ -155,6 +158,7 @@ function chargerBrouillon(): { donnees: Donnees; etape: number } | null {
     const typeVisa = texte(b.typeVisa);
     const destination = texte(b.destination);
     const pack = texte(b.pack);
+    const ville = texte(b.ville);
     const donnees: Donnees = {
       ...VIDE,
       nom: texte(b.nom),
@@ -167,7 +171,8 @@ function chargerBrouillon(): { donnees: Donnees; etape: number } | null {
       destination:
         destination === "plusieurs" || estValeur(PAYS_SCHENGEN, destination) ? destination : "",
       pack: pack === "indecis" || estValeur(PACK_IDS, pack) ? pack : "",
-      ville: texte(b.ville),
+      // Un ancien brouillon en saisie libre (ville hors liste) repart sans ville.
+      ville: VILLES_IDS.includes(ville) ? ville : "",
       demandeurs:
         typeof b.demandeurs === "number"
           ? Math.min(MAX_DEMANDEURS, Math.max(1, Math.floor(b.demandeurs)))
@@ -226,6 +231,11 @@ function nomPack(p: Donnees["pack"], t: Dictionnaire) {
   return t.packs.offres[PACK_IDS.indexOf(p)]?.nom ?? p;
 }
 
+/** Nom affiché d'une ville de la liste, dans la langue de `D`. */
+function nomVille(v: string, D: Textes) {
+  return v === "" ? "" : (D.villes[v as VilleId] ?? "");
+}
+
 /** Message WhatsApp : une ligne par champ rempli, dans la langue de la page. */
 function message(d: Donnees, t: Dictionnaire) {
   const D = t.demande;
@@ -244,7 +254,7 @@ function message(d: Donnees, t: Dictionnaire) {
     [c.retour, d.retour && !estLong(d.typeVisa) ? jjmmaaaa(d.retour) : ""],
     [c.destination, destination],
     [c.pack, nomPack(d.pack, t)],
-    [c.ville, d.ville],
+    [c.ville, nomVille(d.ville, D)],
     [c.demandeurs, String(d.demandeurs)],
   ];
   return [
@@ -337,6 +347,8 @@ type OptionListe = {
   icone?: LucideIcon;
   drapeau?: string;
   code?: string;
+  /** Groupe (ex. région) : son nom s'affiche en en-tête au-dessus de sa première option. */
+  groupe?: string;
 };
 
 /** Pictogramme de chaque type de visa dans la liste déroulante. */
@@ -457,12 +469,14 @@ function Selecteur({
     document.addEventListener("pointerdown", dehors);
     return () => document.removeEventListener("pointerdown", dehors);
   }, [ouvert]);
+  // `place` : à la première ouverture, la liste n'est montée qu'une fois sa position connue.
+  const place = pos !== null;
   useEffect(() => {
     if (ouvert && actif >= 0)
       liste.current?.querySelector(`#${CSS.escape(optionId(actif))}`)?.scrollIntoView({
         block: "nearest",
       });
-  }, [actif, ouvert]);
+  }, [actif, ouvert, place]);
 
   const ouvrir = () => {
     setActif(
@@ -587,29 +601,43 @@ function Selecteur({
                 maxHeight: pos.max,
               }}
               className={`fixed z-[70] overflow-y-auto overscroll-contain rounded-2xl bg-card p-1.5 shadow-[0_24px_48px_-22px_rgb(0_0_0/0.32),0_2px_8px_-4px_rgb(0_0_0/0.1)] ring-1 ring-black/[0.07] ${
-                pos.haut ? "origin-bottom" : "origin-top"
-              }`}
+                options[0]?.groupe ? "pt-0" : ""
+              } ${pos.haut ? "origin-bottom" : "origin-top"}`}
             >
               {options.map((o, i) => {
                 const estChoisie = o.valeur === valeur;
                 return (
-                  <li
-                    key={o.valeur}
-                    id={optionId(i)}
-                    role="option"
-                    aria-selected={estChoisie}
-                    onPointerMove={() => setActif(i)}
-                    onClick={() => choisir(i)}
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-[14.5px] transition-colors duration-150 ${
-                      i === actif ? "bg-sand" : ""
-                    } ${estChoisie ? "font-semibold text-brand" : "text-ink"}`}
-                  >
-                    <Tuile option={o} choisie={estChoisie} />
-                    <span className="min-w-0 flex-1 leading-snug">{o.libelle}</span>
-                    {estChoisie && (
-                      <Check aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.6} />
+                  <Fragment key={o.valeur}>
+                    {/* En-tête de groupe : reste collé en haut de la liste pendant le défilement
+                        (liste groupée = sans marge intérieure haute, pour coller au bord). */}
+                    {o.groupe && o.groupe !== options[i - 1]?.groupe && (
+                      <li
+                        role="presentation"
+                        className="sticky top-0 z-10 -mx-1.5 flex items-center gap-2 bg-card px-4 pt-3 pb-1.5 text-[11px] font-bold tracking-[0.14em] text-muted uppercase"
+                      >
+                        <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-brand" />
+                        {o.groupe}
+                      </li>
                     )}
-                  </li>
+                    <li
+                      id={optionId(i)}
+                      role="option"
+                      aria-selected={estChoisie}
+                      onPointerMove={() => setActif(i)}
+                      onClick={() => choisir(i)}
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-[14.5px] transition-colors duration-150 ${
+                        o.groupe ? "scroll-mt-10" : ""
+                      } ${i === actif ? "bg-sand" : ""} ${
+                        estChoisie ? "font-semibold text-brand" : "text-ink"
+                      }`}
+                    >
+                      <Tuile option={o} choisie={estChoisie} />
+                      <span className="min-w-0 flex-1 leading-snug">{o.libelle}</span>
+                      {estChoisie && (
+                        <Check aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.6} />
+                      )}
+                    </li>
+                  </Fragment>
                 );
               })}
             </motion.ul>
@@ -732,6 +760,23 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       ),
     [D, langue],
   );
+  // Villes du Sud par région : chef-lieu en tête, puis ordre alphabétique de la langue.
+  const optionsVille = useMemo<OptionListe[]>(
+    () =>
+      REGIONS_SUD.flatMap((region) => {
+        const villes: readonly VilleId[] = region.villes;
+        const triees = [
+          villes[0]!,
+          ...villes.slice(1).sort((a, b) => D.villes[a].localeCompare(D.villes[b], langue)),
+        ];
+        return triees.map((v) => ({
+          valeur: v,
+          libelle: D.villes[v],
+          groupe: D.regions[region.id],
+        }));
+      }),
+    [D, langue],
+  );
 
   // Page figée derrière la popup ; Échap ferme ; Tab reste dans la popup ; au départ, le
   // focus revient sur le bouton qui l'a ouverte.
@@ -832,7 +877,8 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
         retour: long ? "" : d.retour,
         destination: d.destination,
         pack: d.pack,
-        ville: d.ville.trim(),
+        // Nom français, quelle que soit la langue de la page : colonne lisible côté BMS.
+        ville: nomVille(d.ville, fr.demande),
         demandeurs: d.demandeurs,
         langue,
         message: message(d, t),
@@ -1174,14 +1220,13 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                       requis={D.requis}
                       erreur={erreurs.ville}
                     >
-                      <input
-                        {...attrs("ville")}
-                        autoComplete="address-level2"
-                        maxLength={120}
+                      <Selecteur
+                        id={id("ville")}
+                        valeur={d.ville}
+                        options={optionsVille}
                         placeholder={D.exemples.ville}
-                        value={d.ville}
-                        onChange={(e) => maj("ville", e.target.value)}
-                        className={CHAMP}
+                        erreur={erreurs.ville}
+                        onChange={(v) => maj("ville", v)}
                       />
                     </Bloc>
                     <Bloc id={id("demandeurs")} label={D.champs.demandeurs} aide={D.demandeursAide}>

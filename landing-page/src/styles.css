@@ -4,7 +4,6 @@
   --font-serif: "Newsreader", "Amiri", "Times New Roman", serif;
   --font-sans: "DM Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
   --font-script: "La Belle Aurore", "Aref Ruqaa", cursive;
-  --font-logo: "Playfair Display", "Times New Roman", serif;
 
   --color-ink: #0b1a30;
   --color-ink-soft: #2a3342;
@@ -28,6 +27,9 @@
 
 :root {
   --carte-chevauche: 95px;
+  /* Hauteur de la barre d'informations au-dessus du header (Topbar.tsx) : le hero et le
+     menu mobile se décalent d'autant. */
+  --topbar-h: 36px;
 }
 
 @layer base {
@@ -209,13 +211,8 @@
     scale: -1 1;
   }
 
-  /* Bandeau final : photo en miroir (tour Eiffel côté opposé au texte) + voile sombre. */
-  .cta-photo {
-    scale: -1 1;
-  }
-  [dir="rtl"] .cta-photo {
-    scale: 1 1;
-  }
+  /* Bandeau final : voile sombre côté texte. En arabe la photo est un fichier à part
+     (world-1-ar.webp, composition en miroir avec les textes de la photo à l'endroit). */
   .cta-voile {
     background: linear-gradient(
       180deg,
@@ -420,6 +417,52 @@
 @media (min-width: 1024px) {
   .filigrane-rect::after {
     display: block;
+  }
+}
+
+/* Barre d'informations (Topbar.tsx), sous 1280 px : les deux exemplaires de la ligne
+   glissent d'une largeur, en boucle ; pause au survol (souris) et au focus clavier.
+   Arabe : sens inverse. Mouvement réduit : pas de boucle, la ligne se fait défiler au doigt. */
+.topbar-defile {
+  overflow: hidden;
+}
+.topbar-piste {
+  animation: eiden-defile 42s linear infinite;
+}
+[dir="rtl"] .topbar-piste {
+  animation-name: eiden-defile-rtl;
+}
+.topbar-defile:focus-within .topbar-piste {
+  animation-play-state: paused;
+}
+@media (hover: hover) {
+  .topbar-defile:hover .topbar-piste {
+    animation-play-state: paused;
+  }
+}
+@keyframes eiden-defile {
+  to {
+    translate: -100% 0;
+  }
+}
+@keyframes eiden-defile-rtl {
+  to {
+    translate: 100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar-defile {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .topbar-defile::-webkit-scrollbar {
+    display: none;
+  }
+  .topbar-piste {
+    animation: none;
+  }
+  .topbar-piste[aria-hidden="true"] {
+    display: none;
   }
 }
 

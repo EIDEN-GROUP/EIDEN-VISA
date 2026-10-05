@@ -28,7 +28,8 @@ export function Hero() {
       ref={ref}
       className="filigrane-hero relative isolate flex min-h-svh flex-col overflow-hidden lg:block"
     >
-      <div className="relative min-h-[250px] flex-1 court:min-h-[150px] lg:absolute lg:inset-0">
+      {/* Bandeau photo : la barre d'informations (--topbar-h) s'ajoute à sa hauteur mini. */}
+      <div className="relative min-h-[calc(250px+var(--topbar-h))] flex-1 court:min-h-[calc(150px+var(--topbar-h))] lg:absolute lg:inset-0 lg:min-h-0">
         <div className="absolute inset-0 -z-20 overflow-hidden motion-safe:[animation:eiden-film-settle_2.4s_var(--ease-brand)_both]">
           <motion.div
             style={{ y: photoY, scale: photoScale }}
@@ -46,7 +47,7 @@ export function Hero() {
 
         <motion.div
           style={{ y: scriptY }}
-          className="absolute end-4 top-[86px] sm:end-10 sm:top-[108px] lg:end-[5.5%] lg:top-[150px]"
+          className="absolute end-4 top-[calc(86px+var(--topbar-h))] sm:end-10 sm:top-[calc(108px+var(--topbar-h))] lg:end-[5.5%] lg:top-[calc(150px+var(--topbar-h))]"
         >
           <ScriptReveal
             lines={t.hero.script}
@@ -74,7 +75,7 @@ export function Hero() {
         </motion.div>
       </div>
 
-      <div className="container-page relative z-10 -mt-14 pb-[calc(var(--carte-chevauche)+1.75rem)] lg:mt-0 lg:flex lg:min-h-svh lg:items-center lg:ps-[4.25rem] lg:pt-[92px] lg:pb-[calc(var(--carte-chevauche)+2.5rem)]">
+      <div className="container-page relative z-10 -mt-14 pb-[calc(var(--carte-chevauche)+1.75rem)] lg:mt-0 lg:flex lg:min-h-svh lg:items-center lg:ps-[4.25rem] lg:pt-[calc(92px+var(--topbar-h))] lg:pb-[calc(var(--carte-chevauche)+2.5rem)]">
         <motion.div
           style={{ y: texteY, opacity: texteOpacity }}
           className="will-change-transform max-w-[640px] lg:max-w-[48%] xl:max-w-[650px] font-semibold"
