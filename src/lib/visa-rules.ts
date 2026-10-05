@@ -75,44 +75,82 @@ export interface Profile {
    * sans remplacer le dossier tourisme (contrairement à la branche « famille UE » historique). */
   ueEeeFamily?: boolean;
 
-  /* ---- Long séjour (Visa D). Champs à plat et non imbriqués : la fusion des réponses
-     de l'arbre est superficielle, un objet imbriqué écraserait les réponses précédentes. ---- */
-  /** Q1 long séjour — motif principal du séjour. */
-  lsMotif?: "etudes" | "travail" | "famille" | "visiteur" | "stage" | "autre";
-  /** Études — type de projet. */
-  lsEtudesType?: "superieures" | "pro" | "privee" | "autre";
-  /** Études — déjà accepté par un établissement en France. */
-  lsAdmission?: boolean;
-  /** Études / stage — durée annoncée, pour rattraper un dossier qui relève du court séjour. */
-  lsDureeCourte?: boolean;
-  /** Études — qui finance. */
-  lsFinancement?: "soi" | "parents" | "famille" | "tiers" | "bourse";
-  /** Travail — type d'activité exercée en France. */
-  lsTravailType?: "salarie" | "temporaire" | "saisonnier" | "talent" | "entrepreneur" | "autre";
-  /** Travail — contrat ou promesse d'embauche en main. */
-  lsContrat?: boolean;
-  /** Travail — autorisation de travail obtenue par l'employeur. */
-  lsAutorisationTravail?: "oui" | "non" | "inconnu";
-  /** Travail — nature du contrat. */
-  lsTypeContrat?: "cdi" | "cdd" | "saisonnier" | "autre";
-  /** Famille — qui le demandeur rejoint en France. */
-  lsFamilleQui?: "conjoint" | "parent_enfant" | "ascendant" | "enfant" | "autre";
-  /** Famille — la personne rejointe est de nationalité française. */
-  lsPersonneFrancaise?: boolean;
-  /** Famille, ascendant — à la charge du descendant en France. */
-  lsAscendantCharge?: boolean;
-  /** Visiteur — situation socio-économique déclarée. */
-  lsSituation?: "salarie" | "fonctionnaire" | "retraite" | "etudiant" | "sans" | "autre";
-  /** Visiteur — qui finance le séjour. */
+  /* ---- Long séjour (Visa D) — arbre « EIDEN Visa — Long séjour ». Champs à plat et non
+     imbriqués : la fusion des réponses de l'arbre est superficielle, un objet imbriqué
+     écraserait les réponses précédentes. Les questions oui/non sont des booléens nommés
+     `ls…` (voir l'index ci-dessous) ; seuls les aiguillages à plusieurs issues sont typés. ---- */
+  /** Type de demande de visa long séjour. */
+  lsType?: "retour" | "famille" | "visiteur" | "travail";
+  /** Visa de retour — motif de la demande. */
+  lsRetour?: "perte_titre" | "perte_passeport" | "recepisse" | "mineur";
+  /** Installation familiale ou privée — situation familiale en France. */
+  lsFamille?: "asc_charge" | "asc_non_charge" | "conjoint" | "parent_mineur";
+  /** Visiteur — majeur (≥ 18 ans) ou mineur. */
+  lsVisiteur?: "majeur" | "mineur";
+  /** Travail — situation professionnelle en France. */
+  lsTravail?: "embauche" | "ict" | "entrepreneur" | "liberale";
+  /* Réponses de l'arbre long séjour : booléens oui/non, ou code court quand il y a plus de deux issues. */
+  lsActeMariage?: boolean;
+  lsActiviteType?:
+    "individuelle" | "location_gerance" | "fonds" | "societe_fr" | "filiale" | "personne_morale";
+  lsAnciennete?: boolean;
+  lsAttestations?: boolean;
+  lsAutorisation?: "oui" | "non" | "encours";
+  lsAutreParent?: boolean;
+  lsAutreParentAutorise?: boolean;
+  lsCadre?: boolean;
+  lsCommunaute?: boolean;
+  lsConjointFrancais?: boolean;
+  lsContratTravail?: boolean;
+  lsContribue?: boolean;
+  lsContribue2ans?: boolean;
+  lsCopieTitre?: boolean;
+  lsDcemTir?: boolean;
+  lsDecisionGarde?: boolean;
+  lsDeclarationPerte?: boolean;
+  lsDescFrancais?: boolean;
+  lsDescMarie?: "oui" | "non" | "na";
+  lsDiplomes?: boolean;
+  lsEmployeur?: "france" | "detachement";
+  lsEnfantFrancais?: boolean;
+  lsEnfantMineur?: boolean;
+  lsEnfantReside?: boolean;
+  lsFiliation?: boolean;
+  lsFinanceMineur?: "pere" | "mere" | "parents" | "organisme" | "proche" | "autre";
   lsFinanceSejour?: "soi" | "famille" | "autre";
-  /** Visiteur — fonds suffisants déclarés. */
   lsFonds?: boolean;
-  /** Visiteur — nature du logement en France. */
-  lsLogement?: "propriete" | "location" | "heberge" | "autre";
-  /** Stage — le demandeur est étudiant ou en formation. */
-  lsStageEtudiant?: boolean;
-  /** Stage — convention de stage signée. */
-  lsConvention?: boolean;
+  lsGarde?: "pere" | "mere" | "autre";
+  lsGardeAutorise?: boolean;
+  lsHebergMineur?: "parents" | "proche" | "residence" | "autre";
+  lsLettreMission?: boolean;
+  lsLien?: "parent" | "grand_parent" | "autre";
+  lsLogement?: "propriete" | "location" | "personne" | "autre";
+  lsMaintien?: boolean;
+  lsMarie?: boolean;
+  lsMemeGroupe?: boolean;
+  lsMineur?: boolean;
+  lsParentFrancais?: boolean;
+  lsParentsSepares?: boolean;
+  lsPolygamie?: boolean;
+  lsPriseEnCharge?: boolean;
+  lsPriseRegulier?: boolean;
+  lsProfReglementee?: boolean;
+  lsProjet?: "creation" | "existante";
+  lsRecepisse?: boolean;
+  lsRecepisseValide?: boolean;
+  lsReferencesTitre?: boolean;
+  lsRessortissant?: boolean;
+  lsRessourcesPerso?: boolean;
+  lsRessourcesPropres?: boolean;
+  lsRessourcesSmic?: boolean;
+  lsScolarise?: boolean;
+  lsSituation?:
+    "salarie" | "fonctionnaire" | "entrepreneur" | "retraite" | "etudiant" | "sans" | "autre";
+  lsStatutExistant?: "salarie" | "non_salarie";
+  lsStatutIct?: "salarie" | "stagiaire";
+  lsStructure?: boolean;
+  lsTranscrit?: "oui" | "non" | "na";
+  lsViabilite?: boolean;
 
   /** Réponses en texte libre (noms, dates, adresses...) — sans incidence sur la checklist,
    * mais nécessaires pour compléter le dossier. Clé = TreeField.key, valeur = saisie brute. */
@@ -710,294 +748,693 @@ function buildEnVueMariage(p: Profile): CaseResult {
 
 /* ============ LONG SÉJOUR (Visa D) — assemblage dynamique ============ */
 
-/** Socle commun à tous les dossiers long séjour, quel que soit le motif. */
-const LS_BASE = [
-  "Passeport valide",
-  "Formulaire de demande de visa long séjour",
-  "Récépissé de la demande (RCPC)",
-  "2 photos d'identité sur fond blanc",
-];
+/* Source : « EIDEN Visa — Système de qualification des visas Long séjour » (PDF, 27 p.).
+   Règle EIDEN : un document n'est affiché que si une réponse précédente le rend nécessaire ;
+   les documents communs ouvrent le dossier, les pièces conditionnelles s'ajoutent ensuite. */
 
-const LS_ASSURANCE = "Assurance / couverture médicale pour la durée du séjour";
-const LS_NON_ACTIVITE = "Engagement de ne pas exercer d'activité professionnelle en France";
+/** Une réponse oui/non du questionnaire long séjour : `true` / `false`, `undefined` si non posée. */
+const oui = (v: unknown) => v === true;
+const non = (v: unknown) => v === false;
 
-/** Le dossier relève en réalité du court séjour : on le dit plutôt que de produire une liste fausse. */
-function lsTropCourt(motif: string): CaseResult {
-  return {
-    key: "ls_trop_court",
-    title: `${motif} · durée inférieure au seuil du long séjour`,
-    cat: "À requalifier en court séjour (Visa C)",
-    level: "attention",
-    docs: [],
-    extra: [],
-    notes: [
-      "La durée annoncée reste sous le seuil du long séjour : ce dossier relève du court séjour. Reprenez la qualification en choisissant « ≤ 90 jours » pour obtenir la bonne liste de pièces.",
-    ],
-  };
+const LS_FORMULAIRE = "Formulaire de demande de visa long séjour";
+const LS_PHOTOS = "Photographies d'identité";
+const LS_RCPC = "Récépissé de la demande (RCPC)";
+const LS_NOTE_VERBALE =
+  "Note verbale si le demandeur est titulaire d'un document de voyage officiel";
+
+function lsResult(
+  key: string,
+  title: string,
+  cat: string,
+  level: Level,
+  docs: string[],
+  notes: string[] = [],
+): CaseResult {
+  return { key, title, cat, level, docs, extra: [], notes };
 }
 
-function buildLsEtudes(p: Profile): CaseResult {
-  if (p.lsDureeCourte) return lsTropCourt("Études");
-  const docs = [...LS_BASE];
+/* ---------- 1. Visa de retour ---------- */
 
-  if (p.lsAdmission) docs.push("Attestation d'admission ou de préinscription de l'établissement");
-  docs.push("Justificatifs de ressources pour la durée des études");
+function buildLsRetour(p: Profile): CaseResult {
+  const cat = "Long séjour (Visa D) · visa de retour";
+  const docs = [
+    LS_FORMULAIRE,
+    LS_PHOTOS,
+    "Passeport en cours de validité",
+    "Lettre détaillée expliquant les raisons de la demande de visa de retour",
+    "Preuve de la résidence habituelle en France",
+  ];
+  const notes = [
+    "Attention système : la FAQ France-Visas indique 3 formulaires et 3 photographies pour une demande de visa de retour. Vérifier la liste applicable au point de dépôt au moment du dépôt.",
+  ];
 
-  const financement: Record<NonNullable<Profile["lsFinancement"]>, string> = {
-    soi: "Justificatifs de financement personnel (relevés bancaires, épargne)",
-    parents: "Prise en charge des parents + justificatifs de leurs ressources",
-    famille: "Prise en charge du membre de la famille + justificatifs de ses ressources",
-    tiers: "Attestation de prise en charge du sponsor + justificatifs de ses ressources",
-    bourse: "Attestation de bourse précisant le montant et la durée",
-  };
-  if (p.lsFinancement) docs.push(financement[p.lsFinancement]);
-
-  docs.push("Justificatif de logement en France");
-  docs.push(LS_ASSURANCE);
-  if (p.lsEtudesType === "superieures")
-    docs.push(
-      "Documents de la procédure Études en France / Campus France, lorsqu'elle est applicable",
-    );
-
-  const notes: string[] = [];
-  if (!p.lsAdmission)
-    notes.push(
-      "Aucune admission obtenue : le dossier est incomplet en l'état. Orienter le client vers l'obtention d'une attestation d'admission ou de préinscription avant tout dépôt.",
-    );
-
-  return {
-    key: "ls_etudes",
-    title: "Long séjour · études / formation",
-    cat: "Long séjour (Visa D) · études",
-    level: p.lsAdmission ? "attention" : "complexe",
-    docs,
-    extra: [],
-    notes,
-  };
-}
-
-function buildLsTravail(p: Profile): CaseResult {
-  const docs = [...LS_BASE];
-  if (p.lsContrat) docs.push("Contrat de travail ou promesse d'embauche signée");
-  if (p.lsAutorisationTravail === "oui")
-    docs.push("Autorisation de travail obtenue par l'employeur");
-  docs.push("Justificatifs professionnels et de qualification (diplômes, attestations)");
-  docs.push("Documents relatifs à l'employeur en France");
-  docs.push("Justificatif de logement en France");
-  docs.push(LS_ASSURANCE);
-
-  const notes: string[] = [];
-  if (!p.lsContrat)
-    notes.push(
-      "Ni contrat ni promesse d'embauche : le dossier ne peut pas être déposé en l'état, l'engagement de l'employeur est la pièce centrale.",
-    );
-  if (p.lsAutorisationTravail === "non")
-    notes.push(
-      "Autorisation de travail non obtenue : c'est à l'employeur de l'obtenir auprès de l'administration française AVANT le dépôt. Point de blocage à lever en premier.",
-    );
-  if (p.lsTravailType === "talent")
-    notes.push(
-      "Passeport Talent : diplôme d'au moins Bac+3 (équivalence ENIC-NARIC si diplôme étranger) et rémunération annuelle brute au-dessus du seuil réglementaire — ≈ 39 582 € en 2026, réévalué chaque année, à revérifier avant chaque dossier. Démarche via le portail ANEF, validité jusqu'à 4 ans, et pas d'autorisation de travail à obtenir par l'employeur.",
-    );
-  if (p.lsAutorisationTravail === "inconnu")
-    notes.push(
-      "Autorisation de travail à vérifier avec l'employeur avant toute autre pièce — dispense possible selon l'activité (manifestation, mannequin, détachement pour enseignement, mission d'ingénierie ou d'expertise).",
-    );
-
-  const TITRES: Record<NonNullable<Profile["lsTravailType"]>, string> = {
-    salarie: "salarié",
-    temporaire: "travailleur temporaire",
-    saisonnier: "travailleur saisonnier",
-    talent: "talent / hautement qualifié",
-    entrepreneur: "entrepreneur / indépendant",
-    autre: "activité à préciser",
-  };
-
-  return {
-    key: "ls_travail",
-    title: `Long séjour · travail (${TITRES[p.lsTravailType ?? "autre"]})`,
-    cat: "Long séjour (Visa D) · activité professionnelle",
-    level: p.lsContrat && p.lsAutorisationTravail === "oui" ? "attention" : "complexe",
-    docs,
-    extra: [],
-    notes,
-  };
-}
-
-function buildLsFamille(p: Profile): CaseResult {
-  const docs = [...LS_BASE];
-
-  // Ascendant : deux listes distinctes, à charge ou non — les justificatifs diffèrent.
-  if (p.lsFamilleQui === "ascendant") {
-    const aCharge = p.lsAscendantCharge === true;
-    docs.push(
-      "Acte de naissance prouvant le lien familial",
-      "Preuve de la nationalité française du descendant",
-      "Acte de mariage du descendant s'il est étranger marié à un(e) Français(e)",
-    );
-    if (aCharge) {
-      docs.push(
-        "Justificatifs de ressources du demandeur",
-        "Justificatifs de ressources du descendant",
-        "Preuves de prise en charge régulière et effective (virements, transferts)",
-      );
-    } else {
-      docs.push(
-        "Preuve du lien familial",
-        LS_NON_ACTIVITE,
-        "Justificatifs de ressources",
-        "Justificatif de résidence du descendant en France",
+  switch (p.lsRetour) {
+    case "perte_titre": {
+      if (oui(p.lsDeclarationPerte))
+        docs.push(
+          "Déclaration originale de perte ou de vol établie par les autorités locales",
+          "Photocopie de la déclaration de perte ou de vol",
+        );
+      else
+        notes.push(
+          "Pas de déclaration de perte ou de vol : à faire établir par les autorités locales avant le dépôt.",
+        );
+      if (oui(p.lsCopieTitre)) docs.push("Photocopie du titre de séjour perdu ou volé");
+      else if (oui(p.lsReferencesTitre))
+        docs.push(
+          "À défaut de photocopie : références du titre de séjour (numéro, date et lieu de délivrance)",
+        );
+      else
+        notes.push(
+          "Ni photocopie ni références du titre de séjour (numéro, date et lieu de délivrance) : retrouver au moins les références avant le dépôt.",
+        );
+      return lsResult(
+        "ls_retour_titre",
+        "Visa de retour · perte ou vol du titre de séjour",
+        cat,
+        "attention",
+        docs,
+        notes,
       );
     }
-    docs.push(LS_ASSURANCE);
-    return {
-      key: aCharge ? "ls_ascendant_charge" : "ls_ascendant_non_charge",
-      title: aCharge
-        ? "Long séjour · ascendant à charge d'un Français"
-        : "Long séjour · ascendant non à charge",
-      cat: "Long séjour (Visa D) · installation familiale",
-      level: "complexe",
-      docs,
-      extra: [],
-      notes: [],
-    };
-  }
-
-  docs.push("Justificatif du lien familial (acte d'état civil)");
-  if (p.lsPersonneFrancaise)
-    docs.push("Preuve de la nationalité française de la personne rejointe");
-  docs.push("Justificatif de résidence en France de la personne rejointe");
-  docs.push("Justificatifs de ressources");
-  docs.push("Justificatif de logement");
-  docs.push(LS_ASSURANCE);
-
-  const LIENS: Record<NonNullable<Profile["lsFamilleQui"]>, string> = {
-    conjoint: "conjoint(e) de Français(e)",
-    parent_enfant: "parent / enfant de Français",
-    ascendant: "ascendant",
-    enfant: "enfant",
-    autre: "autre membre de famille",
-  };
-
-  return {
-    key: "ls_famille",
-    title: `Long séjour · installation familiale (${LIENS[p.lsFamilleQui ?? "autre"]})`,
-    cat: "Long séjour (Visa D) · installation familiale",
-    level: "complexe",
-    docs,
-    extra: [],
-    notes: p.lsPersonneFrancaise
-      ? []
-      : [
-          "La personne rejointe n'est pas déclarée française : vérifier son titre de séjour et si le dossier relève plutôt du regroupement familial, procédure engagée en France par le résident (OFII/préfecture).",
-        ],
-  };
-}
-
-function buildLsVisiteur(p: Profile): CaseResult {
-  const docs = [...LS_BASE];
-
-  const SITUATION: Record<NonNullable<Profile["lsSituation"]>, string> = {
-    salarie:
-      "Justificatifs de situation socio-économique : attestation de travail et bulletins de paie",
-    fonctionnaire: "Justificatifs de situation socio-économique : attestation de fonction",
-    retraite: "Justificatifs de situation socio-économique : attestation et relevés de pension",
-    etudiant: "Justificatifs de situation socio-économique : certificat de scolarité",
-    sans: "Justificatifs de situation socio-économique : attestation de prise en charge et ressources du garant",
-    autre: "Justificatifs de situation socio-économique",
-  };
-  docs.push(SITUATION[p.lsSituation ?? "autre"]);
-
-  const FINANCE: Record<NonNullable<Profile["lsFinanceSejour"]>, string> = {
-    soi: "Justificatifs de ressources personnelles",
-    famille: "Prise en charge de la famille + justificatifs de ses ressources",
-    autre: "Attestation de prise en charge du tiers + justificatifs de ses ressources",
-  };
-  docs.push(FINANCE[p.lsFinanceSejour ?? "soi"]);
-  docs.push("Justificatifs des fonds disponibles pour la durée du séjour");
-
-  const LOGEMENT: Record<NonNullable<Profile["lsLogement"]>, string> = {
-    propriete: "Justificatif de logement : titre de propriété du bien en France",
-    location: "Justificatif de logement : contrat de bail",
-    heberge: "Justificatif de logement : attestation d'accueil de l'hébergeant (formulaire Cerfa)",
-    autre: "Justificatif de logement",
-  };
-  docs.push(LOGEMENT[p.lsLogement ?? "autre"]);
-  docs.push(LS_NON_ACTIVITE);
-  docs.push(LS_ASSURANCE);
-
-  const notes: string[] = [];
-  if (p.lsFonds === false)
-    notes.push(
-      "Fonds déclarés insuffisants : c'est le motif de refus le plus direct sur un visiteur long séjour. Construire une prise en charge documentée avant de déposer.",
-    );
-
-  return {
-    key: "ls_visiteur",
-    title: "Long séjour · visiteur / séjour privé",
-    cat: "Long séjour (Visa D) · séjour privé",
-    level: p.lsFonds === false ? "complexe" : "attention",
-    docs,
-    extra: [],
-    notes,
-  };
-}
-
-function buildLsStage(p: Profile): CaseResult {
-  if (p.lsDureeCourte) return lsTropCourt("Stage");
-  const docs = [...LS_BASE];
-  if (p.lsConvention)
-    docs.push(
-      "Convention de stage signée entre l'organisme d'accueil en France, l'établissement et le stagiaire",
-    );
-  if (p.lsStageEtudiant) docs.push("Justificatif de formation en cours (certificat de scolarité)");
-  docs.push("Justificatifs de ressources");
-  docs.push("Justificatif de logement en France");
-  docs.push(LS_ASSURANCE);
-
-  const notes: string[] = [];
-  if (!p.lsConvention)
-    notes.push(
-      "Convention de stage absente : c'est la pièce centrale du dossier, rien ne peut être déposé sans elle.",
-    );
-
-  return {
-    key: "ls_stage",
-    title: "Long séjour · stage",
-    cat: "Long séjour (Visa D) · stage",
-    level: p.lsConvention ? "attention" : "complexe",
-    docs,
-    extra: [],
-    notes,
-  };
-}
-
-/** Aiguillage du long séjour à partir du motif déclaré (Q1). */
-export function buildLongSejour(p: Profile): CaseResult {
-  switch (p.lsMotif) {
-    case "etudes":
-      return buildLsEtudes(p);
-    case "travail":
-      return buildLsTravail(p);
-    case "famille":
-      return buildLsFamille(p);
-    case "visiteur":
-      return buildLsVisiteur(p);
-    case "stage":
-      return buildLsStage(p);
+    case "perte_passeport": {
+      if (oui(p.lsDeclarationPerte)) docs.push("Déclaration de perte ou de vol du passeport");
+      else
+        notes.push(
+          "Pas de déclaration de perte ou de vol du passeport : à faire établir avant le dépôt.",
+        );
+      if (oui(p.lsCopieTitre))
+        docs.push("Copie du passeport perdu ou volé contenant le visa long séjour");
+      else if (oui(p.lsReferencesTitre))
+        docs.push("À défaut de copie : références du passeport ou du visa");
+      else
+        notes.push(
+          "Ni copie du passeport perdu ou volé ni références du passeport ou du visa : à retrouver avant le dépôt.",
+        );
+      return lsResult(
+        "ls_retour_passeport",
+        "Visa de retour · perte ou vol du passeport (visa long séjour)",
+        cat,
+        "attention",
+        docs,
+        notes,
+      );
+    }
+    case "recepisse": {
+      if (oui(p.lsRecepisse) && oui(p.lsRecepisseValide))
+        docs.push(
+          "Original + photocopie du récépissé de première demande de carte de séjour en cours de validité",
+        );
+      else
+        notes.push(
+          non(p.lsRecepisse)
+            ? "Pas de récépissé de première demande de carte de séjour : le visa de retour sur ce motif suppose un récépissé en cours de validité."
+            : "Récépissé périmé : il doit être en cours de validité pour demander un visa de retour sur ce motif.",
+        );
+      return lsResult(
+        "ls_retour_recepisse",
+        "Visa de retour · première demande de carte de séjour (récépissé)",
+        cat,
+        non(p.lsRecepisse) || non(p.lsRecepisseValide) ? "complexe" : "attention",
+        docs,
+        notes,
+      );
+    }
+    case "mineur": {
+      if (oui(p.lsMineur)) {
+        if (oui(p.lsDcemTir)) docs.push("DCEM ou TIR");
+        else
+          docs.push(
+            "Documents relatifs à la régularité du séjour des parents en France",
+            "Preuve du lien de filiation",
+            "Preuve d'un regroupement familial, le cas échéant",
+            "Attestation de scolarité",
+            "Tout document permettant d'établir la régularité du séjour en France",
+          );
+      } else
+        notes.push(
+          "Le demandeur n'est pas mineur : ce motif (mineur sorti de France sans DCEM / TIR) ne s'applique pas. Reprendre la qualification avec le bon motif de retour.",
+        );
+      return lsResult(
+        "ls_retour_mineur",
+        "Visa de retour · mineur sorti de France sans DCEM / TIR",
+        cat,
+        non(p.lsMineur) ? "complexe" : "attention",
+        docs,
+        notes,
+      );
+    }
     default:
-      return {
-        key: "ls_autre",
-        title: "Long séjour · motif hors catégories",
-        cat: "Long séjour (Visa D) · à qualifier",
-        level: "complexe",
-        docs: [...LS_BASE],
-        extra: [],
-        notes: [
-          "Motif non couvert par les branches connues : qualification manuelle nécessaire, seul le socle commun est pré-rempli.",
-        ],
-      };
+      return lsResult("ls_retour", "Visa de retour", cat, "attention", docs, notes);
   }
+}
+
+/* ---------- 2. Installation familiale ou privée ---------- */
+
+const LS_ASSURANCE_3M = "Assurance médicale couvrant les 3 premiers mois du séjour";
+const LS_ID_FAMILLE = [
+  "Passeport avec visas et cachets",
+  LS_FORMULAIRE,
+  LS_RCPC,
+  "2 photographies d'identité",
+];
+const LS_ACTE_MARIAGE_DESC = [
+  "Si le descendant est étranger : copie intégrale récente de l'acte de mariage avec un Français",
+  "Acte dressé ou transcrit par une autorité française",
+];
+
+function buildLsAscendantCharge(p: Profile): CaseResult {
+  const docs = [
+    ...LS_ID_FAMILLE,
+    "Copie intégrale récente de l'acte de naissance justifiant le lien familial avec le descendant",
+  ];
+  if (oui(p.lsDescFrancais)) docs.push("Justificatif de la nationalité française du descendant");
+  else docs.push("Justificatif de la nationalité française du conjoint du descendant étranger");
+  if (!oui(p.lsDescFrancais) || p.lsDescMarie === "oui") docs.push(...LS_ACTE_MARIAGE_DESC);
+  if (oui(p.lsRessourcesPropres))
+    docs.push("Justificatifs des ressources propres de l'ascendant dans le pays d'origine");
+  docs.push("Justificatifs des ressources du descendant");
+  if (oui(p.lsPriseEnCharge) && oui(p.lsPriseRegulier))
+    docs.push(
+      "Preuves d'une contribution effective et régulière à l'entretien de l'ascendant depuis une période significative",
+    );
+  docs.push(LS_ASSURANCE_3M);
+
+  const notes = [
+    "France-Visas : pour l'installation comme ascendant, prouver le lien familial, la nationalité du descendant ou de son conjoint, la prise en charge dans le pays de résidence, les conditions de logement et une assurance couvrant les trois premiers mois.",
+  ];
+  if (non(p.lsPriseEnCharge))
+    notes.push(
+      "Pas de prise en charge financière par le descendant dans le pays de résidence : le dossier ne relève pas de l'ascendant à charge — reprendre avec « Ascendant non à charge ».",
+    );
+  else if (non(p.lsPriseRegulier))
+    notes.push(
+      "Prise en charge non régulière / non effective depuis une période significative : point faible du dossier, à documenter avant le dépôt.",
+    );
+  return lsResult(
+    "ls_asc_charge",
+    "Installation familiale · ascendant à charge de Français ou de son conjoint étranger",
+    "Long séjour (Visa D) · installation familiale",
+    non(p.lsPriseEnCharge) || non(p.lsPriseRegulier) ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+function buildLsAscendantNonCharge(p: Profile): CaseResult {
+  const docs = [
+    ...LS_ID_FAMILLE,
+    "Copie intégrale récente de l'acte de naissance justifiant le lien familial avec le descendant",
+    "Justificatif de la nationalité française du descendant",
+    "Ou justificatif de la nationalité française du conjoint du descendant étranger",
+    ...LS_ACTE_MARIAGE_DESC,
+    "Engagement à ne pas exercer d'activité professionnelle en France",
+    "Preuve du lien familial : acte de naissance + traduction, le cas échéant",
+    "CNI ou passeport du descendant français",
+    "Relevés bancaires des 3 derniers mois",
+    "Justificatifs de ressources régulières",
+    "Autres revenus : loyers, rentes, etc.",
+    "Justificatif de résidence du descendant en France",
+    "Assurance médicale couvrant la durée requise du séjour",
+  ];
+  const notes: string[] = [];
+  if (non(p.lsParentFrancais))
+    notes.push(
+      "Le demandeur n'est ni parent ni grand-parent d'un ressortissant français ou de son conjoint : ce motif ne s'applique pas.",
+    );
+  if (non(p.lsRessourcesPerso))
+    notes.push(
+      "Ressources personnelles insuffisantes : sans elles, l'ascendant non à charge ne peut pas subvenir à ses besoins en France — point bloquant à lever avant le dépôt.",
+    );
+  return lsResult(
+    "ls_asc_non_charge",
+    "Installation familiale · ascendant non à charge",
+    "Long séjour (Visa D) · installation familiale",
+    "complexe",
+    docs,
+    notes,
+  );
+}
+
+function buildLsConjoint(p: Profile): CaseResult {
+  const docs = [
+    "Passeport / document de voyage",
+    LS_FORMULAIRE,
+    LS_RCPC,
+    "2 photographies d'identité",
+    "Copie intégrale de l'acte de mariage",
+  ];
+  if (p.lsTranscrit !== "na")
+    docs.push("Documents de transcription / reconnaissance du mariage, le cas échéant");
+  docs.push(
+    "Justificatif de la nationalité française du conjoint",
+    "CNI ou passeport français du conjoint",
+    "Justificatifs relatifs à la communauté de vie",
+    "Éléments permettant d'établir l'intention de maintenir la communauté de vie en France",
+    "Preuve de résidence, lorsque requise",
+    LS_NOTE_VERBALE,
+  );
+  const notes = [
+    "France-Visas : le conjoint de Français demandant un long séjour doit justifier du mariage, de la nationalité française du conjoint, de la communauté de vie et de l'intention de la maintenir en France.",
+  ];
+  const bloquants: string[] = [];
+  if (non(p.lsMarie)) bloquants.push("le demandeur n'est pas légalement marié");
+  if (non(p.lsConjointFrancais)) bloquants.push("le conjoint n'est pas de nationalité française");
+  if (non(p.lsActeMariage)) bloquants.push("l'acte intégral de mariage manque");
+  if (p.lsTranscrit === "non") bloquants.push("le mariage n'est pas transcrit alors qu'il le faut");
+  if (non(p.lsCommunaute)) bloquants.push("pas de communauté de vie");
+  if (non(p.lsMaintien))
+    bloquants.push("pas de projet de maintenir la communauté de vie en France");
+  if (bloquants.length)
+    notes.push(`Points bloquants à lever avant le dépôt : ${bloquants.join(" ; ")}.`);
+  return lsResult(
+    "ls_conjoint",
+    "Installation familiale · conjoint(e) de Français",
+    "Long séjour (Visa D) · installation familiale",
+    bloquants.length ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+function buildLsParentMineur(p: Profile): CaseResult {
+  const docs = [
+    "Document de voyage",
+    LS_FORMULAIRE,
+    LS_RCPC,
+    "Photographie d'identité",
+    "Copie de la page d'identité",
+    "Copies des pages comportant visas, cachets ou autres inscriptions",
+    "Actes d'état civil établissant la filiation",
+    "Justificatif de la nationalité française de l'enfant",
+    "Acte de naissance / document d'état civil permettant d'établir l'âge de l'enfant",
+    "Justificatif de résidence de l'enfant en France",
+    "Justificatifs de contribution effective à l'entretien et à l'éducation de l'enfant",
+  ];
+  // Autorité parentale : l'autre parent, sa décision, la garde.
+  if (oui(p.lsAutreParent)) {
+    docs.push(
+      "Acte de mariage des parents, le cas échéant",
+      "Documents relatifs à l'autorité parentale",
+      "Copie de la pièce d'identité de l'autre parent",
+    );
+    if (oui(p.lsAutreParentAutorise)) docs.push("Autorisation de l'autre parent, le cas échéant");
+  } else {
+    docs.push("Déclaration du parent étranger, selon la situation");
+  }
+  if (oui(p.lsDecisionGarde))
+    docs.push(
+      "Décision de justice, le cas échéant",
+      "Acte de décès de l'autre parent, le cas échéant",
+    );
+  docs.push(
+    "Contrat de bail du parent en France",
+    "Ou titre de propriété",
+    "Ou lettre signée du parent attestant le transfert de sa résidence vers la France",
+    "Lettre explicative si nécessaire",
+  );
+
+  const notes = [
+    "France-Visas : le parent étranger d'un enfant français mineur doit justifier du lien de filiation, de la nationalité et de l'âge de l'enfant, de sa résidence en France, de sa contribution effective à son entretien et son éducation, ainsi que de l'absence de polygamie.",
+  ];
+  const bloquants: string[] = [];
+  if (non(p.lsEnfantFrancais)) bloquants.push("l'enfant n'est pas de nationalité française");
+  if (non(p.lsEnfantMineur)) bloquants.push("l'enfant a 18 ans ou plus");
+  if (non(p.lsFiliation)) bloquants.push("lien de filiation non établi officiellement");
+  if (non(p.lsEnfantReside)) bloquants.push("l'enfant ne réside pas en France");
+  if (non(p.lsContribue))
+    bloquants.push("pas de contribution effective à l'entretien et à l'éducation");
+  else if (non(p.lsContribue2ans))
+    bloquants.push("contribution inférieure à 2 ans et non depuis la naissance");
+  if (oui(p.lsAutreParent) && non(p.lsAutreParentAutorise))
+    bloquants.push("l'autre parent (autorité parentale) n'autorise pas l'installation");
+  if (oui(p.lsPolygamie)) bloquants.push("situation de polygamie");
+  if (bloquants.length)
+    notes.push(`Points bloquants à lever avant le dépôt : ${bloquants.join(" ; ")}.`);
+  return lsResult(
+    "ls_parent_mineur",
+    "Installation familiale · parent d'un enfant mineur français",
+    "Long séjour (Visa D) · installation familiale",
+    bloquants.length ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+/* ---------- 3. Visiteur ---------- */
+
+function buildLsVisiteurMajeur(p: Profile): CaseResult {
+  const docs = [
+    LS_FORMULAIRE,
+    LS_RCPC,
+    "2 photographies d'identité",
+    "Passeport / document de voyage valide",
+    "Engagement à ne pas exercer d'activité professionnelle en France",
+    "Lettre expliquant le projet, le cas échéant",
+    "Justificatifs de situation socio-économique",
+    "Preuve de fonds suffisants",
+    "Justificatifs de ressources régulières, le cas échéant",
+  ];
+  const LOGEMENT: Record<string, string> = {
+    propriete: "Titre de propriété",
+    location: "Contrat de location",
+    personne: "Justificatif d'hébergement par une personne résidant en France",
+    autre: "Document expliquant les modalités de logement",
+  };
+  docs.push(
+    LOGEMENT[typeof p.lsLogement === "string" ? p.lsLogement : "autre"] ?? LOGEMENT["autre"]!,
+    "Assurance maladie couvrant toute la durée du séjour (période de validité du visa, dans la limite applicable)",
+  );
+  const notes = [
+    "France-Visas : le long séjour « visiteur » suppose l'absence d'activité professionnelle, la justification de la situation socio-économique, des ressources, de l'hébergement et de la couverture médicale.",
+  ];
+  if (non(p.lsFonds))
+    notes.push(
+      "Fonds déclarés insuffisants : c'est le motif de refus le plus direct sur un visiteur long séjour — construire une prise en charge documentée avant de déposer.",
+    );
+  return lsResult(
+    "ls_visiteur_majeur",
+    "Visiteur majeur",
+    "Long séjour (Visa D) · visiteur",
+    non(p.lsFonds) ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+function buildLsVisiteurMineur(p: Profile): CaseResult {
+  const docs = [
+    LS_FORMULAIRE,
+    LS_RCPC,
+    "Photographie d'identité",
+    "Document de voyage valide : délivré depuis moins de 10 ans, minimum 2 pages vierges, validité suffisante pour le long séjour",
+    "Page d'identité et toutes les pages comportant visas, cachets ou inscriptions",
+    LS_NOTE_VERBALE,
+  ];
+  if (non(p.lsRessortissant))
+    docs.push(
+      "Preuve de résidence légale dans le pays de résidence (le demandeur n'en est pas ressortissant)",
+    );
+  docs.push("Justificatif d'inscription scolaire en France");
+  if (oui(p.lsParentsSepares))
+    docs.push(
+      "Justificatif du droit de garde en cas de séparation / divorce",
+      "Accord écrit du parent investi du droit de garde",
+      "Documents officiels de garde si nécessaire",
+    );
+  docs.push(
+    "Justificatifs de ressources des parents, ou de l'organisme, ou du proche résidant en France",
+    "Hébergement : titre de propriété, ou bail, ou autre justificatif d'hébergement, ou justificatif de prise en charge de l'hébergement, ou document expliquant les conditions d'hébergement",
+    "Assurance médicale couvrant toute la durée du séjour",
+  );
+  const notes: string[] = [];
+  if (non(p.lsScolarise))
+    notes.push(
+      "Pas d'inscription dans un établissement scolaire en France : le justificatif d'inscription est la pièce centrale du dossier, à obtenir avant le dépôt.",
+    );
+  if (oui(p.lsParentsSepares) && non(p.lsGardeAutorise))
+    notes.push(
+      "Le parent disposant du droit de garde n'autorise pas le séjour : bloquant tant que l'accord écrit n'est pas obtenu.",
+    );
+  return lsResult(
+    "ls_visiteur_mineur",
+    "Visiteur mineur / mineur scolarisé",
+    "Long séjour (Visa D) · visiteur mineur",
+    notes.length ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+/* ---------- 4. Travail ---------- */
+
+/** Pièces d'identité communes à toutes les branches travail. */
+const LS_TRAVAIL_IDENTITE = [
+  "Photographie d'identité",
+  "Note verbale si document de voyage officiel",
+  "Preuve de résidence légale si nécessaire",
+  "Document de voyage : copie de la page identité + toutes les pages comportant visas / cachets / inscriptions",
+];
+
+function buildLsEmbauche(p: Profile): CaseResult {
+  const docs = [...LS_TRAVAIL_IDENTITE];
+  if (p.lsAutorisation === "oui") docs.push("Autorisation de travail");
+  if (oui(p.lsContratTravail)) docs.push("Contrat de travail / document équivalent");
+  if (oui(p.lsDiplomes)) docs.push("Diplômes", "Justificatifs de qualification");
+  if (oui(p.lsAttestations)) docs.push("Attestations de travail");
+
+  const notes: string[] = [];
+  if (p.lsEmployeur === "detachement")
+    notes.push(
+      "Détachement : l'employeur ou l'entreprise bénéficiaire doit obtenir l'autorisation de travail lorsqu'elle est requise.",
+    );
+  if (p.lsAutorisation === "non")
+    notes.push(
+      "Autorisation de travail non obtenue alors qu'elle est requise : à obtenir par l'employeur AVANT le dépôt — point de blocage à lever en premier.",
+    );
+  if (p.lsAutorisation === "encours")
+    notes.push(
+      "Autorisation de travail en cours : le dossier ne peut être déposé qu'une fois obtenue.",
+    );
+  if (non(p.lsContratTravail))
+    notes.push("Pas de contrat de travail ni de document équivalent : pièce centrale du dossier.");
+  const complet = p.lsAutorisation === "oui" && oui(p.lsContratTravail);
+  return lsResult(
+    "ls_embauche",
+    p.lsEmployeur === "detachement"
+      ? "Travail · détachement par un employeur étranger"
+      : "Travail · embauche par une entreprise française",
+    "Long séjour (Visa D) · travail salarié",
+    complet ? "attention" : "complexe",
+    docs,
+    notes,
+  );
+}
+
+function buildLsIct(p: Profile): CaseResult {
+  const docs = [
+    ...LS_TRAVAIL_IDENTITE,
+    "Formulaire CERFA n°15619*01 et pièces qui y sont listées",
+    "Preuve d'ancienneté d'au moins 6 mois",
+    "Preuve de l'appartenance des deux entreprises au même groupe",
+    p.lsStatutIct === "stagiaire"
+      ? "Pour le stagiaire : diplôme d'enseignement supérieur"
+      : "Pour le salarié détaché : qualifications professionnelles + expérience",
+  ];
+  if (oui(p.lsProfReglementee))
+    docs.push("Justificatif des conditions d'exercice de la profession réglementée, si applicable");
+  if (oui(p.lsContratTravail)) docs.push("Contrat de travail, ou document équivalent");
+  if (oui(p.lsLettreMission))
+    docs.push(
+      "Lettre de mission : conditions de rémunération, durée du transfert, localisation de l'entreprise d'accueil",
+    );
+  if (oui(p.lsCadre))
+    docs.push(
+      "Fonction de cadre / expert",
+      "Possibilité de retour dans une entité du groupe située dans un pays tiers",
+    );
+  docs.push(
+    "Justificatifs de ressources suffisantes : au moins égales au SMIC mensuel brut à temps plein",
+  );
+  const notes = [
+    "France-Visas confirme le cadre ICT et le formulaire déclaratif 15619*01, ainsi que les justificatifs liés au groupe, au contrat et à la mission.",
+  ];
+  const bloquants: string[] = [];
+  if (non(p.lsAnciennete)) bloquants.push("moins de 6 mois d'ancienneté dans le groupe");
+  if (non(p.lsCadre)) bloquants.push("pas de fonction de cadre ou d'expert");
+  if (non(p.lsContratTravail)) bloquants.push("pas de contrat de travail");
+  if (non(p.lsLettreMission)) bloquants.push("pas de lettre de mission");
+  if (bloquants.length)
+    notes.push(`Points bloquants à lever avant le dépôt : ${bloquants.join(" ; ")}.`);
+  return lsResult(
+    "ls_ict",
+    `Travail · ICT — mobilité intragroupe (${p.lsStatutIct === "stagiaire" ? "stagiaire" : "salarié"})`,
+    "Long séjour (Visa D) · travail ICT",
+    bloquants.length ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+function buildLsEntrepreneur(p: Profile): CaseResult {
+  const docs = [...LS_TRAVAIL_IDENTITE];
+  const notes = [
+    "France-Visas : l'activité entrepreneuriale / libérale en France relève du visa long séjour « entrepreneur / profession libérale » ; la viabilité économique du projet, ou la capacité à générer au moins le niveau minimum de ressources, est à justifier selon le cas.",
+  ];
+
+  if (p.lsProjet === "existante") {
+    docs.push(
+      "Attestation de compte à jour de l'entreprise délivrée par l'URSSAF",
+      "Bordereau de situation fiscale de l'entreprise (P237)",
+      "Statuts de l'entreprise si insertion dans une société",
+      "Extrait RCS de moins de 3 mois, ou extrait du répertoire des métiers de moins de 3 mois",
+      "Justificatif de nomination, ou lettre d'intention de l'organe compétent",
+      p.lsStatutExistant === "salarie"
+        ? "Original du contrat de travail + copie"
+        : "Élément comptable certifié attestant d'un revenu au moins équivalent au SMIC",
+      "Justificatifs de la viabilité économique du projet",
+    );
+    return lsResult(
+      "ls_entrep_existante",
+      `Travail · entrepreneur — insertion dans une activité existante (${p.lsStatutExistant === "salarie" ? "salarié" : "non-salarié"})`,
+      "Long séjour (Visa D) · entrepreneur",
+      "complexe",
+      docs,
+      notes,
+    );
+  }
+
+  docs.push(
+    "Présentation du projet",
+    "Business plan",
+    "Budget prévisionnel pluriannuel",
+    "Avis de la plateforme compétente de la Main-d'œuvre étrangère lorsque requis",
+    "Statuts",
+    "Extrait K / Kbis si déjà obtenu, ou justificatif d'affiliation au régime social des indépendants",
+    "CERFA « commerçant, artisan, industriel » complété",
+    "Bordereau fiscal si résident en France, ou casier judiciaire / document équivalent du pays de nationalité, selon le cas",
+    "Diplômes",
+    "Qualifications",
+    "Attestations de travail",
+    "Engagement de cautionnement d'un établissement de crédit ou d'une entreprise d'assurance agréée en France, ou attestation de solde créditeur d'un compte bancaire en France",
+  );
+  const PAR_TYPE: Record<string, string[]> = {
+    individuelle: [
+      "Promesse de bail commercial, ou contrat de sous-location",
+      "Autorisation du propriétaire si nécessaire",
+      "Ou document relatif aux locaux, ou contrat de domiciliation",
+    ],
+    location_gerance: [
+      "Promesse / contrat de location-gérance",
+      "Extrait RCS / répertoire des métiers du précédent exploitant datant de moins de 3 mois",
+      "Copie du bail du propriétaire du fonds",
+    ],
+    fonds: ["Promesse ou contrat de vente du fonds"],
+    societe_fr: [
+      "Promesse de bail / sous-location / document concernant les locaux",
+      "Projet de statuts",
+      "Répartition du capital",
+    ],
+    filiale: [
+      "Justificatif de nomination / lettre d'intention",
+      "Statuts de la société étrangère",
+      "Documents concernant les locaux",
+      "Projet de statuts + répartition du capital",
+    ],
+    personne_morale: [
+      "Justificatif de nomination / lettre d'intention",
+      "Statuts de la personne morale étrangère",
+    ],
+  };
+  const TITRES: Record<string, string> = {
+    individuelle: "entreprise individuelle / en nom propre",
+    location_gerance: "location-gérance",
+    fonds: "reprise d'un fonds de commerce",
+    societe_fr: "société de droit français",
+    filiale: "filiale d'une société étrangère",
+    personne_morale: "établissement d'une personne morale étrangère",
+  };
+  const t = typeof p.lsActiviteType === "string" ? p.lsActiviteType : "individuelle";
+  docs.push(...(PAR_TYPE[t] ?? []));
+  return lsResult(
+    "ls_entrep_creation",
+    `Travail · entrepreneur — création d'activité (${TITRES[t] ?? "à préciser"})`,
+    "Long séjour (Visa D) · entrepreneur",
+    "complexe",
+    docs,
+    notes,
+  );
+}
+
+function buildLsLiberale(p: Profile): CaseResult {
+  const docs = [...LS_TRAVAIL_IDENTITE];
+  const notes = [
+    "France-Visas : le visa « entrepreneur / profession libérale » concerne la création ou la participation à une activité économique ; démontrer la viabilité du projet ou, pour une activité existante / libérale, une capacité à générer un niveau de ressources au moins équivalent au salaire minimum légal pour un temps plein.",
+  ];
+  if (oui(p.lsProfReglementee))
+    docs.push(
+      "Autorisation correspondant à l'exercice de la profession",
+      "Autorisation de l'Ordre professionnel, si applicable",
+      "Profession médicale / paramédicale : inscription au Conseil de l'Ordre, ou autorisation du Ministère de la Santé",
+    );
+  if (p.lsProjet === "existante")
+    docs.push("Justificatifs démontrant l'effectivité de l'activité déjà existante");
+  else {
+    docs.push(
+      "Avis du Service de la Main-d'Œuvre Étrangère (SMOE) sur la viabilité économique du projet",
+      "Documents de présentation du projet",
+      "Justificatifs professionnels nécessaires",
+    );
+    if (non(p.lsViabilite))
+      notes.push(
+        "La viabilité économique du projet n'a pas été évaluée : obtenir l'avis du SMOE avant le dépôt.",
+      );
+  }
+  docs.push(
+    "Documents justifiant le niveau de ressources attendu",
+    "Justificatifs économiques de l'activité",
+  );
+  if (p.lsProjet === "existante")
+    docs.push("Justificatifs de poursuite d'activité, le cas échéant");
+  if (non(p.lsRessourcesSmic))
+    notes.push(
+      "L'activité ne permet pas de générer des ressources au moins équivalentes au SMIC temps plein : motif de refus direct, à corriger avant le dépôt.",
+    );
+  const bloque = non(p.lsViabilite) || non(p.lsRessourcesSmic);
+  return lsResult(
+    "ls_liberale",
+    `Travail · profession libérale / indépendante (${p.lsProjet === "existante" ? "poursuite d'activité" : "création d'activité"}${oui(p.lsProfReglementee) ? ", profession réglementée" : ""})`,
+    "Long séjour (Visa D) · profession libérale",
+    bloque ? "complexe" : "attention",
+    docs,
+    notes,
+  );
+}
+
+/** Aiguillage du long séjour à partir du type de demande, puis de la branche. */
+export function buildLongSejour(p: Profile): CaseResult {
+  switch (p.lsType) {
+    case "retour":
+      return buildLsRetour(p);
+    case "famille":
+      switch (p.lsFamille) {
+        case "asc_charge":
+          return buildLsAscendantCharge(p);
+        case "asc_non_charge":
+          return buildLsAscendantNonCharge(p);
+        case "conjoint":
+          return buildLsConjoint(p);
+        case "parent_mineur":
+          return buildLsParentMineur(p);
+      }
+      break;
+    case "visiteur":
+      return p.lsVisiteur === "mineur" ? buildLsVisiteurMineur(p) : buildLsVisiteurMajeur(p);
+    case "travail":
+      switch (p.lsTravail) {
+        case "embauche":
+          return buildLsEmbauche(p);
+        case "ict":
+          return buildLsIct(p);
+        case "entrepreneur":
+          return buildLsEntrepreneur(p);
+        case "liberale":
+          return buildLsLiberale(p);
+      }
+      break;
+  }
+  // Dossier enregistré avant la refonte du long séjour (ancien arbre : études, stage…) ou
+  // réponses incomplètes : on ne devine rien, on demande une requalification.
+  return lsResult(
+    "ls_a_requalifier",
+    "Long séjour · à requalifier",
+    "Long séjour (Visa D) · à qualifier",
+    "complexe",
+    [LS_FORMULAIRE, LS_RCPC, LS_PHOTOS, "Passeport valide"],
+    [
+      "Qualification long séjour absente ou issue de l'ancien arbre : reprendre la qualification (retour, installation familiale, visiteur ou travail). Seul le socle commun est pré-rempli.",
+    ],
+  );
 }
 
 export function buildCourtSejour(p: Profile): CaseResult {
@@ -1187,6 +1624,26 @@ export interface TreeNode {
 export const PERSONNE_QUI = "personne_qui";
 export const PERSONNE_FIN = "personne_fin";
 
+/** Suite d'un nœud long séjour : un nœud du questionnaire, ou le résultat (`DYNAMIC_LS`). */
+const lsTo = (n: string): Pick<TreeOption, "n" | "r"> =>
+  n === "DYNAMIC_LS" ? { n, r: true } : { n };
+
+/** Clés du profil qui portent une réponse oui/non du long séjour. */
+type LsBoolKey = {
+  [K in keyof Profile]-?: NonNullable<Profile[K]> extends boolean ? K : never;
+}[keyof Profile];
+
+/** Nœud oui/non du long séjour : enregistre la réponse dans `key` (booléen à plat). */
+function lsOuiNon(q: string, key: LsBoolKey, nOui: string, nNon: string, help?: string): TreeNode {
+  return {
+    q,
+    ...(help ? { help } : {}),
+    opts: [
+      { l: "Oui", ...lsTo(nOui), set: { [key]: true } },
+      { l: "Non", ...lsTo(nNon), set: { [key]: false } },
+    ],
+  };
+}
 export const TREE: Record<string, TreeNode> = {
   /* ============ ÉTAPE 1 — ANTÉCÉDENTS DE VISA ============ */
   start: {
@@ -1350,7 +1807,7 @@ export const TREE: Record<string, TreeNode> = {
     help: "Dernière question commune avant le motif du voyage.",
     opts: [
       { l: "≤ 90 jours (court séjour)", n: "motif", set: { duree: "court" } },
-      { l: "> 90 jours (long séjour)", n: "motif_long", set: { duree: "long" } },
+      { l: "> 90 jours (long séjour)", n: "ls_type", set: { duree: "long" } },
     ],
   },
 
@@ -1367,292 +1824,626 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Études", n: "eout", r: true },
     ],
   },
-  /* ============ LONG SÉJOUR (Visa D) — arbre propre ============ */
-  motif_long: {
-    q: "Quel est le motif principal de votre séjour en France ?",
-    help: "Séjour de plus de 90 jours — chaque motif a ses propres justificatifs.",
+  /* ============ LONG SÉJOUR (Visa D) — arbre « EIDEN Visa — Long séjour » ============ */
+  ls_type: {
+    q: "Quel est le type de votre demande de visa long séjour ?",
+    help: "Séjour de plus de 90 jours — chaque type a ses propres questions et justificatifs.",
     opts: [
-      { l: "Études / formation", n: "ls_etudes_type", set: { lsMotif: "etudes" } },
+      { l: "Visa de retour", n: "ls_retour_motif", set: { lsType: "retour" } },
       {
-        l: "Travail / activité professionnelle",
-        n: "ls_travail_type",
-        set: { lsMotif: "travail" },
+        l: "Installation familiale ou privée",
+        n: "ls_famille_situation",
+        set: { lsType: "famille" },
       },
-      {
-        l: "Installation familiale / rejoindre un membre de famille",
-        n: "ls_famille_qui",
-        set: { lsMotif: "famille" },
-      },
-      { l: "Visiteur / séjour privé", n: "ls_visiteur_activite", set: { lsMotif: "visiteur" } },
-      { l: "Stage", n: "ls_stage_etudiant", set: { lsMotif: "stage" } },
-      { l: "Autre motif", n: "DYNAMIC_LS", set: { lsMotif: "autre" }, r: true },
+      { l: "Visiteur", n: "ls_visiteur_age", set: { lsType: "visiteur" } },
+      { l: "Travail", n: "ls_travail_situation", set: { lsType: "travail" } },
     ],
   },
 
-  /* ---- A. Études / formation ---- */
-  ls_etudes_type: {
-    q: "Quel type de projet d'études avez-vous ?",
+  /* ---- 1. Visa de retour ---- */
+  ls_retour_motif: {
+    q: "Pourquoi demandez-vous un visa de retour en France ?",
     opts: [
-      { l: "Études supérieures", n: "ls_etudes_admission", set: { lsEtudesType: "superieures" } },
-      { l: "Formation professionnelle", n: "ls_etudes_admission", set: { lsEtudesType: "pro" } },
       {
-        l: "École / établissement privé",
-        n: "ls_etudes_admission",
-        set: { lsEtudesType: "privee" },
+        l: "Perte ou vol du titre de séjour",
+        n: "ls_pt_declaration",
+        set: { lsRetour: "perte_titre" },
       },
-      { l: "Autre formation", n: "ls_etudes_admission", set: { lsEtudesType: "autre" } },
+      {
+        l: "Perte ou vol du passeport contenant le visa long séjour",
+        n: "ls_pp_declaration",
+        set: { lsRetour: "perte_passeport" },
+      },
+      {
+        l: "Première demande de carte de séjour / récépissé",
+        n: "ls_rec_recepisse",
+        set: { lsRetour: "recepisse" },
+      },
+      {
+        l: "Mineur sorti de France sans DCEM / TIR",
+        n: "ls_min_mineur",
+        set: { lsRetour: "mineur" },
+      },
     ],
   },
-  ls_etudes_admission: {
-    q: "Avez-vous déjà été accepté(e) par un établissement en France ?",
-    help: "L'attestation d'admission ou de préinscription est la pièce qui ouvre le dossier.",
-    opts: [
-      { l: "Oui", n: "ls_etudes_etablissement", set: { lsAdmission: true } },
-      { l: "Non — pas encore d'admission", n: "ls_etudes_duree", set: { lsAdmission: false } },
-    ],
-  },
-  ls_etudes_etablissement: {
-    q: "Établissement d'accueil.",
+  ls_pt_declaration: lsOuiNon(
+    "Avez-vous effectué une déclaration de perte ou de vol ?",
+    "lsDeclarationPerte",
+    "ls_pt_copie",
+    "ls_pt_copie",
+  ),
+  ls_pt_copie: lsOuiNon(
+    "Disposez-vous d'une photocopie de votre titre de séjour perdu ou volé ?",
+    "lsCopieTitre",
+    "DYNAMIC_LS",
+    "ls_pt_references",
+  ),
+  ls_pt_references: lsOuiNon(
+    "Disposez-vous des références de votre titre de séjour ?",
+    "lsReferencesTitre",
+    "ls_pt_references_fields",
+    "DYNAMIC_LS",
+  ),
+  ls_pt_references_fields: {
+    q: "Références du titre de séjour.",
     fields: [
-      { key: "ls_etudes_nom", label: "Nom de l'établissement" },
-      { key: "ls_etudes_ville", label: "Ville" },
-      { key: "ls_etudes_formation", label: "Intitulé de la formation" },
-      { key: "ls_etudes_rentree", label: "Date de rentrée", type: "date" },
+      { key: "ls_titre_numero", label: "Numéro du titre" },
+      { key: "ls_titre_delivrance", label: "Date de délivrance", type: "date" },
+      { key: "ls_titre_lieu", label: "Lieu de délivrance" },
     ],
-    next: "ls_etudes_duree",
+    next: "DYNAMIC_LS",
+    fieldsResult: true,
   },
-  ls_etudes_duree: {
-    q: "Quelle est la durée de votre formation ?",
-    opts: [
-      { l: "Plus de 3 mois", n: "ls_etudes_financement", set: { lsDureeCourte: false } },
-      {
-        l: "3 mois ou moins",
-        n: "ls_etudes_financement",
-        set: { lsDureeCourte: true },
-      },
-    ],
-  },
-  ls_etudes_financement: {
-    q: "Qui finance vos études et votre séjour ?",
-    opts: [
-      { l: "Moi-même", n: "DYNAMIC_LS", set: { lsFinancement: "soi" }, r: true },
-      { l: "Mes parents", n: "DYNAMIC_LS", set: { lsFinancement: "parents" }, r: true },
-      { l: "Un membre de ma famille", n: "DYNAMIC_LS", set: { lsFinancement: "famille" }, r: true },
-      { l: "Un tiers / sponsor", n: "DYNAMIC_LS", set: { lsFinancement: "tiers" }, r: true },
-      { l: "Une bourse", n: "DYNAMIC_LS", set: { lsFinancement: "bourse" }, r: true },
-    ],
-  },
+  ls_pp_declaration: lsOuiNon(
+    "Avez-vous effectué une déclaration de perte ou de vol du passeport ?",
+    "lsDeclarationPerte",
+    "ls_pp_copie",
+    "ls_pp_copie",
+  ),
+  ls_pp_copie: lsOuiNon(
+    "Disposez-vous d'une copie du passeport perdu ou volé ?",
+    "lsCopieTitre",
+    "DYNAMIC_LS",
+    "ls_pp_references",
+  ),
+  ls_pp_references: lsOuiNon(
+    "Disposez-vous des références du passeport ou du visa ?",
+    "lsReferencesTitre",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  ls_rec_recepisse: lsOuiNon(
+    "Avez-vous un récépissé de première demande de carte de séjour ?",
+    "lsRecepisse",
+    "ls_rec_valide",
+    "DYNAMIC_LS",
+  ),
+  ls_rec_valide: lsOuiNon(
+    "Votre récépissé est-il encore en cours de validité ?",
+    "lsRecepisseValide",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  ls_min_mineur: lsOuiNon("Êtes-vous mineur ?", "lsMineur", "ls_min_dcem", "DYNAMIC_LS"),
+  ls_min_dcem: lsOuiNon(
+    "Disposez-vous d'un DCEM ou d'un TIR ?",
+    "lsDcemTir",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
 
-  /* ---- B. Travail / activité professionnelle ---- */
-  ls_travail_type: {
-    q: "Quel type d'activité allez-vous exercer en France ?",
+  /* ---- 2. Installation familiale ou privée ---- */
+  ls_famille_situation: {
+    q: "Quelle est votre situation familiale en France ?",
     opts: [
-      { l: "Salarié", n: "ls_travail_contrat", set: { lsTravailType: "salarie" } },
       {
-        l: "Travailleur temporaire",
-        n: "ls_travail_contrat",
-        set: { lsTravailType: "temporaire" },
+        l: "Ascendant à charge de Français ou de son conjoint étranger",
+        n: "ls_ac_lien",
+        set: { lsFamille: "asc_charge" },
       },
-      { l: "Travail saisonnier", n: "ls_travail_contrat", set: { lsTravailType: "saisonnier" } },
+      { l: "Ascendant non à charge", n: "ls_anc_parent", set: { lsFamille: "asc_non_charge" } },
+      { l: "Conjoint(e) de Français", n: "ls_c_marie", set: { lsFamille: "conjoint" } },
       {
-        l: "Talent / hautement qualifié",
-        n: "ls_travail_contrat",
-        set: { lsTravailType: "talent" },
-      },
-      {
-        l: "Entrepreneur / indépendant",
-        n: "ls_travail_contrat",
-        set: { lsTravailType: "entrepreneur" },
-      },
-      { l: "Autre", n: "ls_travail_contrat", set: { lsTravailType: "autre" } },
-    ],
-  },
-  ls_travail_contrat: {
-    q: "Avez-vous déjà un contrat ou une promesse d'embauche ?",
-    opts: [
-      { l: "Oui", n: "ls_travail_employeur", set: { lsContrat: true } },
-      { l: "Non", n: "ls_travail_autorisation", set: { lsContrat: false } },
-    ],
-  },
-  ls_travail_employeur: {
-    q: "Employeur en France.",
-    fields: [
-      { key: "ls_travail_employeur_nom", label: "Nom de l'employeur" },
-      { key: "ls_travail_poste", label: "Poste" },
-      { key: "ls_travail_ville", label: "Ville" },
-      { key: "ls_travail_debut", label: "Date de début prévue", type: "date" },
-      { key: "ls_travail_salaire", label: "Rémunération annuelle brute" },
-    ],
-    next: "ls_travail_autorisation",
-  },
-  ls_travail_autorisation: {
-    q: "Votre employeur a-t-il obtenu l'autorisation de travail, lorsqu'elle est requise ?",
-    help: "Dispense possible : manifestation, mannequin, détachement pour enseignement, mission d'ingénierie ou d'expertise.",
-    opts: [
-      { l: "Oui", n: "ls_travail_type_contrat", set: { lsAutorisationTravail: "oui" } },
-      { l: "Non", n: "ls_travail_type_contrat", set: { lsAutorisationTravail: "non" } },
-      {
-        l: "Je ne sais pas",
-        n: "ls_travail_type_contrat",
-        set: { lsAutorisationTravail: "inconnu" },
+        l: "Parent d'un enfant mineur français",
+        n: "ls_pm_francais",
+        set: { lsFamille: "parent_mineur" },
       },
     ],
   },
-  ls_travail_type_contrat: {
-    q: "Quel est votre type de contrat ?",
+  /* 2.1 Ascendant à charge */
+  ls_ac_lien: {
+    q: "Quel est votre lien avec la personne que vous allez rejoindre ?",
     opts: [
-      { l: "CDI", n: "DYNAMIC_LS", set: { lsTypeContrat: "cdi" }, r: true },
-      { l: "CDD", n: "DYNAMIC_LS", set: { lsTypeContrat: "cdd" }, r: true },
-      { l: "Contrat saisonnier", n: "DYNAMIC_LS", set: { lsTypeContrat: "saisonnier" }, r: true },
-      { l: "Autre", n: "DYNAMIC_LS", set: { lsTypeContrat: "autre" }, r: true },
+      { l: "Parent", n: "ls_ac_francais", set: { lsLien: "parent" } },
+      { l: "Grand-parent", n: "ls_ac_francais", set: { lsLien: "grand_parent" } },
+      { l: "Autre ascendant", n: "ls_ac_francais", set: { lsLien: "autre" } },
     ],
   },
+  ls_ac_francais: lsOuiNon(
+    "La personne que vous rejoignez est-elle de nationalité française ?",
+    "lsDescFrancais",
+    "ls_ac_marie",
+    "ls_ac_marie",
+  ),
+  ls_ac_marie: {
+    q: "Si la personne que vous rejoignez est étrangère, est-elle mariée à un ressortissant français ?",
+    opts: [
+      { l: "Oui", n: "ls_ac_charge", set: { lsDescMarie: "oui" } },
+      { l: "Non", n: "ls_ac_charge", set: { lsDescMarie: "non" } },
+      { l: "Non applicable", n: "ls_ac_charge", set: { lsDescMarie: "na" } },
+    ],
+  },
+  ls_ac_charge: lsOuiNon(
+    "Êtes-vous financièrement pris en charge par votre descendant ou son conjoint dans votre pays de résidence ?",
+    "lsPriseEnCharge",
+    "ls_ac_regulier",
+    "DYNAMIC_LS",
+  ),
+  ls_ac_regulier: lsOuiNon(
+    "Cette prise en charge est-elle régulière et effective depuis une période significative ?",
+    "lsPriseRegulier",
+    "ls_ac_ressources",
+    "ls_ac_ressources",
+  ),
+  ls_ac_ressources: lsOuiNon(
+    "Avez-vous vos propres ressources dans votre pays d'origine ?",
+    "lsRessourcesPropres",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  /* 2.2 Ascendant non à charge */
+  ls_anc_parent: lsOuiNon(
+    "Êtes-vous le parent ou grand-parent d'un ressortissant français ou de son conjoint ?",
+    "lsParentFrancais",
+    "ls_anc_ressources",
+    "DYNAMIC_LS",
+  ),
+  ls_anc_ressources: {
+    q: "Avez-vous des ressources personnelles suffisantes pour subvenir à vos besoins en France ?",
+    help: "Si oui, orientation vers Long séjour → Visiteur, conformément à l'orientation actuelle de France-Visas.",
+    opts: [
+      {
+        l: "Oui — orienter vers Visiteur",
+        n: "ls_visiteur_age",
+        set: { lsRessourcesPerso: true, lsType: "visiteur" },
+      },
+      { l: "Non", n: "DYNAMIC_LS", r: true, set: { lsRessourcesPerso: false } },
+    ],
+  },
+  /* 2.3 Conjoint(e) de Français */
+  ls_c_marie: lsOuiNon(
+    "Êtes-vous légalement marié(e) à un ressortissant français ?",
+    "lsMarie",
+    "ls_c_francais",
+    "ls_c_francais",
+  ),
+  ls_c_francais: lsOuiNon(
+    "Votre conjoint est-il de nationalité française ?",
+    "lsConjointFrancais",
+    "ls_c_acte",
+    "ls_c_acte",
+  ),
+  ls_c_acte: lsOuiNon(
+    "Disposez-vous de l'acte intégral de mariage ?",
+    "lsActeMariage",
+    "ls_c_transcrit",
+    "ls_c_transcrit",
+  ),
+  ls_c_transcrit: {
+    q: "Votre mariage est-il reconnu / transcrit lorsque cette transcription est nécessaire ?",
+    opts: [
+      { l: "Oui", n: "ls_c_communaute", set: { lsTranscrit: "oui" } },
+      { l: "Non", n: "ls_c_communaute", set: { lsTranscrit: "non" } },
+      { l: "Non applicable", n: "ls_c_communaute", set: { lsTranscrit: "na" } },
+    ],
+  },
+  ls_c_communaute: lsOuiNon(
+    "Avez-vous une communauté de vie avec votre conjoint français ?",
+    "lsCommunaute",
+    "ls_c_maintien",
+    "ls_c_maintien",
+  ),
+  ls_c_maintien: lsOuiNon(
+    "Votre projet est-il de maintenir cette communauté de vie en France ?",
+    "lsMaintien",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  /* 2.4 Parent d'un enfant mineur français */
+  ls_pm_francais: lsOuiNon(
+    "Avez-vous un enfant de nationalité française ?",
+    "lsEnfantFrancais",
+    "ls_pm_mineur",
+    "ls_pm_mineur",
+  ),
+  ls_pm_mineur: lsOuiNon(
+    "Votre enfant est-il âgé de moins de 18 ans ?",
+    "lsEnfantMineur",
+    "ls_pm_filiation",
+    "ls_pm_filiation",
+  ),
+  ls_pm_filiation: lsOuiNon(
+    "Le lien de filiation avec votre enfant est-il officiellement établi ?",
+    "lsFiliation",
+    "ls_pm_reside",
+    "ls_pm_reside",
+  ),
+  ls_pm_reside: lsOuiNon(
+    "Votre enfant réside-t-il en France ?",
+    "lsEnfantReside",
+    "ls_pm_contribue",
+    "ls_pm_contribue",
+  ),
+  ls_pm_contribue: lsOuiNon(
+    "Contribuez-vous effectivement à l'entretien et à l'éducation de votre enfant ?",
+    "lsContribue",
+    "ls_pm_2ans",
+    "ls_pm_2ans",
+  ),
+  ls_pm_2ans: lsOuiNon(
+    "Cette contribution existe-t-elle depuis la naissance de l'enfant ou depuis au moins 2 ans ?",
+    "lsContribue2ans",
+    "ls_pm_autre",
+    "ls_pm_autre",
+  ),
+  ls_pm_autre: lsOuiNon(
+    "L'autre parent exerce-t-il également l'autorité parentale ?",
+    "lsAutreParent",
+    "ls_pm_autorise",
+    "ls_pm_garde",
+  ),
+  ls_pm_autorise: lsOuiNon(
+    "L'autre parent vous autorise-t-il à établir votre résidence en France avec l'enfant / à rejoindre votre enfant en France ?",
+    "lsAutreParentAutorise",
+    "ls_pm_garde",
+    "ls_pm_garde",
+  ),
+  ls_pm_garde: lsOuiNon(
+    "Existe-t-il une décision de justice ou une situation particulière concernant la garde de l'enfant ?",
+    "lsDecisionGarde",
+    "ls_pm_polygamie",
+    "ls_pm_polygamie",
+  ),
+  ls_pm_polygamie: lsOuiNon(
+    "Vivez-vous en état de polygamie ?",
+    "lsPolygamie",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
 
-  /* ---- C. Installation familiale ---- */
-  ls_famille_qui: {
-    q: "Qui allez-vous rejoindre en France ?",
+  /* ---- 3. Visiteur ---- */
+  ls_visiteur_age: {
+    q: "Quel est l'âge du demandeur ?",
     opts: [
-      { l: "Conjoint(e) français(e)", n: "d_conjoint_fields1", set: { lsFamilleQui: "conjoint" } },
+      { l: "18 ans ou plus — visiteur majeur", n: "ls_vm_activite", set: { lsVisiteur: "majeur" } },
       {
-        l: "Parent / enfant français",
-        n: "ls_famille_nationalite",
-        set: { lsFamilleQui: "parent_enfant" },
+        l: "Moins de 18 ans — visiteur mineur",
+        n: "ls_vmin_scolarise",
+        set: { lsVisiteur: "mineur" },
       },
-      { l: "Ascendant", n: "ls_famille_nationalite", set: { lsFamilleQui: "ascendant" } },
-      { l: "Enfant", n: "ls_famille_nationalite", set: { lsFamilleQui: "enfant" } },
-      { l: "Autre membre de famille", n: "ls_famille_autre", set: { lsFamilleQui: "autre" } },
     ],
   },
-  ls_famille_nationalite: {
-    q: "Cette personne est-elle de nationalité française ?",
-    opts: [
-      { l: "Oui", n: "ls_famille_lien", set: { lsPersonneFrancaise: true } },
-      { l: "Non", n: "ls_famille_lien", set: { lsPersonneFrancaise: false } },
-    ],
-  },
-  ls_famille_lien: {
-    q: "Personne rejointe.",
-    fields: [
-      { key: "ls_famille_nom", label: "Nom et prénom" },
-      { key: "ls_famille_lien_texte", label: "Quel est votre lien avec cette personne ?" },
-      { key: "ls_famille_naissance", label: "Date de naissance", type: "date" },
-      { key: "ls_famille_adresse", label: "Adresse en France" },
-    ],
-    next: "ls_famille_suite",
-  },
-  ls_famille_suite: {
-    q: "Précisez la situation.",
-    help: "Un ascendant à charge ne fournit pas les mêmes justificatifs qu'un ascendant autonome.",
-    opts: [
-      {
-        l: "Je suis un ascendant à la charge de mon descendant en France",
-        n: "DYNAMIC_LS",
-        set: { lsFamilleQui: "ascendant", lsAscendantCharge: true },
-        r: true,
-      },
-      {
-        l: "Je suis un ascendant, mais pas à charge",
-        n: "DYNAMIC_LS",
-        set: { lsFamilleQui: "ascendant", lsAscendantCharge: false },
-        r: true,
-      },
-      { l: "Aucun de ces cas — autre lien familial", n: "DYNAMIC_LS", r: true },
-    ],
-  },
-  ls_famille_autre: {
-    q: "De quel cas s'agit-il ?",
-    help: "Certaines situations relèvent d'une procédure distincte du visa classique.",
-    opts: [
-      { l: "Membre de famille d'un réfugié", n: "d_refugie_fields" },
-      { l: "Membre de famille sous protection subsidiaire", n: "d_subsidiaire_fields" },
-      { l: "Membre de famille d'un apatride", n: "d_apatride_fields" },
-      { l: "Regroupement familial classique", n: "d_install_fields" },
-      { l: "Autre lien familial", n: "DYNAMIC_LS", r: true },
-    ],
-  },
-
-  /* ---- D. Visiteur / séjour privé ---- */
-  ls_visiteur_activite: {
+  /* 3.1 Visiteur majeur */
+  ls_vm_activite: {
     q: "Avez-vous l'intention d'exercer une activité professionnelle en France ?",
-    help: "La branche visiteur suppose un engagement de ne pas travailler.",
+    help: "Le visa visiteur suppose l'engagement de ne pas travailler : si oui, redirection vers Travail.",
     opts: [
-      { l: "Oui", n: "ls_travail_type", set: { lsMotif: "travail" } },
-      { l: "Non", n: "ls_visiteur_situation" },
+      { l: "Oui — rediriger vers Travail", n: "ls_travail_situation", set: { lsType: "travail" } },
+      { l: "Non", n: "ls_vm_situation" },
     ],
   },
-  ls_visiteur_situation: {
+  ls_vm_situation: {
     q: "Quelle est votre situation socio-économique ?",
     opts: [
-      { l: "Salarié(e)", n: "ls_visiteur_finance", set: { lsSituation: "salarie" } },
-      { l: "Fonctionnaire", n: "ls_visiteur_finance", set: { lsSituation: "fonctionnaire" } },
-      { l: "Retraité(e)", n: "ls_visiteur_finance", set: { lsSituation: "retraite" } },
-      { l: "Étudiant(e)", n: "ls_visiteur_finance", set: { lsSituation: "etudiant" } },
-      { l: "Sans activité", n: "ls_visiteur_finance", set: { lsSituation: "sans" } },
-      { l: "Autre", n: "ls_visiteur_finance", set: { lsSituation: "autre" } },
+      { l: "Salarié", n: "ls_vm_finance", set: { lsSituation: "salarie" } },
+      { l: "Fonctionnaire", n: "ls_vm_finance", set: { lsSituation: "fonctionnaire" } },
+      { l: "Entrepreneur", n: "ls_vm_finance", set: { lsSituation: "entrepreneur" } },
+      { l: "Retraité", n: "ls_vm_finance", set: { lsSituation: "retraite" } },
+      { l: "Étudiant", n: "ls_vm_finance", set: { lsSituation: "etudiant" } },
+      { l: "Sans activité", n: "ls_vm_finance", set: { lsSituation: "sans" } },
+      { l: "Autre", n: "ls_vm_finance", set: { lsSituation: "autre" } },
     ],
   },
-  ls_visiteur_finance: {
+  ls_vm_finance: {
     q: "Qui finance votre séjour ?",
     opts: [
-      { l: "Moi-même", n: "ls_visiteur_fonds", set: { lsFinanceSejour: "soi" } },
-      { l: "Ma famille", n: "ls_visiteur_fonds", set: { lsFinanceSejour: "famille" } },
-      { l: "Une autre personne", n: "ls_visiteur_fonds", set: { lsFinanceSejour: "autre" } },
+      { l: "Moi-même", n: "ls_vm_fonds", set: { lsFinanceSejour: "soi" } },
+      { l: "Parent / famille", n: "ls_vm_fonds", set: { lsFinanceSejour: "famille" } },
+      { l: "Autre personne", n: "ls_vm_fonds", set: { lsFinanceSejour: "autre" } },
     ],
   },
-  ls_visiteur_fonds: {
-    q: "Disposez-vous de fonds suffisants pour toute la durée du séjour ?",
-    opts: [
-      { l: "Oui", n: "ls_visiteur_logement", set: { lsFonds: true } },
-      { l: "Non", n: "ls_visiteur_logement", set: { lsFonds: false } },
-    ],
-  },
-  ls_visiteur_logement: {
+  ls_vm_fonds: lsOuiNon(
+    "Disposez-vous de fonds suffisants pour couvrir votre séjour en France ?",
+    "lsFonds",
+    "ls_vm_logement",
+    "ls_vm_logement",
+  ),
+  ls_vm_logement: {
     q: "Où allez-vous résider en France ?",
     opts: [
       { l: "Ma propriété", n: "DYNAMIC_LS", set: { lsLogement: "propriete" }, r: true },
       { l: "Logement loué", n: "DYNAMIC_LS", set: { lsLogement: "location" }, r: true },
       {
-        l: "Logement fourni par une personne en France",
+        l: "Chez une personne résidant en France",
         n: "DYNAMIC_LS",
-        set: { lsLogement: "heberge" },
+        set: { lsLogement: "personne" },
         r: true,
       },
       { l: "Autre", n: "DYNAMIC_LS", set: { lsLogement: "autre" }, r: true },
     ],
   },
-
-  /* ---- E. Stage ---- */
-  ls_stage_etudiant: {
-    q: "Êtes-vous actuellement étudiant(e) ou en formation ?",
-    opts: [
-      { l: "Oui", n: "ls_stage_convention", set: { lsStageEtudiant: true } },
-      { l: "Non", n: "ls_stage_convention", set: { lsStageEtudiant: false } },
-    ],
-  },
-  ls_stage_convention: {
-    q: "Avez-vous une convention de stage avec l'organisme ou l'entreprise en France ?",
-    opts: [
-      { l: "Oui", n: "ls_stage_fields", set: { lsConvention: true } },
-      { l: "Non — pas encore", n: "ls_stage_duree", set: { lsConvention: false } },
-    ],
-  },
-  ls_stage_fields: {
-    q: "Stage en France.",
+  /* 3.2 Visiteur mineur / mineur scolarisé */
+  ls_vmin_scolarise: lsOuiNon(
+    "Êtes-vous inscrit(e) dans un établissement scolaire en France ?",
+    "lsScolarise",
+    "ls_vmin_ecole",
+    "ls_vmin_separes",
+  ),
+  ls_vmin_ecole: {
+    q: "Établissement scolaire à rejoindre en France.",
     fields: [
-      { key: "ls_stage_organisme", label: "Entreprise / organisme d'accueil" },
-      { key: "ls_stage_ville", label: "Ville" },
-      { key: "ls_stage_domaine", label: "Domaine du stage" },
-      { key: "ls_stage_debut", label: "Date de début", type: "date" },
+      { key: "ls_ecole_nom", label: "Nom de l'établissement" },
+      { key: "ls_ecole_adresse", label: "Adresse" },
     ],
-    next: "ls_stage_duree",
+    next: "ls_vmin_separes",
   },
-  ls_stage_duree: {
-    q: "Quelle est la durée du stage ?",
+  ls_vmin_separes: lsOuiNon(
+    "Vos parents sont-ils séparés ou divorcés ?",
+    "lsParentsSepares",
+    "ls_vmin_garde",
+    "ls_vmin_finance",
+  ),
+  ls_vmin_garde: {
+    q: "Qui dispose du droit de garde ?",
     opts: [
-      { l: "Plus de 90 jours", n: "DYNAMIC_LS", set: { lsDureeCourte: false }, r: true },
-      { l: "90 jours ou moins", n: "DYNAMIC_LS", set: { lsDureeCourte: true }, r: true },
+      { l: "Le père", n: "ls_vmin_autorise", set: { lsGarde: "pere" } },
+      { l: "La mère", n: "ls_vmin_autorise", set: { lsGarde: "mere" } },
+      { l: "Autre", n: "ls_vmin_autorise", set: { lsGarde: "autre" } },
     ],
   },
+  ls_vmin_autorise: lsOuiNon(
+    "Le parent disposant du droit de garde autorise-t-il le séjour / l'établissement de l'enfant en France ?",
+    "lsGardeAutorise",
+    "ls_vmin_finance",
+    "ls_vmin_finance",
+  ),
+  ls_vmin_finance: {
+    q: "Qui finance votre séjour ?",
+    opts: [
+      { l: "Père", n: "ls_vmin_heberg", set: { lsFinanceMineur: "pere" } },
+      { l: "Mère", n: "ls_vmin_heberg", set: { lsFinanceMineur: "mere" } },
+      { l: "Les deux parents", n: "ls_vmin_heberg", set: { lsFinanceMineur: "parents" } },
+      { l: "Organisme", n: "ls_vmin_heberg", set: { lsFinanceMineur: "organisme" } },
+      {
+        l: "Proche résidant en France",
+        n: "ls_vmin_heberg",
+        set: { lsFinanceMineur: "proche" },
+      },
+      { l: "Autre", n: "ls_vmin_heberg", set: { lsFinanceMineur: "autre" } },
+    ],
+  },
+  ls_vmin_heberg: {
+    q: "Où serez-vous hébergé(e) en France ?",
+    opts: [
+      { l: "Chez les parents", n: "ls_vmin_ressortissant", set: { lsHebergMineur: "parents" } },
+      { l: "Chez un proche", n: "ls_vmin_ressortissant", set: { lsHebergMineur: "proche" } },
+      { l: "Résidence", n: "ls_vmin_ressortissant", set: { lsHebergMineur: "residence" } },
+      { l: "Autre", n: "ls_vmin_ressortissant", set: { lsHebergMineur: "autre" } },
+    ],
+  },
+  ls_vmin_ressortissant: lsOuiNon(
+    "Êtes-vous ressortissant du pays dans lequel vous déposez votre demande ?",
+    "lsRessortissant",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+    "Si non : preuve de résidence légale demandée.",
+  ),
+
+  /* ---- 4. Travail ---- */
+  ls_travail_situation: {
+    q: "Quelle est votre situation professionnelle en France ?",
+    opts: [
+      { l: "Embauche / détachement", n: "ls_emb_employeur", set: { lsTravail: "embauche" } },
+      { l: "ICT — mobilité intragroupe", n: "ls_ict_groupe", set: { lsTravail: "ict" } },
+      { l: "Entrepreneur", n: "ls_ent_projet", set: { lsTravail: "entrepreneur" } },
+      {
+        l: "Profession libérale / indépendante",
+        n: "ls_lib_projet",
+        set: { lsTravail: "liberale" },
+      },
+    ],
+  },
+  /* 4.1 Embauche / détachement */
+  ls_emb_employeur: {
+    q: "Votre employeur est-il établi en France ou allez-vous être détaché(e) par votre employeur actuel ?",
+    opts: [
+      {
+        l: "Embauche par une entreprise française",
+        n: "ls_emb_autorisation",
+        set: { lsEmployeur: "france" },
+      },
+      {
+        l: "Détachement par mon employeur étranger",
+        n: "ls_emb_autorisation",
+        set: { lsEmployeur: "detachement" },
+      },
+    ],
+  },
+  ls_emb_autorisation: {
+    q: "Disposez-vous d'une autorisation de travail lorsque celle-ci est requise ?",
+    opts: [
+      { l: "Oui", n: "ls_emb_contrat", set: { lsAutorisation: "oui" } },
+      { l: "Non", n: "ls_emb_contrat", set: { lsAutorisation: "non" } },
+      { l: "En cours", n: "ls_emb_contrat", set: { lsAutorisation: "encours" } },
+    ],
+  },
+  ls_emb_contrat: lsOuiNon(
+    "Avez-vous un contrat de travail ou document équivalent ?",
+    "lsContratTravail",
+    "ls_emb_diplomes",
+    "ls_emb_diplomes",
+  ),
+  ls_emb_diplomes: lsOuiNon(
+    "Disposez-vous de diplômes ou justificatifs de qualification pour le poste ?",
+    "lsDiplomes",
+    "ls_emb_attestations",
+    "ls_emb_attestations",
+  ),
+  ls_emb_attestations: lsOuiNon(
+    "Avez-vous des attestations de travail / expérience professionnelle ?",
+    "lsAttestations",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  /* 4.2 ICT — mobilité intragroupe */
+  ls_ict_groupe: {
+    q: "Votre employeur actuel et l'entreprise française d'accueil appartiennent-ils au même groupe d'entreprises ?",
+    help: "Si non, redirection vers une autre catégorie de travail.",
+    opts: [
+      { l: "Oui", n: "ls_ict_anciennete", set: { lsMemeGroupe: true } },
+      {
+        l: "Non — rediriger vers une autre catégorie de travail",
+        n: "ls_travail_situation",
+        set: { lsMemeGroupe: false },
+      },
+    ],
+  },
+  ls_ict_anciennete: lsOuiNon(
+    "Êtes-vous salarié(e) du groupe depuis au moins 6 mois ?",
+    "lsAnciennete",
+    "ls_ict_statut",
+    "ls_ict_statut",
+  ),
+  ls_ict_statut: {
+    q: "Quel est votre statut dans le cadre de la mobilité ?",
+    opts: [
+      { l: "Salarié ICT", n: "ls_ict_cadre", set: { lsStatutIct: "salarie" } },
+      { l: "Stagiaire ICT", n: "ls_ict_cadre", set: { lsStatutIct: "stagiaire" } },
+    ],
+  },
+  ls_ict_cadre: lsOuiNon(
+    "Exercerez-vous une fonction de cadre ou d'expert ?",
+    "lsCadre",
+    "ls_ict_contrat",
+    "ls_ict_contrat",
+  ),
+  ls_ict_contrat: lsOuiNon(
+    "Disposez-vous d'un contrat de travail ?",
+    "lsContratTravail",
+    "ls_ict_mission",
+    "ls_ict_mission",
+  ),
+  ls_ict_mission: lsOuiNon(
+    "Avez-vous une lettre de mission de votre employeur ?",
+    "lsLettreMission",
+    "ls_ict_reglementee",
+    "ls_ict_reglementee",
+  ),
+  ls_ict_reglementee: lsOuiNon(
+    "Votre profession est-elle réglementée ?",
+    "lsProfReglementee",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  /* 4.3 Entrepreneur */
+  ls_ent_projet: {
+    q: "Quel est votre projet en France ?",
+    opts: [
+      { l: "Création d'une nouvelle activité", n: "ls_ent_type", set: { lsProjet: "creation" } },
+      {
+        l: "Insertion / participation dans une activité existante",
+        n: "ls_ent_statut",
+        set: { lsProjet: "existante" },
+      },
+    ],
+  },
+  ls_ent_type: {
+    q: "Quel type d'activité souhaitez-vous créer ?",
+    opts: [
+      {
+        l: "Entreprise individuelle / en nom propre",
+        n: "ls_ent_activite",
+        set: { lsActiviteType: "individuelle" },
+      },
+      { l: "Location-gérance", n: "ls_ent_activite", set: { lsActiviteType: "location_gerance" } },
+      {
+        l: "Reprise d'un fonds de commerce",
+        n: "ls_ent_activite",
+        set: { lsActiviteType: "fonds" },
+      },
+      {
+        l: "Société de droit français",
+        n: "ls_ent_activite",
+        set: { lsActiviteType: "societe_fr" },
+      },
+      {
+        l: "Filiale d'une société étrangère",
+        n: "ls_ent_activite",
+        set: { lsActiviteType: "filiale" },
+      },
+      {
+        l: "Établissement d'une personne morale étrangère",
+        n: "ls_ent_activite",
+        set: { lsActiviteType: "personne_morale" },
+      },
+    ],
+  },
+  ls_ent_activite: {
+    q: "Votre activité.",
+    help: "Commerciale, artisanale, industrielle ou autre.",
+    fields: [{ key: "ls_ent_nature", label: "Quelle est votre activité ?" }],
+    next: "ls_ent_structure",
+  },
+  ls_ent_structure: lsOuiNon(
+    "Disposez-vous déjà d'une structure ou d'une immatriculation en France ?",
+    "lsStructure",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
+  ls_ent_statut: {
+    q: "Quel sera votre statut dans cette activité existante ?",
+    help: "Vous intégrez une entreprise ou une activité déjà existante en France.",
+    opts: [
+      { l: "Salarié", n: "DYNAMIC_LS", set: { lsStatutExistant: "salarie" }, r: true },
+      { l: "Non-salarié", n: "DYNAMIC_LS", set: { lsStatutExistant: "non_salarie" }, r: true },
+    ],
+  },
+  /* 4.4 Profession libérale / indépendante */
+  ls_lib_projet: {
+    q: "Souhaitez-vous créer une nouvelle activité ou poursuivre une activité existante ?",
+    opts: [
+      { l: "Création d'activité", n: "ls_lib_reglementee_c", set: { lsProjet: "creation" } },
+      {
+        l: "Poursuite d'activité existante",
+        n: "ls_lib_reglementee_e",
+        set: { lsProjet: "existante" },
+      },
+    ],
+  },
+  ls_lib_reglementee_c: lsOuiNon(
+    "Votre profession est-elle réglementée ?",
+    "lsProfReglementee",
+    "ls_lib_viabilite",
+    "ls_lib_viabilite",
+  ),
+  ls_lib_reglementee_e: lsOuiNon(
+    "Votre profession est-elle réglementée ?",
+    "lsProfReglementee",
+    "ls_lib_smic",
+    "ls_lib_smic",
+  ),
+  ls_lib_viabilite: lsOuiNon(
+    "Votre projet a-t-il fait l'objet d'une évaluation de sa viabilité économique ?",
+    "lsViabilite",
+    "ls_lib_smic",
+    "ls_lib_smic",
+  ),
+  ls_lib_smic: lsOuiNon(
+    "Votre activité vous permet-elle de générer des ressources au moins équivalentes au SMIC correspondant à un temps plein ?",
+    "lsRessourcesSmic",
+    "DYNAMIC_LS",
+    "DYNAMIC_LS",
+  ),
 
   /* ============ BRANCHE A — TOURISME / VISITE PRIVÉE ============ */
   a_residence: {
