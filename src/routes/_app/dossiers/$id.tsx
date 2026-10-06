@@ -98,6 +98,20 @@ function grouperDetails(details: Record<string, string> | undefined) {
   return [...groupes.entries()].map(([titre, lignes]) => ({ titre, lignes }));
 }
 
+/** Les champs saisis pendant la qualification, vides compris : ce sont eux qu'on corrige. */
+function groupesEditables(details: Record<string, string> | undefined) {
+  const groupes = new Map<string, { cle: string; label: string; type: "text" | "date" }[]>();
+  for (const cle of Object.keys(details ?? {})) {
+    const champ = TREE_FIELDS[cle];
+    if (!champ) continue;
+    groupes.set(champ.groupe, [
+      ...(groupes.get(champ.groupe) ?? []),
+      { cle, label: champ.label, type: champ.type },
+    ]);
+  }
+  return [...groupes.entries()].map(([titre, champs]) => ({ titre, champs }));
+}
+
 /**
  * Ce que chaque étape affiche, et dans quel ordre. On ne montre QUE les panneaux utiles
  * à l'étape en cours : tout afficher noie l'agent sous des cartes dont il n'a pas besoin
@@ -184,6 +198,7 @@ function DossierDetail() {
     setUploadAutorisation,
     updateClient,
     updateOrigine,
+    updateDetails,
     supprimer,
   } = useDossier(id);
   const { user: me } = useCurrentUser();
@@ -191,6 +206,10 @@ function DossierDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editOrigine, setEditOrigine] = useState<"site" | "direct" | null>(null);
+  const [editDetails, setEditDetails] = useState<Record<string, string>>({});
+  const [editCentre, setEditCentre] = useState<Centre>(CENTRES[0]);
+  const [editModalite, setEditModalite] = useState<Modalite>("comptant");
+  const [editErreur, setEditErreur] = useState<string | null>(null);
   const [editNom, setEditNom] = useState("");
   const [editTelephone, setEditTelephone] = useState("");
   const [editVille, setEditVille] = useState("");
@@ -268,6 +287,10 @@ function DossierDetail() {
 
   function openEdit() {
     setEditOrigine(d!.profile.origine ?? null);
+    setEditDetails(d!.profile.details ?? {});
+    setEditCentre(d!.centre);
+    setEditModalite(d!.modalitePaiement);
+    setEditErreur(null);
     setEditNom(d!.client.nom);
     setEditTelephone(d!.client.telephone);
     setEditVille(d!.client.ville);
@@ -296,6 +319,22 @@ function DossierDetail() {
       passeportLieu: editPassLieu.trim() || null,
     });
     if (editOrigine && editOrigine !== d!.profile.origine) await updateOrigine(d!.id, editOrigine);
+    await updateDetails(d!.id, editDetails);
+    if (editCentre !== d!.centre) await changerCentre(d!.id, editCentre);
+    // Dernier : la modalité est réservée à certains rôles et recalcule l'échéancier — si elle
+    // est refusée, tout le reste est déjà enregistré et on le dit au lieu de tout perdre.
+    if (editModalite !== d!.modalitePaiement) {
+      try {
+        await changerModalite(d!.id, editModalite);
+      } catch (e) {
+        setEditErreur(
+          e instanceof Error
+            ? `Le reste est enregistré, mais la modalité de paiement n'a pas été modifiée : ${e.message}`
+            : "Le reste est enregistré, mais la modalité de paiement n'a pas été modifiée.",
+        );
+        return;
+      }
+    }
     setEditOpen(false);
   }
 
@@ -1305,7 +1344,88 @@ function DossierDetail() {
                 5 ans après la délivrance par défaut — modifiable.
               </p>
             </div>
+            <div className="col-span-2 mt-1 border-t border-border pt-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Dossier
+              </div>
+            </div>
+            <div className="col-span-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+              <div className="text-xs text-muted-foreground">Type de visa · Catégorie</div>
+              <div className="text-sm font-medium text-foreground">{d.titre}</div>
+              <div className="text-xs text-muted-foreground">{d.categorie}</div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Déterminés par la qualification : ils pilotent la liste de pièces, donc pas
+                modifiables à la main.{" "}
+                <Link to="/qualification" className="font-medium text-primary underline">
+                  Refaire la qualification
+                </Link>{" "}
+                pour changer de type.
+              </p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Centre de dépôt</label>
+              <Select
+                value={editCentre}
+                disabled={cloture}
+                onValueChange={(v) => setEditCentre(v as Centre)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CENTRES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Modalité de paiement
+              </label>
+              <Select
+                value={editModalite}
+                disabled={
+                  cloture ||
+                  !(me?.role === "ceo" || me?.role === "reception" || me?.role === "back_office")
+                }
+                onValueChange={(v) => setEditModalite(v as Modalite)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(MODALITE_LABEL) as Modalite[]).map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {MODALITE_LABEL[m]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {groupesEditables(d.profile.details).map((g) => (
+              <div key={g.titre} className="col-span-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="col-span-2 mt-1 border-t border-border pt-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {g.titre}
+                  </div>
+                </div>
+                {g.champs.map((c) => (
+                  <div key={c.cle}>
+                    <label className="text-xs font-medium text-muted-foreground">{c.label}</label>
+                    <Input
+                      type={c.type === "date" ? "date" : "text"}
+                      value={editDetails[c.cle] ?? ""}
+                      onChange={(e) => setEditDetails((v) => ({ ...v, [c.cle]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
+          {editErreur && <p className="text-sm text-[var(--stop)]">{editErreur}</p>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>
               Annuler

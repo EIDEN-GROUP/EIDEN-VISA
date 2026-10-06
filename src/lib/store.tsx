@@ -27,6 +27,7 @@ import {
   createDossier,
   updateClient as updateClientFn,
   updateOrigine as updateOrigineFn,
+  updateDetails as updateDetailsFn,
   deleteDossier as deleteDossierFn,
 } from "@/backend/functions/dossiers";
 import {
@@ -205,6 +206,11 @@ function useDossierMutations() {
       updateOrigineFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const updateDetailsMutation = useMutation({
+    mutationFn: (vars: { id: string; details: Record<string, string> }) =>
+      updateDetailsFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDossierFn({ data: { id } }),
     onSuccess: invalidateAll,
@@ -273,6 +279,8 @@ function useDossierMutations() {
       updateClientMutation.mutateAsync({ id, client }),
     updateOrigine: (id: string, origine: "site" | "direct") =>
       updateOrigineMutation.mutateAsync({ id, origine }),
+    updateDetails: (id: string, details: Record<string, string>) =>
+      updateDetailsMutation.mutateAsync({ id, details }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
     setEtape: (id: string, etape: number) => setEtapeMutation.mutateAsync({ id, etape }),
   };

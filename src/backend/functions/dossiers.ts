@@ -18,7 +18,7 @@ import {
   type PackKey,
   type Modalite,
 } from "@/lib/dossier-model";
-import type { Profile } from "@/lib/visa-rules";
+import { TREE_FIELDS, type Profile } from "@/lib/visa-rules";
 
 /** Filtre de date partagé : "dossiers ouverts entre le X et le Y", sur la vraie colonne
  * `created_at` (timestamp) — pas sur `ouvert_le`, un texte français non fiable à trier/filtrer.
@@ -944,6 +944,41 @@ export const updateOrigine = createServerFn({ method: "POST" })
     await logActivity(
       "dossier.origine",
       `Origine du client corrigée : ${data.origine === "site" ? "site (landing)" : "directement chez nous"} (${data.id})`,
+      data.id,
+    );
+  });
+
+/** Corrige les réponses saisies pendant la qualification (nom de l'hôtel, etc.). Seules les
+ * clés connues de l'arbre sont acceptées : on ne laisse pas écrire n'importe quoi dans le profil. */
+export const updateDetails = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.string().min(1).max(32),
+      details: z
+        .record(z.string(), z.string().max(500))
+        .refine((v) => Object.keys(v).length <= 100, "Trop de détails."),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const inconnues = Object.keys(data.details).filter((k) => !(k in TREE_FIELDS));
+    if (inconnues.length) throw new Error("Champ inconnu dans les informations du dossier.");
+    const row = await db.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+    if (!row) throw new Error("Dossier introuvable.");
+    const avant = row.profile.details ?? {};
+    const modifies = Object.keys(data.details).filter(
+      (k) => (data.details[k] ?? "").trim() !== (avant[k] ?? "").trim(),
+    );
+    if (!modifies.length) return;
+    const details = { ...avant };
+    for (const k of modifies) details[k] = (data.details[k] ?? "").trim();
+    await db
+      .update(dossiersTable)
+      .set({ profile: { ...row.profile, details } })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "dossier.details",
+      `Informations de qualification corrigées (${modifies.length} champ${modifies.length > 1 ? "s" : ""}) (${data.id})`,
       data.id,
     );
   });
