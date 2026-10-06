@@ -23,8 +23,9 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
     const marginX = 20;
     const contentW = pageW - marginX * 2;
 
-    // Ink terracotta (matches the app's --primary token), forest ink for structure.
-    const terracotta: [number, number, number] = [138, 74, 41];
+    // Encre marine = --primary du système (oklch(0.24 0.03 280) → RVB 28, 30, 45),
+    // forest pour la structure.
+    const marine: [number, number, number] = [28, 30, 45];
     const forest: [number, number, number] = [42, 51, 41];
     const gray: [number, number, number] = [110, 110, 105];
 
@@ -48,7 +49,7 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
     doc.text(`Émis le ${emisLe}`, pageW - marginX, y + 7, { align: "right" });
 
     y += 16;
-    doc.setDrawColor(...terracotta);
+    doc.setDrawColor(...marine);
     doc.setLineWidth(0.6);
     doc.line(marginX, y, pageW - marginX, y);
 
@@ -113,7 +114,7 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       doc.setLineWidth(0.35);
       doc.rect(marginX, y - 3, 3, 3);
       if (p.fourni) {
-        doc.setFillColor(...terracotta);
+        doc.setFillColor(...marine);
         doc.rect(marginX, y - 3, 3, 3, "F");
         doc.setDrawColor(255, 255, 255);
         doc.setLineWidth(0.5);
@@ -178,7 +179,7 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       }
 
       y += 3;
-      doc.setDrawColor(...terracotta);
+      doc.setDrawColor(...marine);
       doc.setLineWidth(0.5);
       doc.line(marginX, y, pageW - marginX, y);
       y += 8;
