@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useDossier } from "@/lib/store";
 import type { Dossier } from "@/lib/dossier-model";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,10 @@ export const Route = createFileRoute("/dossiers/$id/recu")({
   component: Recu,
 });
 
-function buildReceiptPdf(d: Dossier) {
+/** Le reçu « avant paiement » est identique, sans la section des paiements. */
+type ModeRecu = "apres" | "avant";
+
+function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
   return import("jspdf").then(({ jsPDF }) => {
     const paye = d.paiements.filter((p) => p.encaisse);
     const total = paye.reduce((s, p) => s + p.montant, 0);
@@ -130,59 +134,61 @@ function buildReceiptPdf(d: Dossier) {
       y += 6;
     }
 
-    y += 4;
-    ensureSpace(16);
-    doc.setDrawColor(220, 214, 200);
-    doc.setLineWidth(0.3);
-    doc.line(marginX, y, pageW - marginX, y);
+    if (mode === "apres") {
+      y += 4;
+      ensureSpace(16);
+      doc.setDrawColor(220, 214, 200);
+      doc.setLineWidth(0.3);
+      doc.line(marginX, y, pageW - marginX, y);
 
-    y += 8;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...gray);
-    doc.text("LIBELLÉ", marginX, y);
-    doc.text("DATE", marginX + contentW * 0.55, y);
-    doc.text("MONTANT", pageW - marginX, y, { align: "right" });
-
-    y += 3;
-    doc.setDrawColor(...forest);
-    doc.line(marginX, y, pageW - marginX, y);
-
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(...forest);
-    if (paye.length === 0) {
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
       doc.setTextColor(...gray);
-      doc.text("Aucun paiement encaissé à ce jour.", marginX, y);
-      y += 6;
-    } else {
-      for (const p of paye) {
-        ensureSpace(7);
-        doc.setTextColor(...forest);
-        doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.5 });
-        doc.setTextColor(...gray);
-        doc.text(p.date ?? "—", marginX + contentW * 0.55, y);
-        doc.setTextColor(...forest);
-        doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
-        y += 7;
-        doc.setDrawColor(238, 232, 220);
-        doc.setLineWidth(0.2);
-        doc.line(marginX, y - 3, pageW - marginX, y - 3);
-      }
-    }
+      doc.text("LIBELLÉ", marginX, y);
+      doc.text("DATE", marginX + contentW * 0.55, y);
+      doc.text("MONTANT", pageW - marginX, y, { align: "right" });
 
-    y += 3;
-    doc.setDrawColor(...terracotta);
-    doc.setLineWidth(0.5);
-    doc.line(marginX, y, pageW - marginX, y);
-    y += 8;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(...forest);
-    doc.text("Total encaissé", marginX, y);
-    doc.setFontSize(13);
-    doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
+      y += 3;
+      doc.setDrawColor(...forest);
+      doc.line(marginX, y, pageW - marginX, y);
+
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(...forest);
+      if (paye.length === 0) {
+        doc.setTextColor(...gray);
+        doc.text("Aucun paiement encaissé à ce jour.", marginX, y);
+        y += 6;
+      } else {
+        for (const p of paye) {
+          ensureSpace(7);
+          doc.setTextColor(...forest);
+          doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.5 });
+          doc.setTextColor(...gray);
+          doc.text(p.date ?? "—", marginX + contentW * 0.55, y);
+          doc.setTextColor(...forest);
+          doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
+          y += 7;
+          doc.setDrawColor(238, 232, 220);
+          doc.setLineWidth(0.2);
+          doc.line(marginX, y - 3, pageW - marginX, y - 3);
+        }
+      }
+
+      y += 3;
+      doc.setDrawColor(...terracotta);
+      doc.setLineWidth(0.5);
+      doc.line(marginX, y, pageW - marginX, y);
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(...forest);
+      doc.text("Total encaissé", marginX, y);
+      doc.setFontSize(13);
+      doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
+    }
 
     // Signature block — client acknowledgment and the Eiden Visa agent's countersignature.
     // Bornée à la page courante : jamais forcée à une position fixe qui déborderait sur une
@@ -221,6 +227,8 @@ function buildReceiptPdf(d: Dossier) {
 function Recu() {
   const { id } = Route.useParams();
   const { dossier: d, isLoading } = useDossier(id);
+  // Avant paiement : même reçu, sans la section des paiements.
+  const [mode, setMode] = useState<ModeRecu>("apres");
 
   if (!d) {
     return (
@@ -245,9 +253,24 @@ function Recu() {
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Retour au dossier
         </Link>
-        <Button size="sm" onClick={() => buildReceiptPdf(d)}>
+        <Button size="sm" onClick={() => buildReceiptPdf(d, mode)}>
           <Download className="h-3.5 w-3.5" /> Télécharger le reçu (PDF)
         </Button>
+      </div>
+
+      <div className="mx-auto mb-6 flex max-w-2xl items-center gap-2">
+        <label htmlFor="mode-recu" className="text-sm text-muted-foreground">
+          Type de reçu
+        </label>
+        <select
+          id="mode-recu"
+          value={mode}
+          onChange={(e) => setMode(e.target.value as ModeRecu)}
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+        >
+          <option value="apres">Après paiement</option>
+          <option value="avant">Avant paiement</option>
+        </select>
       </div>
 
       <div className="mx-auto max-w-2xl border border-border bg-card p-10">
@@ -303,37 +326,41 @@ function Recu() {
           </ul>
         </div>
 
-        <div className="py-6">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="ref border-b border-border text-left text-muted-foreground">
-                <th className="pb-2 font-medium">Libellé</th>
-                <th className="pb-2 font-medium">Date</th>
-                <th className="pb-2 text-right font-medium">Montant</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paye.map((p, i) => (
-                <tr key={i} className="border-b border-border/60">
-                  <td className="py-2.5 text-foreground">{p.libelle}</td>
-                  <td className="py-2.5 text-muted-foreground">{p.date}</td>
-                  <td className="py-2.5 text-right font-medium text-foreground">{p.montant} MAD</td>
+        {mode === "apres" && (
+          <div className="py-6">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="ref border-b border-border text-left text-muted-foreground">
+                  <th className="pb-2 font-medium">Libellé</th>
+                  <th className="pb-2 font-medium">Date</th>
+                  <th className="pb-2 text-right font-medium">Montant</th>
                 </tr>
-              ))}
-              {paye.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="py-6 text-center text-muted-foreground">
-                    Aucun paiement encaissé à ce jour.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm font-semibold">
-            <span className="text-foreground">Total encaissé</span>
-            <span className="num-display text-lg text-foreground">{total} MAD</span>
+              </thead>
+              <tbody>
+                {paye.map((p, i) => (
+                  <tr key={i} className="border-b border-border/60">
+                    <td className="py-2.5 text-foreground">{p.libelle}</td>
+                    <td className="py-2.5 text-muted-foreground">{p.date}</td>
+                    <td className="py-2.5 text-right font-medium text-foreground">
+                      {p.montant} MAD
+                    </td>
+                  </tr>
+                ))}
+                {paye.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="py-6 text-center text-muted-foreground">
+                      Aucun paiement encaissé à ce jour.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm font-semibold">
+              <span className="text-foreground">Total encaissé</span>
+              <span className="num-display text-lg text-foreground">{total} MAD</span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-4 grid grid-cols-2 gap-6 border-t border-border pt-6 text-xs text-muted-foreground">
           <div>
