@@ -372,6 +372,7 @@ const dossierInput = z.object({
         "agriculteur",
         "retraite",
         "etudiant",
+        "entrepreneur",
         "sans",
       ])
       .optional(),

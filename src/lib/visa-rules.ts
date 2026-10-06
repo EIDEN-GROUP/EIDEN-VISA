@@ -50,6 +50,7 @@ export interface Profile {
     | "agriculteur"
     | "retraite"
     | "etudiant"
+    | "entrepreneur"
     | "sans";
   /** Durée du séjour — Branche A (Tourisme), Q7. ≤ 90 jours = court, > 90 = long. */
   duree?: "court" | "long";
@@ -486,6 +487,8 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
 function profDoc(prof?: Profile["prof"]): string {
   if (prof === "commercant")
     return "Situation socio-professionnelle : preuve du statut (contrat de travail, certificat de travail, extrait du registre du commerce et des sociétés) et tout document démontrant les liens personnels avec le pays de résidence (copie du certificat de mariage, livret de famille)";
+  if (prof === "entrepreneur")
+    return "Situation socio-professionnelle : entrepreneur — extrait du registre du commerce (RC), statuts de la société, identifiants ICE et IF, patente et IRG de l'année en cours, et justificatifs d'activité et de revenus";
   if (prof === "retraite")
     return "Situation socio-professionnelle : preuve du statut, et pour un retraité, attestation de pension (justificatif de pension / relevé de virement)";
   if (prof === "agriculteur")
@@ -566,6 +569,20 @@ function professionDocsTourisme(prof: Profile["prof"]): string[] {
         "Justificatif de propriété ou de location des terres agricoles",
         "3 derniers relevés bancaires",
       ];
+    case "entrepreneur":
+      return [
+        "Registre de Commerce (RC)",
+        "Certificat d'immatriculation au Registre de Commerce",
+        "Statuts de la société",
+        "ICE (Identifiant Commun de l'Entreprise)",
+        "Identifiant fiscal / IF",
+        "Original de la patente et de l'IRG pour l'année en cours",
+        "Déclarations fiscales récentes",
+        "Attestation de situation fiscale, si disponible",
+        "Relevés bancaires du compte professionnel (3 derniers mois)",
+        "Justificatifs de l'activité de l'entreprise : factures, contrats, bons de commande, etc.",
+        "Justificatifs de revenus / chiffre d'affaires de l'entrepreneur, selon le statut",
+      ];
     case "sans":
       return [
         "Attestation de prise en charge",
@@ -591,6 +608,7 @@ const PROF_LABEL: Record<NonNullable<Profile["prof"]>, string> = {
   avocat_medical: "Avocat / profession médicale",
   retraite: "Retraité(e)",
   agriculteur: "Agriculteur(rice)",
+  entrepreneur: "Entrepreneur(e)",
   sans: "Sans profession",
   commercant: "Commerçant(e) / profession libérale",
 };
@@ -2500,6 +2518,7 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Avocat / profession médicale", n: "situation", set: { prof: "avocat_medical" } },
       { l: "Retraité(e)", n: "situation", set: { prof: "retraite" } },
       { l: "Agriculteur(rice)", n: "situation", set: { prof: "agriculteur" } },
+      { l: "Entrepreneur(e)", n: "situation", set: { prof: "entrepreneur" } },
       { l: "Sans profession", n: "situation", set: { prof: "sans" } },
     ],
   },
@@ -2573,6 +2592,7 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Avocat / profession médicale", n: "situation", set: { prof: "avocat_medical" } },
       { l: "Retraité(e)", n: "situation", set: { prof: "retraite" } },
       { l: "Agriculteur(rice)", n: "situation", set: { prof: "agriculteur" } },
+      { l: "Entrepreneur(e)", n: "situation", set: { prof: "entrepreneur" } },
       { l: "Sans profession", n: "situation", set: { prof: "sans" } },
     ],
   },
