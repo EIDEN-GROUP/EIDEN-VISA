@@ -1,0 +1,439 @@
+/* ============================================================
+   Pages légales EIDEN Visa — charte identique à la landing.
+   Police auto-hébergée (public/fonts) : ZÉRO requête externe,
+   aucun traceur sur ces pages (politique cookies §2).
+   Tokens repris de src/styles.css (@theme).
+   ============================================================ */
+
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/newsreader-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/newsreader-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/dmsans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+}
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/dmsans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* Palette (src/styles.css @theme) */
+  --ink: #0b1a30;
+  --ink-soft: #2a3342;
+  --muted: #6b6f76;
+  --cream: #faf8f4;
+  --card: #fffefc;
+  --sand: #f4ece5;
+  --blush: #f9e7e4;
+  --line: #e7e1d9;
+  --brand: #ae0a1a;
+  --brand-dark: #8a0714;
+  --eu: #003399;
+  --eu-star: #ffcc00;
+  --marine: #1f2f5c; /* bandeau/hero du loader — garde le pont avec l'ancienne charte */
+
+  --shadow-soft: 0 18px 50px -24px rgb(24 20 40 / 0.18), 0 2px 8px -2px rgb(24 20 40 / 0.05);
+  --radius-card: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  background: var(--cream);
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ---------- Barre du haut (Topbar + Header de la landing) ---------- */
+.topbar {
+  background: var(--ink);
+  color: rgb(255 255 255 / 0.85);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.topbar-inner {
+  max-width: 1380px;
+  margin-inline: auto;
+  padding: 5px 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.topbar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease-out;
+}
+.topbar a:hover {
+  color: #fff;
+}
+.topbar .sep {
+  width: 1px;
+  height: 12px;
+  background: rgb(255 255 255 / 0.3);
+}
+.topbar .groupe {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.icone {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  stroke: var(--eu-star);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Header : logo réel (couleur) + retour au site, comme le Header React. */
+.header {
+  background: var(--cream);
+  border-bottom: 1px solid var(--line);
+}
+.header-inner {
+  max-width: 1380px;
+  margin-inline: auto;
+  padding: 12px 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.logo img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+.retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 8px 18px;
+  transition: border-color 0.2s ease-out, background 0.2s ease-out;
+}
+.retour:hover {
+  border-color: var(--ink);
+}
+.retour:focus-visible,
+.topbar a:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---------- Hero : ciel du loader, comme la maquette ---------- */
+.hero {
+  background: linear-gradient(
+    180deg,
+    #8fbde6 0%,
+    #b5d1e8 30%,
+    #c9b08a 55%,
+    #84736b 75%,
+    var(--marine) 100%
+  );
+  color: #fff;
+  padding: 44px 1.25rem 40px;
+}
+.hero-inner {
+  max-width: 760px;
+  margin-inline: auto;
+}
+.fil {
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.78);
+  margin: 0 0 10px;
+}
+.fil a {
+  color: #fff;
+  text-decoration: none;
+}
+.fil a:hover {
+  text-decoration: underline;
+}
+h1 {
+  font-family: "Newsreader", "Times New Roman", serif;
+  font-weight: 500;
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+.chip {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: rgb(255 255 255 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.4);
+  border-radius: 999px;
+  padding: 4px 14px;
+}
+
+/* ---------- Contenu ---------- */
+main {
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 28px 1.25rem 64px;
+}
+.sommaire {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 18px 22px;
+  margin: 0 0 18px;
+  box-shadow: var(--shadow-soft);
+  font-size: 14px;
+}
+.sommaire h2 {
+  margin: 0 0 8px;
+  font-family: "Newsreader", serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.sommaire ol {
+  margin: 0;
+  padding-inline-start: 20px;
+  columns: 2;
+  column-gap: 32px;
+}
+@media (max-width: 560px) {
+  .sommaire ol {
+    columns: 1;
+  }
+}
+.sommaire a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.sommaire a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+  margin: 16px 0;
+  box-shadow: var(--shadow-soft);
+}
+h2 {
+  font-family: "Newsreader", serif;
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0 0 10px;
+  scroll-margin-top: 24px;
+}
+h2 .num {
+  color: var(--brand);
+  font-size: 1.1rem;
+  margin-inline-end: 10px;
+  font-variant-numeric: tabular-nums;
+}
+h3 {
+  font-family: "DM Sans", sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 14px 0 6px;
+}
+p,
+li {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+}
+.card p:last-child,
+.card ul:last-child,
+.card ol:last-child {
+  margin-bottom: 0;
+}
+ul,
+ol {
+  padding-inline-start: 22px;
+  margin: 0 0 8px;
+}
+li::marker {
+  color: var(--brand);
+}
+a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--brand-dark);
+}
+strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+code {
+  font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  font-size: 0.86em;
+  background: var(--sand);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--ink);
+}
+
+/* Encadré « alerte » : marque le point critique (garantie, droits, vigilance). */
+.alerte {
+  border-inline-start: 4px solid var(--brand);
+  background: var(--blush);
+}
+.alerte h2 .num {
+  color: var(--brand);
+}
+.alerte p,
+.alerte li {
+  color: var(--ink);
+}
+
+/* Tableaux (cookies) */
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 4px;
+  font-size: 14px;
+}
+th,
+td {
+  text-align: start;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+th {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+tr:first-child th:first-child {
+  border-start-start-radius: 10px;
+}
+tr:first-child th:last-child {
+  border-start-end-radius: 10px;
+}
+tbody tr:hover {
+  background: rgb(244 236 229 / 0.5);
+}
+
+/* Pied de page : même structure que le Footer React (marine, icônes dorées). */
+footer {
+  background: var(--ink);
+  color: rgb(255 255 255 / 0.75);
+  padding: 22px 1.25rem 26px;
+  font-size: 13px;
+  text-align: center;
+}
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 18px;
+  margin-bottom: 10px;
+}
+footer nav a {
+  color: rgb(255 255 255 / 0.85);
+  text-decoration: none;
+  transition: color 0.3s ease-out;
+}
+footer nav a[aria-current="page"],
+footer nav a:hover {
+  color: #fff;
+}
+footer .droits {
+  font-size: 11.5px;
+  color: rgb(255 255 255 / 0.55);
+  margin: 0;
+}
+
+/* ---------- Impression (devis légaux imprimables) ---------- */
+@media print {
+  .topbar,
+  .header .retour,
+  footer {
+    display: none;
+  }
+  body {
+    background: #fff;
+  }
+  .hero {
+    background: var(--ink);
+    padding: 20px 1.25rem;
+  }
+  .card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}
+
+/* Accessibilité : respect des réglages de mouvement (cohérent avec la landing). */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
