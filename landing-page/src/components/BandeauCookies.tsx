@@ -2,13 +2,27 @@
 // prononcé (`eiden-consentement-v1` absent). « Tout accepter » charge les traceurs
 // configurés (GTM/GA4/Clarity/Bing, voir `src/lib/suivi.ts`), « Tout refuser »
 // n'en charge aucun. Détails : page publique `/cookies.html`.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLangue } from "../i18n";
-import { choisirConsentement, lirePreferences, ouvrirPreferences } from "../lib/suivi";
+import {
+  choisirConsentement,
+  EVENEMENT_CONSENTEMENT,
+  lirePreferences,
+  ouvrirPreferences,
+} from "../lib/suivi";
 
 export function BandeauCookies() {
   const { t } = useLangue();
   const [visible, setVisible] = useState(() => lirePreferences() === null);
+  // Choix exprimé dans la modale « Personnaliser » : le bandeau se ferme aussi
+  // (les deux ne doivent jamais rester affichés ensemble).
+  useEffect(() => {
+    const fermer = () => {
+      if (lirePreferences() !== null) setVisible(false);
+    };
+    window.addEventListener(EVENEMENT_CONSENTEMENT, fermer);
+    return () => window.removeEventListener(EVENEMENT_CONSENTEMENT, fermer);
+  }, []);
   if (!visible) return null;
   const B = t.bandeauCookies;
 

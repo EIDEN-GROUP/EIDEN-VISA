@@ -12,11 +12,14 @@
 // correspondant — le conteneur fait alors respecter les refus tout seul.
 //
 // Taxonomie des événements (noms recommandés GA4) :
-//   page_view                              { page_path, langue }
+//   page_view                              { page_path, langue }   (chargement + changement de langue)
+//   scroll                                 { profondeur: 25/50/75/90_pourcent }   (une fois chacun)
 //   select_content                         { content_type: "cta"|"lien"|"bouton"|"faq"|"langue", item_id, section }
 //   generate_lead                          { destination, pack }              (demande rapide envoyée)
 //   contact                                { moyen: "whatsapp"|"telephone"|"email" }
 //   consentement                           { choix: "accepte"|"partiel"|"refuse", detail }
+// Les balises de vérification moteurs (Search Console, Bing) sont injectées depuis
+// l'environnement (`installerBalisesVerification`) : ce ne sont pas des traceurs.
 
 export const CLE_CONSENTEMENT = "eiden-consentement-v1";
 
@@ -40,15 +43,40 @@ export function ouvrirPreferences(): void {
   window.dispatchEvent(new CustomEvent(EVENEMENT_PREFERENCES));
 }
 
+/**
+ * Émis à chaque choix enregistré : le bandeau cookies l'écoute pour se fermer
+ * (choix via la modale « Personnaliser » alors que le bandeau est affiché).
+ */
+export const EVENEMENT_CONSENTEMENT = "eiden:consentement";
+function annoncerConsentement(): void {
+  window.dispatchEvent(new CustomEvent(EVENEMENT_CONSENTEMENT));
+}
+
 function variable(nom: string): string {
   const valeur = (import.meta.env[nom] as string | undefined)?.trim();
   return valeur ?? "";
 }
 
+/**
+ * Identifiant validé : un `VITE_GTM_ID` qui contient en réalité un ID GA4
+ * (`G-...`) chargeait `gtm.js?id=G-...` → 404 silencieux, zéro donnée, et le
+ * GA4 direct restait coupé (blocage « No Google tags found »). On ignore la
+ * valeur mal préfixée avec un avertissement explicite plutôt que d'échouer.
+ */
+function variableId(nom: string, prefixe: string): string {
+  const valeur = variable(nom);
+  if (!valeur) return "";
+  if (!valeur.startsWith(prefixe)) {
+    console.warn(`[suivi] ${nom} ignoré : la valeur doit commencer par « ${prefixe} ».`);
+    return "";
+  }
+  return valeur;
+}
+
 const IDS = {
   // Lus une fois au chargement du module : le choix se fait au build/Vercel.
-  gtm: variable("VITE_GTM_ID"), // ex. GTM-XXXXXX
-  ga4: variable("VITE_GA4_ID"), // ex. G-XXXXXXXXXX
+  gtm: variableId("VITE_GTM_ID", "GTM-"), // ex. GTM-XXXXXX (jamais un ID G-...)
+  ga4: variableId("VITE_GA4_ID", "G-"), // ex. G-XXXXXXXXXX
   clarity: variable("VITE_CLARITY_ID"), // ex. abc123def4
   bing: variable("VITE_BING_UET_ID"), // ex. 12345678
 };
@@ -57,8 +85,8 @@ declare global {
   interface Window {
     dataLayer: Array<Record<string, unknown> | unknown[]>;
     gtag?: (...args: unknown[]) => void;
-    clarifions?: unknown;
-    uetq?: unknown[];
+    clarity?: unknown;
+    uetq?: unknown;
   }
 }
 
@@ -140,10 +168,14 @@ function chargerGa4(id: string): void {
     "eiden-ga4",
   );
   fileCommandes()("js", new Date());
-  fileCommandes()("config", id, { page_path: window.location.pathname });
+  // Pas de page vue auto : `suivrePageVue()` l'envoie (une seule fois, même nom).
+  fileCommandes()("config", id, { page_path: window.location.pathname, send_page_view: false });
 }
 
-/** Charge Microsoft Clarity (heatmaps + replays, catégorie « expérience »). */
+/**
+ * Charge Microsoft Clarity (heatmaps + replays, catégorie « expérience »).
+ * Le stub DOIT s'appeler `clarity` (nom officiel attendu par le tag).
+ */
 function chargerClarity(id: string): void {
   // Extrait officiel Clarity, `i` = identifiant du projet.
   (function (c: Window, l: Document, a: string, r: string, i: string) {
@@ -161,14 +193,31 @@ function chargerClarity(id: string): void {
     const y = l.getElementsByTagName(r)[0];
     if (!y?.parentNode) return;
     y.parentNode.insertBefore(t, y);
-  })(window, document, "clarifions", "script", id);
+  })(window, document, "clarity", "script", id);
 }
 
-/** Charge le tag universel Bing (UET, catégorie « marketing »), avec page_view auto. */
+/**
+ * Charge le tag universel Bing (UET, catégorie « marketing »).
+ * Extrait officiel : l'objet UET est initialisé avec l'identifiant puis `pageLoad`.
+ */
 function chargerBing(id: string): void {
-  window.uetq = window.uetq ?? [];
-  chargerScript(`https://bat.bing.com/bat.js`, "eiden-bing");
-  window.uetq.push("event", "", { ti: id });
+  if (document.getElementById("eiden-bing")) return;
+  const demarrer = () => {
+    const file = window.uetq;
+    if (!Array.isArray(file)) return; // Déjà initialisé.
+    type ConstructeurUet = new (o: unknown) => { push: (...a: string[]) => void };
+    const UET = (window as unknown as { UET?: ConstructeurUet }).UET;
+    if (typeof UET !== "function") return;
+    const instance = new UET({ ti: id, enableAutoSpaTracking: true });
+    (window as unknown as { uetq: unknown }).uetq = instance;
+    instance.push("pageLoad");
+  };
+  const script = document.createElement("script");
+  script.id = "eiden-bing";
+  script.async = true;
+  script.src = "https://bat.bing.com/bat.js";
+  script.onload = demarrer;
+  document.head.appendChild(script);
 }
 
 function etatConsentement(prefs: Preferences): Record<string, "granted" | "denied"> {
@@ -182,31 +231,70 @@ function etatConsentement(prefs: Preferences): Record<string, "granted" | "denie
   };
 }
 
-let charge = false;
+/** Scripts déjà injectés (un visiteur peut accepter une catégorie plus tard). */
+const scriptsCharges = new Set<string>();
 
 /** Pousse l'état du consentement (Consent Mode v2, consommé par GTM/GA4). */
 function pousserConsentement(prefs: Preferences): void {
   fileCommandes()("consent", "update", etatConsentement(prefs));
 }
 
+/**
+ * Injecte les scripts des catégories acceptées (une seule fois chacun) puis
+ * pousse TOUJOURS l'état du consentement — même si tout est déjà chargé, car
+ * l'utilisateur a pu retirer une catégorie (sinon le traceur continuait).
+ */
 function chargerTraceurs(prefs: Preferences): void {
-  if (charge) return;
-  charge = true;
-  // Refus par défaut, levé juste après selon les catégories acceptées.
-  fileCommandes()(
-    "consent",
-    "default",
-    etatConsentement({ statistiques: false, experience: false, marketing: false }),
-  );
+  if (!scriptsCharges.has("base")) {
+    scriptsCharges.add("base");
+    // Refus par défaut, levé juste après selon les catégories acceptées.
+    fileCommandes()(
+      "consent",
+      "default",
+      etatConsentement({ statistiques: false, experience: false, marketing: false }),
+    );
+  }
   const accepteUn = prefs.statistiques || prefs.experience || prefs.marketing;
-  if (IDS.gtm && accepteUn) chargerGtm(IDS.gtm);
+  if (IDS.gtm && accepteUn && !scriptsCharges.has("gtm")) {
+    scriptsCharges.add("gtm");
+    chargerGtm(IDS.gtm);
+  }
   // Directs uniquement sans GTM (sinon double comptage : tout vit dans le conteneur).
   if (!IDS.gtm) {
-    if (IDS.ga4 && prefs.statistiques) chargerGa4(IDS.ga4);
-    if (IDS.clarity && prefs.experience) chargerClarity(IDS.clarity);
-    if (IDS.bing && prefs.marketing) chargerBing(IDS.bing);
+    if (IDS.ga4 && prefs.statistiques && !scriptsCharges.has("ga4")) {
+      scriptsCharges.add("ga4");
+      chargerGa4(IDS.ga4);
+    }
+    if (IDS.clarity && prefs.experience && !scriptsCharges.has("clarity")) {
+      scriptsCharges.add("clarity");
+      chargerClarity(IDS.clarity);
+    }
+    if (IDS.bing && prefs.marketing && !scriptsCharges.has("bing")) {
+      scriptsCharges.add("bing");
+      chargerBing(IDS.bing);
+    }
   }
   pousserConsentement(prefs);
+}
+
+/**
+ * Balises de vérification des moteurs (Search Console, Bing Webmaster) lues dans
+ * l'environnement puis injectées dans le `<head>`. Ce ne sont PAS des traceurs :
+ * posées au démarrage, sans attendre le consentement. Vide = rien n'est injecté.
+ */
+export function installerBalisesVerification(): void {
+  const balises: [string, string][] = [
+    ["google-site-verification", variable("VITE_GOOGLE_SITE_VERIFICATION")],
+    ["msvalidate.01", variable("VITE_BING_SITE_VERIFICATION")],
+  ];
+  for (const [nom, contenu] of balises) {
+    if (!contenu) continue;
+    if (document.querySelector(`meta[name="${nom}"]`)) continue;
+    const meta = document.createElement("meta");
+    meta.name = nom;
+    meta.content = contenu;
+    document.head.appendChild(meta);
+  }
 }
 
 /**
@@ -215,6 +303,7 @@ function chargerTraceurs(prefs: Preferences): void {
  * rien (le bandeau cookies recueillera le choix).
  */
 export function initialiserSuivi(): void {
+  installerBalisesVerification();
   const prefs = lirePreferences();
   if (!prefs) return;
   chargerTraceurs(prefs);
@@ -270,6 +359,7 @@ let ecouteInstallee = false;
  * Écoute déléguée : chaque clic sur un lien ou un bouton est tracké, avec
  * inférence du moyen de contact. Les accordéons FAQ (`aria-expanded`) sont
  * exclus : `Faq.tsx` les suit déjà avec la question en libellé.
+ * La profondeur de scroll est suivie par paliers (25/50/75/90 %, une fois chacun).
  */
 function installerEcouteClics(): void {
   if (ecouteInstallee) return;
@@ -290,6 +380,21 @@ function installerEcouteClics(): void {
     }
     suivreContenu("bouton", libelle, section);
   });
+  const paliers = [25, 50, 75, 90];
+  const atteints = new Set<number>();
+  const scruter = () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    if (total <= 0) return;
+    const pct = Math.round((window.scrollY / total) * 100);
+    for (const palier of paliers) {
+      if (pct >= palier && !atteints.has(palier)) {
+        atteints.add(palier);
+        suivreEvenement("scroll", { profondeur: `${palier}_pourcent` });
+      }
+    }
+    if (atteints.size === paliers.length) window.removeEventListener("scroll", scruter);
+  };
+  window.addEventListener("scroll", scruter, { passive: true });
 }
 
 function enregistrerPreferences(prefs: Preferences): void {
@@ -311,6 +416,7 @@ function enregistrerPreferences(prefs: Preferences): void {
       ? "refuse"
       : "partiel";
   suivreEvenement("consentement", { choix, detail: prefs });
+  annoncerConsentement();
 }
 
 /** Raccourcis du bandeau : tout accepter / tout refuser. */

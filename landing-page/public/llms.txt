@@ -1,41 +1,23 @@
 # EIDEN Visa
 
-> Agence d'accompagnement aux demandes de visa Schengen, basée à Agadir (Maroc).
-> Site vitrine en français et en arabe. Ceci est un résumé destiné aux assistants
-> IA et aux moteurs de recherche : pour une citation exacte, se référer aux pages.
+> Agence d'accompagnement aux demandes de visa Schengen, basée à Agadir (Maroc). Site vitrine en français et en arabe, demande rapide en 3 étapes, réponse de l'équipe EIDEN. EIDEN ne délivre pas les visas et ne garantit jamais leur obtention : la décision appartient aux autorités consulaires.
 
-- Site : https://visa.eiden-group.com/
-- Contact : contact@eiden-group.com — Tél/WhatsApp : +212 777 777 428
-- Adresse : Agadir Bay, Technopole 1, Bloc B, 1er étage, Bureau 101 B, Agadir (Maroc)
-- Horaires : lundi–jeudi 10h00–17h30, vendredi 10h00–12h30 et 14h00–15h30
-- Éditeur : EIDEN SARL AU — RC 62623 (Tribunal d'Agadir), ICE 003670867000027
+EIDEN Visa accompagne les voyageurs basés au Maroc dans la préparation de leur dossier de visa : étude du dossier, pré-réservations d'hôtel et de billet d'avion, assurance voyage et prise de rendez-vous consulaire (frais inclus dans les packs). Contact : contact@eiden-group.com, +212 777 777 428, Agadir Bay (Technopole 1, Bloc B, 1er étage, Bureau 101 B).
 
-## Services
+## Accueil et contact
 
-- Étude et préparation du dossier de visa Schengen (tourisme, études, travail,
-  regroupement familial, soins médicaux, autres motifs).
-- Pré-réservations d'hôtel, billets d'avion et assurance voyage.
-- Prise de rendez-vous consulaire (frais de rendez-vous inclus dans les packs).
-- Demande rapide en 3 étapes depuis le site (formulaire + WhatsApp).
+- [Site EIDEN Visa](https://visa.eiden-group.com/) : présentation des services, packs, questions fréquentes et demande rapide en français et en arabe.
+- [Contenu complet en un seul fichier](https://visa.eiden-group.com/llms-full.txt) : l'intégralité des informations ci-dessous (services, FAQ, mentions légales résumées) sans navigation.
+- [WhatsApp EIDEN Visa](https://wa.me/212777777428) : discussion directe avec l'équipe.
 
-## À savoir absolument
+## Informations légales et confidentialité
 
-- EIDEN Visa NE DÉLIVRE PAS les visas et ne garantit jamais leur obtention :
-  la décision appartient exclusivement aux autorités consulaires.
-- Aucun paiement en ligne ni compte utilisateur sur ce site.
+- [Conditions d'utilisation](https://visa.eiden-group.com/conditions.html) : éditeur EIDEN SARL AU (RC 62623 Agadir, ICE 003670867000027), services, tarifs, responsabilités, droit marocain.
+- [Politique de confidentialité](https://visa.eiden-group.com/confidentialite.html) : données de la demande rapide, finalités, conservation 3 ans maximum, droits loi 09-08 (accès, rectification, opposition).
+- [Politique cookies](https://visa.eiden-group.com/cookies.html) : stockage local uniquement par défaut, traceurs tiers seulement après acceptation par catégorie.
+- [Sécurité](https://visa.eiden-group.com/securite.html) : HTTPS, base en écriture seule, validation serveur, aucun paiement en ligne, signalement de faille.
 
-## Pages
+## Optional
 
-- Accueil : https://visa.eiden-group.com/
-- Conditions d'utilisation : https://visa.eiden-group.com/conditions.html
-- Confidentialité (loi marocaine 09-08) : https://visa.eiden-group.com/confidentialite.html
-- Cookies : https://visa.eiden-group.com/cookies.html
-- Sécurité : https://visa.eiden-group.com/securite.html
-
-## Données et vie privée
-
-- Le formulaire de demande rapide transmet nom, prénom, téléphone, e-mail
-  (facultatif), type de visa, dates, destination, pack, ville et nombre de
-  demandeurs, uniquement pour être recontacté (conservation 3 ans max).
-- Mesure d'audience et traceurs tiers (Google, Microsoft Clarity, Bing)
-  uniquement après consentement explicite du visiteur.
+- [Plan du site](https://visa.eiden-group.com/sitemap.xml) : liste des pages pour les moteurs de recherche.
+- [Contact sécurité](https://visa.eiden-group.com/.well-known/security.txt) : comment signaler une vulnérabilité (RFC 9116).

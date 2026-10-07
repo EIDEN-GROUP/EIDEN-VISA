@@ -1,0 +1,4 @@
+Contact: mailto:contact@eiden-group.com
+Expires: 2027-10-07T00:00:00.000Z
+Preferred-Languages: fr, ar
+Canonical: https://visa.eiden-group.com/.well-known/security.txt
