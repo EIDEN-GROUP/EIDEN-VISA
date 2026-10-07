@@ -1,4 +1,4 @@
-// Landing page Eiden Visa — projet Vite autonome, séparé de l'app (TanStack Start à la racine).
+// Landing page Eiden Visa   projet Vite autonome, séparé de l'app (TanStack Start à la racine).
 // Aucun import depuis ../src : ce dossier doit pouvoir être déplacé ou déployé seul.
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";

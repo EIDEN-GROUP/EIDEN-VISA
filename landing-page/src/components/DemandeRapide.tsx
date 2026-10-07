@@ -882,7 +882,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     }
     if (etape === ETAPES.length - 1) {
       // Sauvegarde Supabase en arrière-plan (silencieuse en cas d'échec),
-      // puis ouverture WhatsApp comme avant — les deux portent le même contenu.
+      // puis ouverture WhatsApp comme avant   les deux portent le même contenu.
       await saveContact({
         nom: d.nom.trim(),
         prenom: d.prenom.trim(),

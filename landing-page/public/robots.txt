@@ -1,4 +1,4 @@
-# EIDEN Visa — landing publique. Le back-office (compte, dossiers, paiements)
+# EIDEN Visa   landing publique. Le back-office (compte, dossiers, paiements)
 # vit sur un autre hôte, avec son propre robots.txt qui le désindexe.
 User-agent: *
 Allow: /

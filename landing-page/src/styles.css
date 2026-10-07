@@ -329,7 +329,7 @@
 }
 /* Sens arabe : vol miroir (droite → gauche). Le masque part du bord droit
    (inclinaison -100deg, symétrique du 100deg). Les traînées sont retournées avec
-   l'avion par le `scaleX: -1` — aucune surcharge ici (sinon double miroir). */
+   l'avion par le `scaleX: -1`   aucune surcharge ici (sinon double miroir). */
 [dir="rtl"] .loader-rideau {
   -webkit-mask-image: linear-gradient(
     -100deg,

@@ -1,4 +1,4 @@
--- Eiden Visa — table des demandes de la landing page (DemandeRapide).
+-- Eiden Visa   table des demandes de la landing page (DemandeRapide).
 -- À exécuter une fois dans Supabase : Dashboard > SQL Editor > New query.
 -- Le navigateur insère avec la clé anon (INSERT seul) ; la lecture BMS passe
 -- par la fonction serverless /api/contacts-feed (clé service_role, jamais exposée).

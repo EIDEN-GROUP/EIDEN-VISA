@@ -1,4 +1,4 @@
-// GET /api/contacts-feed — flux de lecture des demandes pour le BMS.
+// GET /api/contacts-feed   flux de lecture des demandes pour le BMS.
 // Fonction serverless Vercel hébergée par la landing page (dossier api/).
 // Le BMS la consomme via son proxy Website Contacts (GET + header X-API-Key),
 // exactement comme les autres sources CONTACT_SOURCE_* : aucune modification
@@ -8,7 +8,7 @@
 //   CONTACT_SOURCE_N_API_KEY=<même valeur que CONTACTS_FEED_API_KEY>
 //
 // Sécurité : la clé service_role Supabase et CONTACTS_FEED_API_KEY sont des
-// variables serveur (sans préfixe VITE_) — jamais exposées au navigateur.
+// variables serveur (sans préfixe VITE_)   jamais exposées au navigateur.
 // Durcissement : comparaison à temps constant, clé ≥ 32 caractères, frein
 // anti-bourrinage par IP (best-effort en serverless), colonnes minimales,
 // erreurs génériques (aucun oracle de configuration).

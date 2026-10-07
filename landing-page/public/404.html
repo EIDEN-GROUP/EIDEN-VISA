@@ -14,10 +14,212 @@
     <meta name="theme-color" content="#faf8f4" />
     <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
-    <!-- Même structure et charte que les pages légales (legal.css). -->
+    <!-- Base commune aux pages légales (legal.css) ; le bloc ci-dessous en fait un
+         hero de la landing : texte à gauche, illustration du bandeau final à droite. -->
     <link rel="stylesheet" href="/legal.css" />
+    <link rel="preload" as="image" href="/images/world-1.webp" />
+    <style>
+      :root {
+        --illus: 120vw;
+      }
+      /* Illustration du bandeau final (Cta.tsx) à la place du tampon en filigrane :
+         fondue dans le crème à gauche et en bas, le header passe par-dessus. */
+      body::before {
+        top: 36px;
+        inset-inline-end: calc((100vw - var(--illus)) * 0.4);
+        width: var(--illus);
+        aspect-ratio: 1672 / 941;
+        rotate: none;
+        opacity: 1;
+        background: url("/images/world-1.webp") center / cover no-repeat;
+        -webkit-mask-image:
+          linear-gradient(90deg, transparent 2%, #000 34%),
+          linear-gradient(0deg, transparent 0, #000 24%);
+        -webkit-mask-composite: source-in;
+        mask-image:
+          linear-gradient(90deg, transparent 2%, #000 34%),
+          linear-gradient(0deg, transparent 0, #000 24%);
+        mask-composite: intersect;
+      }
+      /* Mobile et tablette : l'illustration en bandeau, le texte commence dessous. */
+      .hero-inner {
+        padding-top: calc(var(--illus) * 0.518 - 78px);
+      }
+      .code-404 {
+        margin: 0.1em 0 0.3rem;
+        color: var(--brand);
+        font-family: var(--serif);
+        font-size: clamp(5.5rem, 12vw, 10rem);
+        font-weight: 600;
+        line-height: 0.9;
+        letter-spacing: -0.03em;
+      }
+      h1 {
+        max-width: 20ch;
+        font-size: clamp(2rem, 3.6vw, 3.1rem);
+        line-height: 1.05;
+        letter-spacing: -0.01em;
+      }
+      .ar {
+        width: fit-content;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        margin-top: 1.75rem;
+      }
+      .actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        height: 48px;
+        padding: 0 28px;
+        border-radius: 999px;
+        font-size: 14.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        text-decoration: none;
+        transition: background-color 0.3s ease-out;
+      }
+      .actions .primaire {
+        background: var(--brand);
+        color: #fff;
+        box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.35);
+      }
+      .actions .primaire::after {
+        content: "";
+        width: 18px;
+        height: 18px;
+        background: currentColor;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E")
+          center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E")
+          center / contain no-repeat;
+        transition: translate 0.3s ease-out;
+      }
+      .actions .primaire:hover {
+        background: var(--brand-dark);
+      }
+      .actions .primaire:hover::after {
+        translate: 4px 0;
+      }
+      .actions .secondaire {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: var(--shadow-soft);
+      }
+      .actions .secondaire:hover {
+        background: var(--sand);
+      }
+
+      /* « Où aller ? » : surtitre + liens, sous le filet du hero. */
+      main {
+        padding-block: clamp(1.5rem, 3vw, 2.25rem) clamp(2.5rem, 6vw, 4rem);
+      }
+      .card {
+        max-width: none;
+        padding: 0;
+      }
+      .card > h2 {
+        display: block;
+        margin: 0 0 1rem;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.5;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+      }
+      .card > h2 .num {
+        display: none;
+      }
+      .card > :not(h2) {
+        margin-inline-start: 0;
+      }
+      .card ul {
+        max-width: var(--mesure);
+      }
+
+      @media (min-width: 640px) {
+        :root {
+          --illus: 100vw;
+        }
+        .actions a {
+          width: auto;
+          height: 58px;
+          padding: 0 36px;
+          font-size: 15.5px;
+        }
+      }
+      @media (min-width: 1024px) {
+        :root {
+          --illus: min(72vw, 1100px);
+        }
+        body::before {
+          inset-inline-end: 0;
+        }
+        .hero-inner {
+          padding-top: clamp(1.5rem, 3vw, 2.75rem);
+        }
+        .hero-inner > * {
+          max-width: min(48%, 40rem);
+        }
+        .card {
+          display: grid;
+          grid-template-columns: 15rem minmax(0, var(--mesure));
+          column-gap: clamp(3rem, 6.5vw, 7rem);
+          align-items: baseline;
+        }
+        .card > h2 {
+          margin: 0;
+        }
+      }
+
+      /* Entrée : le texte monte, l'illustration se pose (comme le hero et le bandeau final). */
+      @media (prefers-reduced-motion: no-preference) {
+        body::before {
+          transform-origin: 100% 0;
+          animation: film-404 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .hero-inner > * {
+          animation: monte-404 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .hero-inner > :nth-child(2) {
+          animation-delay: 0.08s;
+        }
+        .hero-inner > :nth-child(3) {
+          animation-delay: 0.16s;
+        }
+        .hero-inner > :nth-child(4) {
+          animation-delay: 0.24s;
+        }
+        .hero-inner > :nth-child(5) {
+          animation-delay: 0.32s;
+        }
+      }
+      @keyframes film-404 {
+        from {
+          opacity: 0;
+          transform: scale(1.08);
+        }
+      }
+      @keyframes monte-404 {
+        from {
+          opacity: 0;
+          transform: translateY(22px);
+        }
+      }
+      @media print {
+        .hero-inner {
+          padding-top: 1.5rem;
+        }
+      }
+    </style>
   </head>
-  <!-- Structure identique aux pages légales ; charte = legal.css. -->
   <body>
     <div class="topbar">
       <div class="topbar-inner">
@@ -44,7 +246,7 @@
 
     <div class="header">
       <div class="header-inner">
-        <a class="logo" href="/" aria-label="EIDEN Visa — Accueil">
+        <a class="logo" href="/" aria-label="EIDEN Visa   Accueil">
           <img src="/images/logo-eiden-visa.webp" alt="EIDEN Visa" width="900" height="264" />
         </a>
         <a class="retour" href="/">← Retour au site</a>
@@ -53,65 +255,9 @@
 
     <div class="hero">
       <div class="hero-inner">
-        <svg class="hero-tampon" viewBox="0 0 140 140" aria-hidden="true" focusable="false">
-          <defs>
-            <polygon
-              id="etoile-ue"
-              points="0,-10 2.35,-3.24 9.51,-3.09 3.8,1.24 5.88,8.09 0,4 -5.88,8.09 -3.8,1.24 -9.51,-3.09 -2.35,-3.24"
-            />
-          </defs>
-          <circle
-            cx="70"
-            cy="70"
-            r="66"
-            fill="none"
-            stroke="#ffffff"
-            stroke-width="2.5"
-            opacity="0.55"
-          />
-          <circle
-            cx="70"
-            cy="70"
-            r="58"
-            fill="none"
-            stroke="#ffffff"
-            stroke-width="1"
-            opacity="0.35"
-          />
-          <g fill="#ffcc00" opacity="0.9">
-            <use href="#etoile-ue" transform="translate(70,26) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(92,31.9) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(108.1,48) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(114,70) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(108.1,92) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(92,108.1) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(70,114) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(48,108.1) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(31.9,92) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(26,70) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(31.9,48) scale(0.7)" />
-            <use href="#etoile-ue" transform="translate(48,31.9) scale(0.7)" />
-          </g>
-          <text
-            x="70"
-            y="72"
-            text-anchor="middle"
-            dominant-baseline="central"
-            font-family="Newsreader, Georgia, serif"
-            font-size="44"
-            fill="#ffffff"
-            opacity="0.85"
-          >
-            ?
-          </text>
-        </svg>
         <p class="fil"><a href="/">Accueil</a> / Page introuvable</p>
-        <p class="code-erreur" aria-hidden="true">404</p>
+        <p class="code-404" aria-hidden="true">404</p>
         <h1>Cette page n'existe pas (ou plus).</h1>
-        <p class="tampon" aria-hidden="true">
-          <span class="tampon-ligne">INTROUVABLE</span>
-          <span class="tampon-sous-ligne">page non trouvée</span>
-        </p>
         <p class="ar" dir="rtl" lang="ar">
           هذه الصفحة غير موجودة. عُد إلى الصفحة الرئيسية أو راسلنا على واتساب.
         </p>
@@ -132,7 +278,7 @@
       <section class="card">
         <h2><span class="num">✦</span>Où aller ?</h2>
         <ul>
-          <li><a href="/">Accueil</a> — services, packs et demande rapide en 3 étapes.</li>
+          <li><a href="/">Accueil</a> services, packs et demande rapide en 3 étapes.</li>
           <li>
             <a href="/conditions.html">Conditions d'utilisation</a>,
             <a href="/confidentialite.html">confidentialité</a>,
@@ -149,7 +295,7 @@
         <a href="/cookies.html">Cookies</a>
         <a href="/securite.html">Sécurité</a>
       </nav>
-      <p class="droits">© 2026 EIDEN Visa — Agadir, Maroc.</p>
+      <p class="droits">© 2026 EIDEN Visa Agadir, Maroc.</p>
     </footer>
   </body>
 </html>

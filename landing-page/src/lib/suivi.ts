@@ -9,10 +9,10 @@
 //   experience   → functionality_storage → Microsoft Clarity (heatmaps + replays)
 //   marketing    → ad_storage + ad_user_data + ad_personalization → Bing UET
 // Dans GTM : activer le mode de consentement et lier chaque balise au type
-// correspondant — le conteneur fait alors respecter les refus tout seul.
+// correspondant   le conteneur fait alors respecter les refus tout seul.
 //
 // Taxonomie des événements (vérifiée contre la doc GA4 au 2026-10-07 :
-// snake_case, ≤ 40 caractères, aucun nom réservé — `download` est libre,
+// snake_case, ≤ 40 caractères, aucun nom réservé   `download` est libre,
 // `file_download` étant le nom réservé ; `page_view`, `scroll` et
 // `select_content` sont standard et réutilisés avec nos paramètres) :
 //   page_view                              { page_path, langue }   (chargement + changement de langue)
@@ -26,7 +26,7 @@
 //   select_content                         { content_type: "cta"|"lien"|"bouton"|"faq"|"langue", item_id, section }
 //   consentement                           { choix: "accepte"|"partiel"|"refuse", detail }
 // Note GTM : ne PAS créer de balises Event pour `page_view` / `scroll` (déjà couverts
-// par le Google tag + Enhanced measurement — doublons garantis). Créer des balises
+// par le Google tag + Enhanced measurement   doublons garantis). Créer des balises
 // « GA4 Event » déclenchées sur l'événement personnalisé de même nom pour les autres,
 // puis déclarer leurs paramètres en dimensions personnalisées (Admin > Custom
 // definitions) : `destination`, `pack`, `profondeur`, `section`, `champ`.
@@ -187,7 +187,7 @@ function chargerGa4(id: string): void {
 /**
  * Charge Microsoft Clarity via le paquet officiel `@microsoft/clarity`
  * (import dynamique : zéro octet tant que la catégorie « expérience » n'est pas
- * acceptée — chunk séparé). `consent()` explicite : couvre aussi les projets
+ * acceptée   chunk séparé). `consent()` explicite : couvre aussi les projets
  * Clarity configurés en « consentement requis », sinon rien n'est collecté.
  */
 type ModuleClarity = typeof import("@microsoft/clarity").default;
@@ -261,7 +261,7 @@ function pousserConsentement(prefs: Preferences): void {
 
 /**
  * Injecte les scripts des catégories acceptées (une seule fois chacun) puis
- * pousse TOUJOURS l'état du consentement — même si tout est déjà chargé, car
+ * pousse TOUJOURS l'état du consentement   même si tout est déjà chargé, car
  * l'utilisateur a pu retirer une catégorie (sinon le traceur continuait).
  */
 function chargerTraceurs(prefs: Preferences): void {
