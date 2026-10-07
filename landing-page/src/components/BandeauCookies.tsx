@@ -4,11 +4,11 @@
 // n'en charge aucun. Détails : page publique `/cookies.html`.
 import { useState } from "react";
 import { useLangue } from "../i18n";
-import { choisirConsentement, lireConsentement } from "../lib/suivi";
+import { choisirConsentement, lirePreferences, ouvrirPreferences } from "../lib/suivi";
 
 export function BandeauCookies() {
   const { t } = useLangue();
-  const [visible, setVisible] = useState(() => lireConsentement() === null);
+  const [visible, setVisible] = useState(() => lirePreferences() === null);
   if (!visible) return null;
   const B = t.bandeauCookies;
 
@@ -42,6 +42,13 @@ export function BandeauCookies() {
             className="h-10 flex-1 rounded-xl bg-white px-4 text-[14px] font-bold whitespace-nowrap text-ink transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             {B.accepter}
+          </button>
+          <button
+            type="button"
+            onClick={ouvrirPreferences}
+            className="h-10 flex-1 rounded-xl px-4 text-[14px] font-bold whitespace-nowrap text-white ring-1 ring-white/25 transition-colors duration-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            {B.personnaliser}
           </button>
           <button
             type="button"

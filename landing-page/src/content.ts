@@ -116,15 +116,15 @@ export const AVANTAGES: {
   position: string;
   tampon?: boolean;
 }[] = [
-  { icon: Users, image: "/images/04-etudiante.png", position: "50% 55%" },
-  { icon: FileSpreadsheet, image: "/images/justificatifs.png", position: "50% 40%" },
+  { icon: Users, image: "/images/04-etudiante.webp", position: "50% 55%" },
+  { icon: FileSpreadsheet, image: "/images/justificatifs.webp", position: "50% 40%" },
   {
     icon: ShieldCheck,
     image: "/images/hero-3.webp",
     position: "50% 50%",
     tampon: true,
   },
-  { icon: Settings, image: "/images/serenite.jpg", position: "50% 62%" },
+  { icon: Settings, image: "/images/serenite.webp", position: "50% 62%" },
 ];
 
 /** Packs Standard, Essentiel, Global (textes : `t.packs.offres`). Aucun prix affiché. */
@@ -135,11 +135,11 @@ export const PACKS: { id: PackId; image: string; position: string; vedette?: boo
   { id: "standard", image: "/images/pack-essentiel.webp", position: "50% 45%" },
   {
     id: "global",
-    image: "/images/hero-bg-2.jpg",
+    image: "/images/hero-bg-2.webp",
     position: "50% 55%",
     vedette: true,
   },
-  { id: "essentiel", image: "/images/06-valise-aeroport.png", position: "50% 50%" },
+  { id: "essentiel", image: "/images/06-valise-aeroport.webp", position: "50% 50%" },
 ];
 
 export const AVATARS = [

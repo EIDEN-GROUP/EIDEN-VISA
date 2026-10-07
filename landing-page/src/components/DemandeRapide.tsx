@@ -834,7 +834,10 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
 
   // Brouillon local : chaque saisie est conservée ; rouvrir la popup retrouve
   // tout (champs + étape). Silencieux si le stockage est indisponible.
+  // Écran de succès exclu : le brouillon a été effacé à l'envoi, le réécrire ici
+  // (l'étape change après l'effacement) ressusciterait la demande envoyée.
   useEffect(() => {
+    if (etape === ETAPES.length) return;
     try {
       window.localStorage.setItem(CLE_BROUILLON, JSON.stringify({ version: 1, etape, donnees: d }));
     } catch {

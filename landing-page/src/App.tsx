@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { BandeauCookies } from "./components/BandeauCookies";
 import { DemandeRapide } from "./components/DemandeRapide";
 import { Loader } from "./components/Loader";
+import { PreferencesCookies } from "./components/PreferencesCookies";
 import { SmoothScroll } from "./components/SmoothScroll";
 import { useLangue } from "./i18n";
 import { prefersReducedMotion, ScrollTrigger } from "./lib/gsap";
@@ -75,6 +76,8 @@ export function App() {
         )}
         {/* Bandeau cookies après le loader pour ne pas le recouvrir. */}
         {intro === "fini" && <BandeauCookies />}
+        {/* Modale de préférences : ouverte depuis le bandeau ou le pied de page. */}
+        <PreferencesCookies />
       </SmoothScroll>
     </MotionConfig>
   );

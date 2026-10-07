@@ -416,9 +416,27 @@ export const ar: Dictionnaire = {
   bandeauCookies: {
     titre: "نحترم خصوصيتك",
     texte:
-      "نستخدم ملفات تعريف الارتباط لقياس الزيارات وتحسين تجربتك. يمكنك قبول الكل أو رفض الكل — ويُحفظ اختيارك لمدة 12 شهرًا.",
+      "نستخدم ملفات تعريف الارتباط لقياس الزيارات وتحسين تجربتك. يمكنك قبول الكل أو رفض الكل أو التخصيص — ويُحفظ اختيارك لمدة 12 شهرًا.",
     accepter: "قبول الكل",
     refuser: "رفض الكل",
+    personnaliser: "تخصيص",
     enSavoirPlus: "اعرف المزيد",
+  },
+  preferencesCookies: {
+    titre: "تفضيلات ملفات تعريف الارتباط",
+    intro: "اختر ما تسمح بتتبعه. يمكنك تغيير رأيك في أي وقت من تذييل الموقع.",
+    necessaires: "ضرورية تمامًا",
+    necessairesDesc: "اللغة ومسودة الطلب وتذكر هذا الاختيار — نشطة دائمًا ولا تُرسل أبدًا.",
+    statistiques: "قياس الجمهور",
+    statistiquesDesc: "Google Analytics: الصفحات المعروضة والنقرات والطلبات المرسلة، بشكل مجهول.",
+    experience: "التجربة",
+    experienceDesc: "Microsoft Clarity: خرائط الحرارة وإعادة تشغيل التنقل بشكل مجهول.",
+    marketing: "التسويق",
+    marketingDesc: "Bing: قياس الزيارات القادمة من محرك بحث Bing.",
+    toujoursActif: "نشطة دائمًا",
+    toutAccepter: "قبول الكل",
+    toutRefuser: "رفض الكل",
+    enregistrer: "حفظ اختياراتي",
+    fermer: "إغلاق",
   },
 };

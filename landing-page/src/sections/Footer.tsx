@@ -1,7 +1,7 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { CONTACT } from "../content";
 import { useLangue } from "../i18n";
-import { oublierConsentement } from "../lib/suivi";
+import { ouvrirPreferences } from "../lib/suivi";
 
 const LIEN =
   "flex w-fit gap-2 rounded-sm transition-colors duration-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
@@ -80,10 +80,7 @@ export function Footer() {
           </a>
           <button
             type="button"
-            onClick={() => {
-              oublierConsentement();
-              window.location.reload();
-            }}
+            onClick={ouvrirPreferences}
             className="underline underline-offset-2 transition-colors hover:text-white"
           >
             {t.footer.gererCookies}

@@ -440,10 +440,32 @@ export const fr = {
   bandeauCookies: {
     titre: "Nous respectons votre vie privée",
     texte:
-      "Nous utilisons des cookies pour mesurer les visites et améliorer votre expérience. Vous pouvez tout accepter ou tout refuser — votre choix est conservé 12 mois.",
+      "Nous utilisons des cookies pour mesurer les visites et améliorer votre expérience. Vous pouvez tout accepter, tout refuser ou personnaliser — votre choix est conservé 12 mois.",
     accepter: "Tout accepter",
     refuser: "Tout refuser",
+    personnaliser: "Personnaliser",
     enSavoirPlus: "En savoir plus",
+  },
+  // Modale de préférences catégorie par catégorie (`PreferencesCookies.tsx`).
+  preferencesCookies: {
+    titre: "Préférences cookies",
+    intro:
+      "Choisissez ce que vous autorisez à suivre. Modifiable à tout moment depuis le pied de page.",
+    necessaires: "Strictement nécessaires",
+    necessairesDesc:
+      "Langue, brouillon de demande et mémorisation de ce choix — toujours actifs, jamais transmis.",
+    statistiques: "Mesure d'audience",
+    statistiquesDesc:
+      "Google Analytics : pages vues, clics et demandes envoyées, de façon anonymisée.",
+    experience: "Expérience",
+    experienceDesc: "Microsoft Clarity : cartes de chaleur et replays de navigation anonymisés.",
+    marketing: "Marketing",
+    marketingDesc: "Bing : mesure des visites issues du moteur de recherche Bing.",
+    toujoursActif: "Toujours actif",
+    toutAccepter: "Tout accepter",
+    toutRefuser: "Tout refuser",
+    enregistrer: "Enregistrer mes choix",
+    fermer: "Fermer",
   },
 };
 

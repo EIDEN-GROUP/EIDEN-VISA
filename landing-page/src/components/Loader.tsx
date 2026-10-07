@@ -8,10 +8,10 @@ import { useLangue } from "../i18n";
 import { gsap, useGSAP } from "../lib/gsap";
 import { lancerIntro } from "../lib/intro";
 
-const CIEL = "/images/loader-bg.png";
+const CIEL = "/images/loader-bg.webp";
 const AVION = "/images/loader-avion.webp";
 const LOGO = "/images/logo-eiden-visa-blanc.webp";
-const A_PRECHARGER = [CIEL, AVION, LOGO, "/images/hero.png"];
+const A_PRECHARGER = [CIEL, AVION, LOGO, "/images/hero.webp"];
 /** Le temps de lire la marque, même quand tout est déjà en cache (ms). */
 const TEMPS_MIN = 1400;
 /** Réseau lent : on n'attend jamais plus longtemps (ms). */

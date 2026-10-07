@@ -41,6 +41,8 @@
         ]
       }
     </script>
+    <!-- Charte EIDEN (mêmes tokens que la landing : crème, marine, rouge).
+         Zéro requête externe : aucun traceur sur ces pages. -->
     <style>
       :root {
         --marine: #1f2f5c;
@@ -48,6 +50,7 @@
         --rouge: #ae0a1a;
         --encre: #232838;
         --muted: #5b6472;
+        --ligne: #e7e0d3;
       }
       * {
         box-sizing: border-box;
@@ -69,127 +72,201 @@
         gap: 12px;
         flex-wrap: wrap;
       }
-      .bandeau strong {
-        font-size: 17px;
+      .bandeau .marque {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 19px;
         letter-spacing: 0.02em;
       }
-      .bandeau a {
+      .bandeau .marque span {
+        color: #f0b429;
+      }
+      .bandeau a.retour {
         color: #fff;
         text-decoration: none;
         font-size: 14px;
+        font-weight: 600;
         border: 1px solid rgba(255, 255, 255, 0.4);
         border-radius: 999px;
-        padding: 6px 14px;
+        padding: 7px 16px;
+      }
+      .hero {
+        background: linear-gradient(
+          180deg,
+          #8fbde6 0%,
+          #b5d1e8 30%,
+          #c9b08a 55%,
+          #84736b 75%,
+          #1f2f5c 100%
+        );
+        color: #fff;
+        padding: 46px 20px 40px;
+      }
+      .hero .inner {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .fil {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.78);
+        margin-bottom: 10px;
+      }
+      .fil a {
+        color: #fff;
+      }
+      h1 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 600;
+        font-size: clamp(1.8rem, 4.5vw, 2.5rem);
+        line-height: 1.12;
+        margin: 0 0 12px;
+      }
+      .chip {
+        display: inline-block;
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 999px;
+        padding: 4px 14px;
       }
       main {
         max-width: 760px;
         margin: 0 auto;
-        padding: 32px 20px 64px;
+        padding: 26px 20px 64px;
       }
-      h1 {
-        font-size: clamp(1.7rem, 4vw, 2.3rem);
-        line-height: 1.15;
-        color: var(--marine);
-        margin: 0 0 4px;
-      }
-      .maj {
-        color: var(--muted);
-        font-size: 13.5px;
-        margin-bottom: 28px;
+      .card {
+        background: #fff;
+        border: 1px solid var(--ligne);
+        border-radius: 14px;
+        padding: 20px 22px;
+        margin: 14px 0;
+        box-shadow: 0 12px 30px -22px rgb(20 20 40 / 0.35);
       }
       h2 {
-        font-size: 1.15rem;
+        font-size: 1.12rem;
         color: var(--marine);
-        margin: 30px 0 8px;
+        margin: 0 0 8px;
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+      }
+      h2 .num {
+        font-family: Georgia, serif;
+        color: var(--rouge);
+        font-size: 1.3rem;
       }
       p,
       li {
         font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .card p:last-child,
+      .card ul:last-child {
+        margin-bottom: 0;
       }
       ul {
         padding-inline-start: 22px;
       }
-      .encadre {
-        background: #fff;
+      .alerte {
         border-inline-start: 4px solid var(--rouge);
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin: 18px 0;
+        background: #fdf3f1;
       }
       footer {
-        border-top: 1px solid #e3ddd2;
-        padding: 20px;
+        background: var(--marine);
+        color: rgba(255, 255, 255, 0.75);
+        padding: 24px 20px 30px;
         text-align: center;
         font-size: 13.5px;
-        color: var(--muted);
+      }
+      footer nav {
+        margin-bottom: 10px;
       }
       footer a {
-        color: var(--marine);
+        color: #fff;
         margin: 0 8px;
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
     <div class="bandeau">
-      <strong>EIDEN Visa</strong>
-      <a href="/">← Retour au site</a>
+      <div class="marque">EIDEN <span>Visa</span></div>
+      <a class="retour" href="/">← Retour au site</a>
+    </div>
+    <div class="hero">
+      <div class="inner">
+        <p class="fil"><a href="/">Accueil</a> / Sécurité</p>
+        <h1>Sécurité</h1>
+        <span class="chip">Dernière mise à jour : 7 octobre 2026</span>
+      </div>
     </div>
     <main>
-      <h1>Sécurité</h1>
-      <p class="maj">Dernière mise à jour : 7 octobre 2026.</p>
-
-      <h2>1. Ce que nous mettons en place</h2>
-      <ul>
-        <li><strong>Chiffrement :</strong> tout le site est servi en HTTPS, formulaires inclus.</li>
-        <li>
-          <strong>Base verrouillée :</strong> depuis le site, les demandes ne peuvent qu'être
-          <em>écrites</em> — aucune lecture publique des demandes n'est techniquement possible.
-        </li>
-        <li>
-          <strong>Validation serveur :</strong> chaque envoi est contrôlé et plafonné côté serveur
-          avant enregistrement (formats, tailles, fréquence).
-        </li>
-        <li>
-          <strong>Secrets jamais exposés :</strong> les clés techniques restent côté serveur et ne
-          transitent jamais dans le navigateur.
-        </li>
-        <li>
-          <strong>Traceurs sous consentement :</strong> aucune balise tierce sans votre acceptation
-          (voir <a href="/cookies.html">politique cookies</a>).
-        </li>
-      </ul>
-
-      <h2>2. Ce que le site ne vous demandera jamais en ligne</h2>
-      <ul>
-        <li>Aucun compte utilisateur, aucun mot de passe.</li>
-        <li>Aucun paiement en ligne, aucune coordonnée bancaire.</li>
-        <li>Aucune pièce d'identité via le formulaire (les documents se traitent en agence).</li>
-      </ul>
-      <div class="encadre">
-        <strong>Méfiez-vous</strong> de tout message ou site imitant EIDEN Visa et réclamant un
-        paiement ou des documents : en cas de doute, appelez l'agence au
-        <a href="tel:+212777777428" dir="ltr">+212 777 777 428</a>.
-      </div>
-
-      <h2>3. Signaler une faille</h2>
-      <p>
-        Vous avez repéré une vulnérabilité ? Écrivez à
-        <a href="mailto:contact@eiden-group.com">contact@eiden-group.com</a> avec l'objet «
-        [SÉCURITÉ] » et une description du problème. Nous nous engageons à accuser réception
-        rapidement, à corriger dans les meilleurs délais et à ne pas engager de poursuites contre
-        les signalements de bonne foi.
-      </p>
-
-      <h2>4. Limites</h2>
-      <p>
-        Aucun système n'est inviolable : en cas d'incident avéré, nous informerons les personnes
-        concernées et les autorités compétentes conformément à la loi 09-08.
-      </p>
+      <section class="card">
+        <h2><span class="num">1</span>Ce que nous mettons en place</h2>
+        <ul>
+          <li>
+            <strong>Chiffrement :</strong> tout le site est servi en HTTPS, formulaires inclus.
+          </li>
+          <li>
+            <strong>Base verrouillée :</strong> depuis le site, les demandes ne peuvent qu'être
+            <em>écrites</em> — aucune lecture publique des demandes n'est techniquement possible.
+          </li>
+          <li>
+            <strong>Validation serveur :</strong> chaque envoi est contrôlé et plafonné côté serveur
+            avant enregistrement (formats, tailles, fréquence).
+          </li>
+          <li>
+            <strong>Secrets jamais exposés :</strong> les clés techniques restent côté serveur et ne
+            transitent jamais dans le navigateur.
+          </li>
+          <li>
+            <strong>Traceurs sous consentement :</strong> aucune balise tierce sans votre
+            acceptation (voir <a href="/cookies.html">politique cookies</a>).
+          </li>
+        </ul>
+      </section>
+      <section class="card">
+        <h2><span class="num">2</span>Ce que le site ne vous demandera jamais en ligne</h2>
+        <ul>
+          <li>Aucun compte utilisateur, aucun mot de passe.</li>
+          <li>Aucun paiement en ligne, aucune coordonnée bancaire.</li>
+          <li>Aucune pièce d'identité via le formulaire (les documents se traitent en agence).</li>
+        </ul>
+      </section>
+      <section class="card alerte">
+        <h2><span class="num">✦</span>Méfiez-vous des imitations</h2>
+        <p>
+          Méfiez-vous de tout message ou site imitant EIDEN Visa et réclamant un paiement ou des
+          documents : en cas de doute, appelez l'agence au
+          <a href="tel:+212777777428" dir="ltr">+212 777 777 428</a>.
+        </p>
+      </section>
+      <section class="card">
+        <h2><span class="num">3</span>Signaler une faille</h2>
+        <p>
+          Vous avez repéré une vulnérabilité ? Écrivez à
+          <a href="mailto:contact@eiden-group.com">contact@eiden-group.com</a> avec l'objet «
+          [SÉCURITÉ] » et une description du problème. Nous nous engageons à accuser réception
+          rapidement, à corriger dans les meilleurs délais et à ne pas engager de poursuites contre
+          les signalements de bonne foi.
+        </p>
+      </section>
+      <section class="card">
+        <h2><span class="num">4</span>Limites</h2>
+        <p>
+          Aucun système n'est inviolable : en cas d'incident avéré, nous informerons les personnes
+          concernées et les autorités compétentes conformément à la loi 09-08.
+        </p>
+      </section>
     </main>
     <footer>
-      <a href="/conditions.html">Conditions</a>·<a href="/confidentialite.html">Confidentialité</a
-      >·<a href="/cookies.html">Cookies</a>·<a href="/securite.html">Sécurité</a> <br />© 2026 EIDEN
-      Visa — Agadir, Maroc.
+      <nav>
+        <a href="/conditions.html">Conditions</a>·<a href="/confidentialite.html">Confidentialité</a
+        >·<a href="/cookies.html">Cookies</a>·<a href="/securite.html">Sécurité</a>
+      </nav>
+      © 2026 EIDEN Visa — Agadir, Maroc.
     </footer>
   </body>
 </html>

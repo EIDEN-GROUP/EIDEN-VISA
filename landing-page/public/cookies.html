@@ -41,6 +41,8 @@
         ]
       }
     </script>
+    <!-- Charte EIDEN (mêmes tokens que la landing : crème, marine, rouge).
+         Zéro requête externe : aucun traceur sur ces pages. -->
     <style>
       :root {
         --marine: #1f2f5c;
@@ -48,6 +50,7 @@
         --rouge: #ae0a1a;
         --encre: #232838;
         --muted: #5b6472;
+        --ligne: #e7e0d3;
       }
       * {
         box-sizing: border-box;
@@ -69,43 +72,101 @@
         gap: 12px;
         flex-wrap: wrap;
       }
-      .bandeau strong {
-        font-size: 17px;
+      .bandeau .marque {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 19px;
         letter-spacing: 0.02em;
       }
-      .bandeau a {
+      .bandeau .marque span {
+        color: #f0b429;
+      }
+      .bandeau a.retour {
         color: #fff;
         text-decoration: none;
         font-size: 14px;
+        font-weight: 600;
         border: 1px solid rgba(255, 255, 255, 0.4);
         border-radius: 999px;
-        padding: 6px 14px;
+        padding: 7px 16px;
+      }
+      .hero {
+        background: linear-gradient(
+          180deg,
+          #8fbde6 0%,
+          #b5d1e8 30%,
+          #c9b08a 55%,
+          #84736b 75%,
+          #1f2f5c 100%
+        );
+        color: #fff;
+        padding: 46px 20px 40px;
+      }
+      .hero .inner {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .fil {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.78);
+        margin-bottom: 10px;
+      }
+      .fil a {
+        color: #fff;
+      }
+      h1 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 600;
+        font-size: clamp(1.8rem, 4.5vw, 2.5rem);
+        line-height: 1.12;
+        margin: 0 0 12px;
+      }
+      .chip {
+        display: inline-block;
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 999px;
+        padding: 4px 14px;
       }
       main {
         max-width: 760px;
         margin: 0 auto;
-        padding: 32px 20px 64px;
+        padding: 26px 20px 64px;
       }
-      h1 {
-        font-size: clamp(1.7rem, 4vw, 2.3rem);
-        line-height: 1.15;
-        color: var(--marine);
-        margin: 0 0 4px;
-      }
-      .maj {
-        color: var(--muted);
-        font-size: 13.5px;
-        margin-bottom: 28px;
+      .card {
+        background: #fff;
+        border: 1px solid var(--ligne);
+        border-radius: 14px;
+        padding: 20px 22px;
+        margin: 14px 0;
+        box-shadow: 0 12px 30px -22px rgb(20 20 40 / 0.35);
       }
       h2 {
-        font-size: 1.15rem;
+        font-size: 1.12rem;
         color: var(--marine);
-        margin: 30px 0 8px;
+        margin: 0 0 8px;
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+      }
+      h2 .num {
+        font-family: Georgia, serif;
+        color: var(--rouge);
+        font-size: 1.3rem;
       }
       p,
       li,
       td {
         font-size: 15px;
+        margin: 0 0 8px;
+      }
+      td,
+      th {
+        margin: 0;
+      }
+      .card p:last-child,
+      .card ul:last-child {
+        margin-bottom: 0;
       }
       ul {
         padding-inline-start: 22px;
@@ -113,17 +174,14 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        margin: 12px 0;
-        background: #fff;
-        border-radius: 8px;
-        overflow: hidden;
+        margin: 12px 0 4px;
         font-size: 14px;
       }
       th,
       td {
         text-align: start;
         padding: 10px 12px;
-        border-bottom: 1px solid #ece6da;
+        border-bottom: 1px solid var(--ligne);
         vertical-align: top;
       }
       th {
@@ -131,121 +189,143 @@
         color: #fff;
         font-size: 13px;
       }
-      .encadre {
-        background: #fff;
+      tr:first-child th:first-child {
+        border-start-start-radius: 8px;
+      }
+      tr:first-child th:last-child {
+        border-start-end-radius: 8px;
+      }
+      .alerte {
         border-inline-start: 4px solid var(--rouge);
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin: 18px 0;
+        background: #fdf3f1;
       }
       footer {
-        border-top: 1px solid #e3ddd2;
-        padding: 20px;
+        background: var(--marine);
+        color: rgba(255, 255, 255, 0.75);
+        padding: 24px 20px 30px;
         text-align: center;
         font-size: 13.5px;
-        color: var(--muted);
+      }
+      footer nav {
+        margin-bottom: 10px;
       }
       footer a {
-        color: var(--marine);
+        color: #fff;
         margin: 0 8px;
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
     <div class="bandeau">
-      <strong>EIDEN Visa</strong>
-      <a href="/">← Retour au site</a>
+      <div class="marque">EIDEN <span>Visa</span></div>
+      <a class="retour" href="/">← Retour au site</a>
+    </div>
+    <div class="hero">
+      <div class="inner">
+        <p class="fil"><a href="/">Accueil</a> / Cookies</p>
+        <h1>Politique cookies</h1>
+        <span class="chip">Dernière mise à jour : 7 octobre 2026</span>
+      </div>
     </div>
     <main>
-      <h1>Politique cookies</h1>
-      <p class="maj">Dernière mise à jour : 7 octobre 2026.</p>
-
-      <div class="encadre">
-        <strong>Le principe est simple :</strong> sans votre clic sur « Tout accepter »,
-        <strong>aucun traceur tiers n'est chargé</strong>. « Tout refuser » laisse le site
-        entièrement fonctionnel, sans mesure d'audience.
-      </div>
-
-      <h2>1. Stockage nécessaire (toujours actif, sur votre appareil uniquement)</h2>
-      <table>
-        <tr>
-          <th>Nom</th>
-          <th>Rôle</th>
-          <th>Durée</th>
-        </tr>
-        <tr>
-          <td><code>eiden-langue</code></td>
-          <td>Mémorise votre langue (français / arabe).</td>
-          <td>12 mois</td>
-        </tr>
-        <tr>
-          <td><code>eiden-demande-v1</code></td>
-          <td>Brouillon de votre demande rapide, effacé à l'envoi.</td>
-          <td>Jusqu'à l'envoi</td>
-        </tr>
-        <tr>
-          <td><code>eiden-consentement-v1</code></td>
-          <td>Mémorise votre choix cookies pour ne pas le redemander.</td>
-          <td>12 mois</td>
-        </tr>
-      </table>
-      <p>Ces données ne quittent jamais votre appareil et ne sont transmises à personne.</p>
-
-      <h2>2. Traceurs chargés uniquement après acceptation</h2>
-      <table>
-        <tr>
-          <th>Outil</th>
-          <th>Rôle</th>
-          <th>Éditeur</th>
-        </tr>
-        <tr>
-          <td>Google Tag Manager</td>
-          <td>Gestion centralisée des balises de mesure.</td>
-          <td>Google LLC</td>
-        </tr>
-        <tr>
-          <td>Google Analytics 4</td>
-          <td>Statistiques de visite anonymisées (pages vues, clics, demandes envoyées).</td>
-          <td>Google LLC</td>
-        </tr>
-        <tr>
-          <td>Microsoft Clarity</td>
-          <td>Cartes de chaleur et replays de navigation anonymisés.</td>
-          <td>Microsoft</td>
-        </tr>
-        <tr>
-          <td>Bing UET</td>
-          <td>Mesure des visites issues du moteur Bing.</td>
-          <td>Microsoft</td>
-        </tr>
-      </table>
-      <p>
-        Leurs propres cookies (ex. <code>_ga</code>, <code>_clck</code>, <code>_uetvid</code>,
-        conservation de l'ordre de 13 mois) sont soumis à leurs politiques respectives.
-      </p>
-
-      <h2>3. Changer d'avis à tout moment</h2>
-      <ul>
-        <li>
-          Cliquez sur <strong>« Gérer mes cookies »</strong> dans le pied de page du site : votre
-          choix est oublié et le bandeau réapparaît.
-        </li>
-        <li>
-          Vous pouvez aussi effacer les données du site depuis les réglages de votre navigateur.
-        </li>
-      </ul>
-
-      <h2>4. Contact</h2>
-      <p>
-        Questions sur cette politique :
-        <a href="mailto:contact@eiden-group.com">contact@eiden-group.com</a>. Voir aussi la
-        <a href="/confidentialite.html">politique de confidentialité</a>.
-      </p>
+      <section class="card alerte">
+        <h2><span class="num">✦</span>Le principe est simple</h2>
+        <p>
+          Sans votre clic sur « Tout accepter »,
+          <strong>aucun traceur tiers n'est chargé</strong>. « Tout refuser » laisse le site
+          entièrement fonctionnel, sans mesure d'audience. Et « Personnaliser » vous laisse choisir
+          catégorie par catégorie.
+        </p>
+      </section>
+      <section class="card">
+        <h2>
+          <span class="num">1</span>Stockage nécessaire (toujours actif, sur votre appareil
+          uniquement)
+        </h2>
+        <table>
+          <tr>
+            <th>Nom</th>
+            <th>Rôle</th>
+            <th>Durée</th>
+          </tr>
+          <tr>
+            <td><code>eiden-langue</code></td>
+            <td>Mémorise votre langue (français / arabe).</td>
+            <td>12 mois</td>
+          </tr>
+          <tr>
+            <td><code>eiden-demande-v1</code></td>
+            <td>Brouillon de votre demande rapide, effacé à l'envoi.</td>
+            <td>Jusqu'à l'envoi</td>
+          </tr>
+          <tr>
+            <td><code>eiden-consentement-v1</code></td>
+            <td>Mémorise vos choix cookies par catégorie.</td>
+            <td>12 mois</td>
+          </tr>
+        </table>
+        <p>Ces données ne quittent jamais votre appareil et ne sont transmises à personne.</p>
+      </section>
+      <section class="card">
+        <h2><span class="num">2</span>Catégories activables (avec votre accord uniquement)</h2>
+        <table>
+          <tr>
+            <th>Catégorie</th>
+            <th>Outils</th>
+            <th>Rôle</th>
+          </tr>
+          <tr>
+            <td><strong>Mesure d'audience</strong></td>
+            <td>Google Analytics 4 (via Tag Manager si configuré)</td>
+            <td>Statistiques de visite : pages vues, clics, demandes envoyées.</td>
+          </tr>
+          <tr>
+            <td><strong>Expérience</strong></td>
+            <td>Microsoft Clarity</td>
+            <td>Cartes de chaleur et replays de navigation anonymisés.</td>
+          </tr>
+          <tr>
+            <td><strong>Marketing</strong></td>
+            <td>Bing UET</td>
+            <td>Mesure des visites issues du moteur Bing.</td>
+          </tr>
+        </table>
+        <p>
+          Leurs propres cookies (ex. <code>_ga</code>, <code>_clck</code>, <code>_uetvid</code>,
+          conservation de l'ordre de 13 mois) sont soumis à leurs politiques respectives.
+        </p>
+      </section>
+      <section class="card">
+        <h2><span class="num">3</span>Changer d'avis à tout moment</h2>
+        <ul>
+          <li>
+            Cliquez sur <strong>« Gérer mes cookies »</strong> dans le pied de page du site pour
+            rouvrir vos préférences catégorie par catégorie.
+          </li>
+          <li>
+            Vous pouvez aussi effacer les données du site depuis les réglages de votre navigateur.
+          </li>
+        </ul>
+      </section>
+      <section class="card">
+        <h2><span class="num">4</span>Contact</h2>
+        <p>
+          Questions sur cette politique :
+          <a href="mailto:contact@eiden-group.com">contact@eiden-group.com</a>. Voir aussi la
+          <a href="/confidentialite.html">politique de confidentialité</a>.
+        </p>
+      </section>
     </main>
     <footer>
-      <a href="/conditions.html">Conditions</a>·<a href="/confidentialite.html">Confidentialité</a
-      >·<a href="/cookies.html">Cookies</a>·<a href="/securite.html">Sécurité</a> <br />© 2026 EIDEN
-      Visa — Agadir, Maroc.
+      <nav>
+        <a href="/conditions.html">Conditions</a>·<a href="/confidentialite.html">Confidentialité</a
+        >·<a href="/cookies.html">Cookies</a>·<a href="/securite.html">Sécurité</a>
+      </nav>
+      © 2026 EIDEN Visa — Agadir, Maroc.
     </footer>
   </body>
 </html>

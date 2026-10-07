@@ -78,7 +78,7 @@ export function Destination() {
             />
             <div className="relative h-full overflow-hidden rounded-r-lg ">
               <img
-                src="/images/world-2.png"
+                src="/images/world-2.webp"
                 alt={t.destination.imageAlt}
                 loading="lazy"
                 decoding="async"

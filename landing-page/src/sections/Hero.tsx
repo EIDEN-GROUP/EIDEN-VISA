@@ -36,7 +36,7 @@ export function Hero() {
             className="h-full w-full will-change-transform"
           >
             <img
-              src="/images/bg-hero.png"
+              src="/images/bg-hero.webp"
               alt={t.hero.imageAlt}
               fetchPriority="high"
               decoding="async"
