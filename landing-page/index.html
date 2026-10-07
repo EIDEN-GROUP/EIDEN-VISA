@@ -44,14 +44,11 @@
     <meta name="geo.position" content="30.4278;-9.5981" />
     <meta name="ICBM" content="30.4278, -9.5981" />
 
-    <!-- Vérification de propriété : injectée au démarrage depuis l'environnement
-         (`VITE_GOOGLE_SITE_VERIFICATION`, `VITE_BING_SITE_VERIFICATION` — voir
-         `.env.example` et `src/lib/suivi.ts`). Les balises sont posées sans attendre
-         le consentement cookies car ce ne sont pas des traceurs.
-         Search Console : https://search.google.com/search-console
-         Bing Webmaster : https://www.bing.com/webmasters
-         Semrush : vérification DNS ou fichier, aucune balise requise.
+    <!-- Balises de vérification Search Console / Bing : écrites ici AU BUILD par
+         `vite.config.ts` (les vérificateurs lisent le HTML brut sans JS).
+         Voir `.env.example` : coller le jeton seul, redeployer, vérifier.
     -->
+    <!--VERIFICATION-METAS-->
 
     <!-- Données structurées Schema.org : éligibles aux résultats enrichis
          (tester dans https://search.google.com/test/rich-results et

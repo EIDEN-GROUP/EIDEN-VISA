@@ -11,13 +11,25 @@
 // Dans GTM : activer le mode de consentement et lier chaque balise au type
 // correspondant — le conteneur fait alors respecter les refus tout seul.
 //
-// Taxonomie des événements (noms recommandés GA4) :
+// Taxonomie des événements (vérifiée contre la doc GA4 au 2026-10-07 :
+// snake_case, ≤ 40 caractères, aucun nom réservé — `download` est libre,
+// `file_download` étant le nom réservé ; `page_view`, `scroll` et
+// `select_content` sont standard et réutilisés avec nos paramètres) :
 //   page_view                              { page_path, langue }   (chargement + changement de langue)
 //   scroll                                 { profondeur: 25/50/75/90_pourcent }   (une fois chacun)
+//   click_phone / click_whatsapp / click_email   { section }       (clic tel / WhatsApp / e-mail)
+//   contact_form_start                     {}                      (première saisie dans la demande)
+//   contact_form_error                     { champ }               (validation refusée)
+//   contact_form_submit                    { destination, pack }   (demande envoyée)
+//   appointment_request                    {}                      (bouton WhatsApp de l'écran de succès)
+//   download                               { file_name, link_url } (prêt pour les futurs fichiers)
 //   select_content                         { content_type: "cta"|"lien"|"bouton"|"faq"|"langue", item_id, section }
-//   generate_lead                          { destination, pack }              (demande rapide envoyée)
-//   contact                                { moyen: "whatsapp"|"telephone"|"email" }
 //   consentement                           { choix: "accepte"|"partiel"|"refuse", detail }
+// Note GTM : ne PAS créer de balises Event pour `page_view` / `scroll` (déjà couverts
+// par le Google tag + Enhanced measurement — doublons garantis). Créer des balises
+// « GA4 Event » déclenchées sur l'événement personnalisé de même nom pour les autres,
+// puis déclarer leurs paramètres en dimensions personnalisées (Admin > Custom
+// definitions) : `destination`, `pack`, `profondeur`, `section`, `champ`.
 // Les balises de vérification moteurs (Search Console, Bing) sont injectées depuis
 // l'environnement (`installerBalisesVerification`) : ce ne sont pas des traceurs.
 
@@ -279,13 +291,15 @@ function chargerTraceurs(prefs: Preferences): void {
 
 /**
  * Balises de vérification des moteurs (Search Console, Bing Webmaster) lues dans
- * l'environnement puis injectées dans le `<head>`. Ce ne sont PAS des traceurs :
- * posées au démarrage, sans attendre le consentement. Vide = rien n'est injecté.
+ * l'environnement puis injectées dans le `<head>`. SECOURS uniquement : le cas
+ * normal est l'écriture au build (`vite.config.ts`), car les vérificateurs lisent
+ * le HTML brut sans exécuter le JS. Ce ne sont PAS des traceurs : posées au
+ * démarrage, sans attendre le consentement. Vide = rien n'est injecté.
  */
 export function installerBalisesVerification(): void {
   const balises: [string, string][] = [
-    ["google-site-verification", variable("VITE_GOOGLE_SITE_VERIFICATION")],
-    ["msvalidate.01", variable("VITE_BING_SITE_VERIFICATION")],
+    ["google-site-verification", extraireJeton(variable("VITE_GOOGLE_SITE_VERIFICATION"))],
+    ["msvalidate.01", extraireJeton(variable("VITE_BING_SITE_VERIFICATION"))],
   ];
   for (const [nom, contenu] of balises) {
     if (!contenu) continue;
@@ -295,6 +309,13 @@ export function installerBalisesVerification(): void {
     meta.content = contenu;
     document.head.appendChild(meta);
   }
+}
+
+/** Tolère la balise entière collée au lieu du jeton seul. */
+function extraireJeton(valeur: string): string {
+  const brut = valeur.trim();
+  if (!brut) return "";
+  return (brut.match(/content\s*=\s*"([^"]+)"/)?.[1] ?? brut).trim();
 }
 
 /**
@@ -334,17 +355,37 @@ export function suivreContenu(
   suivreEvenement("select_content", { content_type: type, item_id: libelle, section });
 }
 
-/** Demande rapide envoyée (WhatsApp + Supabase). */
-export function suivreProspect(destination: string, pack: string): void {
-  suivreEvenement("generate_lead", {
+/** Demande rapide : première saisie (une fois par ouverture). */
+export function suivreDebutFormulaire(): void {
+  suivreEvenement("contact_form_start");
+}
+
+/** Demande rapide refusée par la validation (champ fautif en cause). */
+export function suivreErreurFormulaire(champ: string): void {
+  suivreEvenement("contact_form_error", { champ });
+}
+
+/** Demande rapide envoyée (WhatsApp + Supabase). Marquer comme événement clé dans GA4. */
+export function suivreEnvoiDemande(destination: string, pack: string): void {
+  suivreEvenement("contact_form_submit", {
     destination: destination || "inconnue",
     pack: pack || "indecis",
   });
 }
 
-/** Clic WhatsApp / téléphone / e-mail. */
-export function suivreContact(moyen: "whatsapp" | "telephone" | "email"): void {
-  suivreEvenement("contact", { moyen });
+/** Écran de succès : le visiteur poursuit sur WhatsApp pour caler son rendez-vous. */
+export function suivreDemandeRendezVous(): void {
+  suivreEvenement("appointment_request");
+}
+
+/** Clic téléphone / WhatsApp / e-mail (noms d'événements imposés par le pilotage). */
+export function suivreClicContact(moyen: "whatsapp" | "telephone" | "email"): void {
+  suivreEvenement(`click_${moyen}`);
+}
+
+/** Téléchargement de fichier (aucun sur le site à ce jour : prêt à l'emploi). */
+export function suivreTelechargement(nomFichier: string, url: string): void {
+  suivreEvenement("download", { file_name: nomFichier, link_url: url });
 }
 
 function libelleElement(el: HTMLElement): string {
@@ -373,9 +414,16 @@ function installerEcouteClics(): void {
     const libelle = libelleElement(el);
     if (el.tagName === "A") {
       const href = (el.getAttribute("href") ?? "").toLowerCase();
-      if (href.includes("wa.me")) return void suivreContact("whatsapp");
-      if (href.startsWith("tel:")) return void suivreContact("telephone");
-      if (href.startsWith("mailto:")) return void suivreContact("email");
+      if (href.includes("wa.me")) return void suivreClicContact("whatsapp");
+      if (href.startsWith("tel:")) return void suivreClicContact("telephone");
+      if (href.startsWith("mailto:")) return void suivreClicContact("email");
+      const telechargement =
+        el.getAttribute("download") ??
+        (/\.(pdf|docx?|xlsx?)$/.test(href) ? href.split("/").pop() : undefined);
+      if (telechargement) {
+        suivreTelechargement(telechargement, el.getAttribute("href") ?? "");
+        return;
+      }
       return void suivreContenu("lien", libelle, section);
     }
     suivreContenu("bouton", libelle, section);

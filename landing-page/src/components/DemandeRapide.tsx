@@ -59,7 +59,12 @@ import { useLangue } from "../i18n";
 import { fr, type Dictionnaire } from "../i18n/fr";
 import { useIntroPrete } from "../lib/intro";
 import { saveContact } from "../lib/save-contact";
-import { suivreProspect } from "../lib/suivi";
+import {
+  suivreDemandeRendezVous,
+  suivreDebutFormulaire,
+  suivreEnvoiDemande,
+  suivreErreurFormulaire,
+} from "../lib/suivi";
 import { REGIONS_SUD, VILLES_IDS, type VilleId } from "../villes";
 import { EASE_OUT } from "./motion";
 
@@ -737,6 +742,8 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     pack: pack ?? brouillonInitial?.donnees?.pack ?? "",
   }));
   const [erreurs, setErreurs] = useState<Erreurs>({});
+  // Première saisie suivie une seule fois (la popup se démonte à la fermeture).
+  const saisieSuivie = useRef(false);
 
   const mobile = useMemo(() => window.matchMedia("(max-width: 639px)").matches, []);
   const long = estLong(d.typeVisa);
@@ -846,6 +853,10 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
   }, [d, etape]);
 
   const maj = <C extends Champ>(c: C, v: Donnees[C]) => {
+    if (!saisieSuivie.current) {
+      saisieSuivie.current = true;
+      suivreDebutFormulaire();
+    }
     setD((p) => ({
       ...p,
       [c]: v,
@@ -864,6 +875,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     const err = valider(d, ETAPES[etape]!, D.erreurs);
     const premier = Object.keys(err)[0];
     if (premier) {
+      suivreErreurFormulaire(premier);
       setErreurs(err);
       carte.current?.querySelector<HTMLElement>(`#${CSS.escape(id(premier as Champ))}`)?.focus();
       return;
@@ -891,7 +903,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       }).catch(() => false);
       // Envoi réussi : le brouillon est oublié, la prochaine ouverture repart de zéro.
       effacerBrouillon();
-      suivreProspect(d.destination, d.pack);
+      suivreEnvoiDemande(d.destination, d.pack);
       window.open(lien, "_blank", "noopener,noreferrer");
     }
     aller(etape + 1);
@@ -1353,6 +1365,8 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                         href={lien}
                         target="_blank"
                         rel="noopener noreferrer"
+                        data-suivi="demande-rdv-whatsapp"
+                        onClick={suivreDemandeRendezVous}
                         style={{ backgroundColor: "#25D366" }}
                         className="inline-flex h-12 items-center justify-center gap-2.5 rounded-full px-6 text-[14.5px] font-semibold text-white shadow-[0_12px_28px_-12px_rgb(37_211_102/0.8)] transition-transform hover:-translate-y-0.5"
                       >
