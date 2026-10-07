@@ -1,0 +1,18 @@
+/* TEAM */
+  EIDEN Visa — Agadir, Maroc
+  Contact: contact@eiden-group.com
+  Site: https://visa.eiden-group.com/
+
+/* SITE */
+  Standards: HTML, CSS, WCAG 2.2 AA visé
+  Stack: Vite + React + Tailwind CSS
+  Fonts: Newsreader + DM Sans (auto-hébergées, zéro requête externe)
+
+/* THANKS */
+  Drapeaux : flagcdn.com
+  Photos : remplacer par des visuels licenciés avant usage commercial intensif.
+
+/* NOTE */
+  Les pages légales, le sitemap et le résumé IA vivent à :
+  /conditions.html, /confidentialite.html, /cookies.html, /securite.html,
+  /sitemap.xml, /llms.txt, /llms-full.txt

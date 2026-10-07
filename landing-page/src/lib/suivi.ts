@@ -1,4 +1,4 @@
-// Suivi consenti de la landing : GTM + GA4 + Clarity + Bing UET.
+// Suivi consenti de la landing : GTM + GA4 + Clarity (paquet npm) + Bing UET.
 // Règle de confidentialité : AUCUN traceur tiers n'est chargé sans acceptation
 // explicite (`BandeauCookies` : tout accepter / tout refuser / personnaliser par
 // catégorie). Sans identifiants (`VITE_*` vides), tout est dormant : les événements
@@ -185,27 +185,35 @@ function chargerGa4(id: string): void {
 }
 
 /**
- * Charge Microsoft Clarity (heatmaps + replays, catégorie « expérience »).
- * Le stub DOIT s'appeler `clarity` (nom officiel attendu par le tag).
+ * Charge Microsoft Clarity via le paquet officiel `@microsoft/clarity`
+ * (import dynamique : zéro octet tant que la catégorie « expérience » n'est pas
+ * acceptée — chunk séparé). `consent()` explicite : couvre aussi les projets
+ * Clarity configurés en « consentement requis », sinon rien n'est collecté.
  */
-function chargerClarity(id: string): void {
-  // Extrait officiel Clarity, `i` = identifiant du projet.
-  (function (c: Window, l: Document, a: string, r: string, i: string) {
-    const w = c as unknown as Record<string, unknown>;
-    w[a] =
-      w[a] ||
-      function (...args: unknown[]) {
-        (w[a] as unknown as { q: unknown[] }).q = (w[a] as unknown as { q: unknown[] }).q || [];
-        (w[a] as unknown as { q: unknown[] }).q.push(args);
-      };
-    const t = l.createElement(r) as HTMLScriptElement;
-    t.id = "eiden-clarity";
-    t.async = true;
-    t.src = `https://www.clarity.ms/tag/${encodeURIComponent(i)}`;
-    const y = l.getElementsByTagName(r)[0];
-    if (!y?.parentNode) return;
-    y.parentNode.insertBefore(t, y);
-  })(window, document, "clarity", "script", id);
+type ModuleClarity = typeof import("@microsoft/clarity").default;
+let instanceClarity: ModuleClarity | null = null;
+
+async function chargerClarity(id: string): Promise<void> {
+  try {
+    const { default: Clarity } = await import("@microsoft/clarity");
+    Clarity.init(id);
+    // Catégorie déjà acceptée (fonction appelée uniquement dans ce cas).
+    Clarity.consent();
+    instanceClarity = Clarity;
+  } catch {
+    // Réseau bloqué (anti-pisteurs…) : la mesure reste silencieuse.
+  }
+}
+
+/** Relaye les conversions vers Clarity en « smart events » (visibles dans les filtres). */
+function relayerClarity(nom: string): void {
+  if (!instanceClarity) return;
+  if (nom !== "contact_form_submit" && nom !== "appointment_request") return;
+  try {
+    instanceClarity.event(nom);
+  } catch {
+    // Jamais bloquant pour le suivi principal.
+  }
 }
 
 /**
@@ -279,7 +287,7 @@ function chargerTraceurs(prefs: Preferences): void {
     }
     if (IDS.clarity && prefs.experience && !scriptsCharges.has("clarity")) {
       scriptsCharges.add("clarity");
-      chargerClarity(IDS.clarity);
+      void chargerClarity(IDS.clarity);
     }
     if (IDS.bing && prefs.marketing && !scriptsCharges.has("bing")) {
       scriptsCharges.add("bing");
@@ -340,6 +348,7 @@ export function suivreEvenement(nom: string, parametres: Record<string, unknown>
     langue: document.documentElement.lang || "fr",
     ...parametres,
   });
+  relayerClarity(nom);
 }
 
 export function suivrePageVue(): void {

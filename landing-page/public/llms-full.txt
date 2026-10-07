@@ -44,7 +44,7 @@ Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches as
 
 ## Données personnelles et cookies (résumé, loi marocaine 09-08)
 
-- Formulaire : nom, prénom, téléphone (obligatoires) ; e-mail, type de visa, dates, destination, formule, ville, nombre de demandeurs. Finalité unique : étudier le projet et recontacter. Conservation 3 ans maximum après le dernier contact, puis suppression.
+- Formulaire : nom, prénom, téléphone (obligatoires) ; e-mail, type de visa, dates, destination, formule, ville, nombre de demandeurs. Finalité unique : étudier le projet et recontacter. Conservation 13 mois maximum après l'envoi, puis suppression automatique (purge technique).
 - Droits gratuits d'accès, de rectification et d'opposition : contact@eiden-group.com (objet « Données personnelles ») ; recours possible auprès de la CNDP.
 - Stockage sur l'appareil : langue, brouillon de demande (effacé à l'envoi), choix cookies (12 mois). Aucun traceur tiers sans acceptation explicite, personnalisable par catégorie (mesure d'audience, expérience, marketing).
 - Sécurité : HTTPS, base de données en écriture seule depuis le site, validation et plafonds côté serveur, secrets jamais exposés. Signaler une faille : contact@eiden-group.com, objet « [SÉCURITÉ] ».
