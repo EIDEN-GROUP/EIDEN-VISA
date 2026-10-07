@@ -1,11 +1,13 @@
 import { MotionConfig } from "framer-motion";
 import { useEffect, useState } from "react";
+import { BandeauCookies } from "./components/BandeauCookies";
 import { DemandeRapide } from "./components/DemandeRapide";
 import { Loader } from "./components/Loader";
 import { SmoothScroll } from "./components/SmoothScroll";
 import { useLangue } from "./i18n";
 import { prefersReducedMotion, ScrollTrigger } from "./lib/gsap";
 import { lancerIntro } from "./lib/intro";
+import { initialiserSuivi } from "./lib/suivi";
 import { Cta } from "./sections/Cta";
 import { Destination } from "./sections/Destination";
 import { Faq } from "./sections/Faq";
@@ -25,6 +27,11 @@ export function App() {
     lancerIntro();
     return "fini";
   });
+
+  // Suivi consenti (GTM/GA4/Clarity/Bing) : dormant sans acceptation cookies.
+  useEffect(() => {
+    initialiserSuivi();
+  }, []);
 
   // Nouvelle langue (ou fin du loader) = nouvelles hauteurs : on recale les déclencheurs GSAP.
   useEffect(() => {
@@ -66,6 +73,8 @@ export function App() {
             <Footer />
           </DemandeRapide>
         )}
+        {/* Bandeau cookies après le loader pour ne pas le recouvrir. */}
+        {intro === "fini" && <BandeauCookies />}
       </SmoothScroll>
     </MotionConfig>
   );

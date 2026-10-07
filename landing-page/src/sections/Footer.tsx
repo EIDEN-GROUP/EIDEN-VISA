@@ -1,6 +1,7 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { CONTACT } from "../content";
 import { useLangue } from "../i18n";
+import { oublierConsentement } from "../lib/suivi";
 
 const LIEN =
   "flex w-fit gap-2 rounded-sm transition-colors duration-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
@@ -60,6 +61,34 @@ export function Footer() {
         </div>
 
         <span aria-hidden="true" className="mt-2 block h-px bg-white/10 sm:mt-3.5" />
+        {/* Pages légales statiques (`public/*.html`) + réouverture du bandeau cookies. */}
+        <nav
+          aria-label={t.footer.juridique}
+          className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11.5px] text-white/65"
+        >
+          <a href="/conditions.html" className="transition-colors hover:text-white">
+            {t.footer.conditions}
+          </a>
+          <a href="/confidentialite.html" className="transition-colors hover:text-white">
+            {t.footer.confidentialite}
+          </a>
+          <a href="/cookies.html" className="transition-colors hover:text-white">
+            {t.footer.cookies}
+          </a>
+          <a href="/securite.html" className="transition-colors hover:text-white">
+            {t.footer.securite}
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              oublierConsentement();
+              window.location.reload();
+            }}
+            className="underline underline-offset-2 transition-colors hover:text-white"
+          >
+            {t.footer.gererCookies}
+          </button>
+        </nav>
         <p className="mt-2 pe-20 text-center text-[11px] leading-4 whitespace-nowrap text-white/55 sm:mt-2.5 sm:pe-0">
           © {new Date().getFullYear()} EIDEN Visa. {t.footer.droits}
         </p>

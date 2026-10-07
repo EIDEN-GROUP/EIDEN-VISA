@@ -66,6 +66,7 @@ export function Packs() {
                     src={image}
                     alt={alt}
                     loading="lazy"
+                    decoding="async"
                     style={{ objectPosition: position }}
                     className={`absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-[1.2s] ${EASE} group-hover:scale-[1.07]`}
                   />

@@ -75,6 +75,7 @@ export function Temoignages() {
                           src={a.avatar}
                           alt=""
                           loading="lazy"
+                          decoding="async"
                           className="size-[52px] shrink-0 rounded-full object-cover object-top"
                         />
                         <div>

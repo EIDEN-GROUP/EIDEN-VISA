@@ -77,6 +77,7 @@ export function Pourquoi() {
           src={image}
           alt={alt}
           loading="lazy"
+          decoding="async"
           style={{ objectPosition: position }}
           className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1.2s] ${EASE} group-hover:scale-[1.06] group-data-[actif=true]:scale-[1.04]`}
         />

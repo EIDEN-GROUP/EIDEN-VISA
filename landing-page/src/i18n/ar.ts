@@ -4,9 +4,9 @@ import type { Dictionnaire } from "./fr";
 
 export const ar: Dictionnaire = {
   meta: {
-    title: "EIDEN Visa | العالم بانتظارك",
+    title: "تأشيرة شنغن من المغرب | EIDEN Visa أكادير",
     description:
-      "ترافقك EIDEN Visa في إعداد ملف تأشيرة شنغن الخاص بك، بمواكبة احترافية وخبرة متكاملة حتى حجز موعدك.",
+      "ترافقك EIDEN Visa في أكادير في ملف تأشيرة شنغن: دراسة الملف، الحجوزات المسبقة للفندق والطيران، تأمين السفر وحجز الموعد. طلب سريع في 3 خطوات.",
   },
   loader: {
     slogan: "العالم في انتظارك",
@@ -406,5 +406,19 @@ export const ar: Dictionnaire = {
   },
   footer: {
     droits: "جميع الحقوق محفوظة.",
+    juridique: "روابط قانونية",
+    conditions: "شروط الاستخدام",
+    confidentialite: "الخصوصية",
+    cookies: "ملفات تعريف الارتباط",
+    securite: "الأمان",
+    gererCookies: "إدارة ملفات تعريف الارتباط",
+  },
+  bandeauCookies: {
+    titre: "نحترم خصوصيتك",
+    texte:
+      "نستخدم ملفات تعريف الارتباط لقياس الزيارات وتحسين تجربتك. يمكنك قبول الكل أو رفض الكل — ويُحفظ اختيارك لمدة 12 شهرًا.",
+    accepter: "قبول الكل",
+    refuser: "رفض الكل",
+    enSavoirPlus: "اعرف المزيد",
   },
 };

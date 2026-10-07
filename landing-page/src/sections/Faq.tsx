@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { EASE_OUT, Reveal, SplitReveal } from "../components/motion";
 import { useLangue } from "../i18n";
 import { ScrollTrigger } from "../lib/gsap";
+import { suivreContenu } from "../lib/suivi";
 
 function Question({
   question,
@@ -66,13 +67,17 @@ export function Faq() {
   const { t } = useLangue();
   const questions = t.faq.questions;
   const [ouverts, setOuverts] = useState<Set<number>>(new Set());
-  const basculer = (i: number) =>
+  const basculer = (i: number) => {
+    // Ouverture suivie (contenu utile pour l'AEO) ; la fermeture ne l'est pas.
+    // Les boutons d'accordéon sont exclus de l'écoute déléguée (`suivi.ts`).
+    if (!ouverts.has(i)) suivreContenu("faq", questions[i]?.question ?? `question-${i}`);
     setOuverts((prev) => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
       else next.add(i);
       return next;
     });
+  };
   // Deux colonnes équilibrées (2 + 2 pour 4 questions).
   const parColonne = Math.ceil(questions.length / 2);
   const colonnes = [questions.slice(0, parColonne), questions.slice(parColonne)];

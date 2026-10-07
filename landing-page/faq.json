@@ -1,0 +1,34 @@
+[
+  {
+    "@type": "Question",
+    "name": "Est-ce que vous fournissez les réservations d’hôtel, de billet d’avion et l’assurance voyage ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Oui. Nous proposons des services de pré-réservation d’hôtel, de billet d’avion et d’assurance voyage, selon les besoins de votre dossier et les exigences liées à votre demande de visa."
+    }
+  },
+  {
+    "@type": "Question",
+    "name": "Quels sont les tarifs de vos services ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Nos tarifs varient en fonction du pack que vous choisissez et des services inclus. Consultez nos différents packs pour choisir celui qui correspond le mieux à vos besoins."
+    }
+  },
+  {
+    "@type": "Question",
+    "name": "Les frais de rendez-vous sont-ils inclus ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Oui, les frais de prise de rendez-vous sont inclus dans nos packs."
+    }
+  },
+  {
+    "@type": "Question",
+    "name": "Est-ce que vous garantissez l'obtention du visa ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches associées. La décision finale appartient exclusivement aux autorités compétentes."
+    }
+  }
+]

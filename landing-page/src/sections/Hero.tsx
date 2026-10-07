@@ -39,6 +39,7 @@ export function Hero() {
               src="/images/bg-hero.png"
               alt={t.hero.imageAlt}
               fetchPriority="high"
+              decoding="async"
               className="hero-photo h-full w-full object-cover object-[86%_50%] lg:object-[70%_30%]"
             />
           </motion.div>

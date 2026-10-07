@@ -1,5 +1,6 @@
 // Traduction de la landing : français (par défaut) et arabe (droite à gauche).
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { suivreContenu } from "../lib/suivi";
 import { ar } from "./ar";
 import { fr, type Dictionnaire } from "./fr";
 
@@ -60,6 +61,7 @@ export function LangueProvider({ children }: { children: ReactNode }) {
     } catch {
       // Préférence non mémorisée, sans conséquence.
     }
+    suivreContenu("langue", suivante);
     setLangue(suivante);
   };
 

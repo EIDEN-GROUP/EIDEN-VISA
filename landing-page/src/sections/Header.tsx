@@ -147,6 +147,8 @@ function MenuMobile({
         src="/images/tampon-schengen-rond.webp"
         alt=""
         aria-hidden="true"
+        loading="lazy"
+        decoding="async"
         className="pointer-events-none absolute -end-24 -bottom-20 w-[min(105vw,560px)] -rotate-[14deg] opacity-[0.08]"
       />
 

@@ -3,9 +3,9 @@
 
 export const fr = {
   meta: {
-    title: "EIDEN Visa | Le monde vous attend",
+    title: "Visa Schengen depuis le Maroc | EIDEN Visa Agadir",
     description:
-      "EIDEN Visa vous accompagne dans la préparation de votre dossier de visa Schengen, avec un accompagnement professionnel et personnalisé et une expertise complète jusqu'à la prise de votre rendez-vous.",
+      "EIDEN Visa à Agadir vous accompagne dans votre dossier de visa Schengen : étude du dossier, pré-réservations hôtel et avion, assurance voyage et prise de rendez-vous. Demande rapide en 3 étapes.",
   },
   loader: {
     slogan: "Le monde vous attend",
@@ -417,7 +417,10 @@ export const fr = {
     telephone: "Téléphone",
     email: "E-mail",
     horaires: "Horaires",
-    horairesLignes: ["Du Lundi au jeudi : De 10:00 à 17:30", "Vendredi : De 10:00 à 12:30 et de 14:00 à 15:30"],
+    horairesLignes: [
+      "Du Lundi au jeudi : De 10:00 à 17:30",
+      "Vendredi : De 10:00 à 12:30 et de 14:00 à 15:30",
+    ],
     adresse: "Adresse",
     adresseCourte: "Agadir Bay, Technopole 1, Bloc B, 1er étage, Bureau 101 B",
     adresseComplete:
@@ -426,6 +429,21 @@ export const fr = {
   },
   footer: {
     droits: "Tous droits réservés.",
+    juridique: "Liens légaux",
+    conditions: "Conditions d'utilisation",
+    confidentialite: "Confidentialité",
+    cookies: "Cookies",
+    securite: "Sécurité",
+    gererCookies: "Gérer mes cookies",
+  },
+  // Bandeau de consentement cookies (voir `src/lib/suivi.ts` + page `/cookies.html`).
+  bandeauCookies: {
+    titre: "Nous respectons votre vie privée",
+    texte:
+      "Nous utilisons des cookies pour mesurer les visites et améliorer votre expérience. Vous pouvez tout accepter ou tout refuser — votre choix est conservé 12 mois.",
+    accepter: "Tout accepter",
+    refuser: "Tout refuser",
+    enSavoirPlus: "En savoir plus",
   },
 };
 

@@ -59,6 +59,7 @@ import { useLangue } from "../i18n";
 import { fr, type Dictionnaire } from "../i18n/fr";
 import { useIntroPrete } from "../lib/intro";
 import { saveContact } from "../lib/save-contact";
+import { suivreProspect } from "../lib/suivi";
 import { REGIONS_SUD, VILLES_IDS, type VilleId } from "../villes";
 import { EASE_OUT } from "./motion";
 
@@ -887,6 +888,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       }).catch(() => false);
       // Envoi réussi : le brouillon est oublié, la prochaine ouverture repart de zéro.
       effacerBrouillon();
+      suivreProspect(d.destination, d.pack);
       window.open(lien, "_blank", "noopener,noreferrer");
     }
     aller(etape + 1);

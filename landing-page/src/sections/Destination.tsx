@@ -81,6 +81,7 @@ export function Destination() {
                 src="/images/world-2.png"
                 alt={t.destination.imageAlt}
                 loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover object-[50%_38%] transition-transform duration-[1.4s] ease-out hover:scale-[1.05]"
               />
             </div>
