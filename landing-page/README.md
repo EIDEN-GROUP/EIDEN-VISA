@@ -230,3 +230,9 @@ real EIDEN company details (law 09-08).
 - Images : tout visuel utilisé est en **webp** (PNG → sans perte, JPG → fidélité vérifiée
   PSNR ≥ 43 dB) ; ne jamais réintroduire de jpg/png référencé. / All used visuals are
   webp; never reintroduce a referenced jpg/png.
+- Pages statiques (`public/*.html`) : un seul motif signature, l'anneau d'étoiles UE
+  (`.hero-tampon`, SVG inline, zéro requête) + le tampon « INTROUVABLE » réservé à la 404
+  (`.tampon`, écho du `VerifiedStamp` de la landing) — le reste de la déco vit dans
+  `legal.css`, jamais en ligne. Contenu légal intouchable sans relecture. / Static pages
+  share one signature motif (EU-stars ring) plus the 404-only INTROUVABLE stamp; legal
+  copy needs review before any edit.

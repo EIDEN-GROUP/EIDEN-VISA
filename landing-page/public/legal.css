@@ -11,7 +11,9 @@
   font-weight: 400 600;
   font-display: swap;
   src: url("/fonts/newsreader-latin.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122;
 }
 @font-face {
   font-family: "Newsreader";
@@ -19,7 +21,9 @@
   font-weight: 400 600;
   font-display: swap;
   src: url("/fonts/newsreader-latin-ext.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
   font-family: "DM Sans";
@@ -27,7 +31,9 @@
   font-weight: 400 700;
   font-display: swap;
   src: url("/fonts/dmsans-latin.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122;
 }
 @font-face {
   font-family: "DM Sans";
@@ -35,7 +41,9 @@
   font-weight: 400 700;
   font-display: swap;
   src: url("/fonts/dmsans-latin-ext.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 :root {
@@ -161,7 +169,9 @@ body {
   background: var(--card);
   border-radius: 999px;
   padding: 8px 18px;
-  transition: border-color 0.2s ease-out, background 0.2s ease-out;
+  transition:
+    border-color 0.2s ease-out,
+    background 0.2s ease-out;
 }
 .retour:hover {
   border-color: var(--ink);
@@ -436,4 +446,105 @@ footer .droits {
   * {
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- Motif signature : anneau d'étoiles UE en filigrane du hero ----------
+   Même ciel, même encre, mêmes étoiles or que la landing — mais en élément
+   graphique pur (zéro requête, zéro JS). Un seul par page, aria-hidden. */
+.hero {
+  position: relative;
+  overflow: clip;
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+.hero-tampon {
+  position: absolute;
+  z-index: 0;
+  inset-inline-end: -48px;
+  top: 50%;
+  translate: 0 -50%;
+  width: clamp(190px, 32vw, 300px);
+  height: auto;
+  transform: rotate(-12deg);
+  opacity: 0.5;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .hero-tampon {
+    inset-inline-end: -70px;
+    width: 180px;
+    opacity: 0.35;
+  }
+}
+
+/* ---------- Tampon « INTROUVABLE » de la 404 ----------
+   Écho direct du tampon « vérifié » de la landing (VerifiedStamp) : même rouge,
+   même italique serif, même inclinaison — mais en négatif blanc sur le ciel,
+   parce qu'il s'applique sur le dégradé, pas sur le papier. */
+.tampon {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 10px 26px 12px;
+  border: 3px double rgb(255 255 255 / 0.92);
+  border-radius: 6px;
+  color: #fff;
+  text-align: center;
+  transform: rotate(-8deg);
+  background: rgb(11 26 48 / 0.18);
+}
+.tampon .tampon-ligne {
+  display: block;
+  font-weight: 800;
+  font-size: clamp(1.35rem, 4.6vw, 2rem);
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+}
+.tampon .tampon-sous-ligne {
+  display: block;
+  font-family: "Newsreader", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
+  color: rgb(255 255 255 / 0.92);
+  margin-top: 2px;
+}
+
+/* ---------- Hero d'erreur : numeral géant + actions pilule (comme la landing) ---------- */
+.code-erreur {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(4.5rem, 15vw, 7rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 4px 30px rgb(11 26 48 / 0.45);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.actions a {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.actions .primaire {
+  background: #fff;
+  color: var(--marine);
+}
+.actions .secondaire {
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 0.55);
+}
+.hero .ar {
+  margin-top: 12px;
+  color: rgb(255 255 255 / 0.85);
+  font-size: 14.5px;
 }
