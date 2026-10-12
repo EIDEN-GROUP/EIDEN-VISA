@@ -7,7 +7,8 @@ import {
   useDossiersAvecEncaissement,
   type DateRange,
 } from "@/lib/store";
-import { PACKS, type PackKey } from "@/lib/dossier-model";
+import { PACKS, prixPackLabel, type PackKey } from "@/lib/dossier-model";
+import { PackContenu } from "@/components/dossier/pack-contenu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangeFilter } from "@/components/filters/date-range-filter";
@@ -100,10 +101,12 @@ function Paiements() {
               <img src={PACK_ICON[p.key]} alt="" className="mb-2 h-9 w-9" />
               <div className="text-sm font-semibold text-foreground">{p.label}</div>
               <div className="ref mt-1 text-muted-foreground">
-                {p.prix} MAD · marge nette{" "}
-                {p.margeNette !== null ? `${p.margeNette} MAD` : "à confirmer (courtier assurance)"}
+                {prixPackLabel(p.key)} · marge nette{" "}
+                {p.margeNette !== null ? `${p.margeNette} MAD` : "à confirmer"}
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">{p.contenu}</p>
+              <div className="mt-2">
+                <PackContenu pack={p.key} />
+              </div>
               <div className="mt-3 text-xs font-medium text-foreground">{p.count} dossier(s)</div>
             </div>
           ))}

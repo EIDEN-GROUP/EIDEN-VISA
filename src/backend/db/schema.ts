@@ -86,6 +86,8 @@ export const dossiers = pgTable("dossiers", {
   categorie: text("categorie").notNull(),
   niveau: text("niveau").$type<Level>().notNull(),
   pack: text("pack").$type<PackKey>().notNull().default("base"),
+  // Prix convenu (MAD) pour un pack sans tarif fixe (Pack Global) ; null pour les autres.
+  packPrix: integer("pack_prix"),
   modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
   etape: integer("etape").notNull().default(1),
   // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS). Eiden ne prend

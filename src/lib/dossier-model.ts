@@ -63,30 +63,72 @@ export const ETAPES = [
 
 export type PackKey = "base" | "voyage" | "global";
 
+/**
+ * Les trois packs vendus, alignés sur la landing (Essentiel / Confort / Global). Les clés
+ * `base`/`voyage`/`global` sont historiques (colonne `dossiers.pack`) et ne changent pas.
+ * `prix: null` = pas de tarif fixe : le prix est convenu avec le client et saisi sur le
+ * dossier (`Dossier.packPrix`) au moment où ce pack est choisi.
+ */
 export const PACKS: Record<
   PackKey,
-  { label: string; prix: number; margeNette: number | null; contenu: string }
+  {
+    label: string;
+    prix: number | null;
+    margeNette: number | null;
+    contenu: string;
+    /** Pack dont celui-ci reprend tout le contenu (« Tout le pack X, plus »). */
+    herite: PackKey | null;
+    /** Ce que le pack ajoute (au pack hérité, le cas échéant). */
+    inclus: string[];
+  }
 > = {
   base: {
-    label: "Pack Dossier",
-    prix: 700,
-    margeNette: 391,
-    contenu: "Qualification, constitution et contrôle du dossier.",
+    label: "Pack Essentiel",
+    prix: 1000,
+    // Coût de revient inchangé (309 MAD) : la hausse de prix est de la marge.
+    margeNette: 691,
+    contenu: "Pour préparer votre demande de visa en toute sérénité.",
+    herite: null,
+    inclus: [
+      "Vérification et Rassemblement du dossier",
+      "Assistance au remplissage du formulaire France-Visas",
+      "Accompagnement pour la prise de rendez-vous visa",
+    ],
   },
   voyage: {
-    label: "Pack + pré-réservation voyage",
-    prix: 1000,
-    margeNette: 500,
-    contenu: "Pack Dossier + pré-réservation hôtel et vol via l'agence partenaire.",
+    label: "Pack Confort",
+    prix: 1350,
+    // Coût de revient inchangé (500 MAD, pré-réservations agence partenaire comprises).
+    margeNette: 850,
+    contenu: "Une préparation complète avec les réservations nécessaires à votre voyage.",
+    herite: "base",
+    inclus: ["Pré-réservation du billet d'avion", "Pré-réservation de l'hôtel"],
   },
   global: {
     label: "Pack Global",
-    prix: 1300,
+    /** Tarif « à définir » : prix convenu dossier par dossier. */
+    prix: null,
     /** Commission courtier assurance non encore figée (EV/2026-08) : pas de chiffre tant qu'elle n'est pas confirmée. */
     margeNette: null,
-    contenu: "Pack voyage + mise en relation courtier assurance (commission non encore figée).",
+    contenu: "Un accompagnement complet pour préparer votre dossier et anticiper votre voyage.",
+    herite: "voyage",
+    inclus: ["Assurance voyage"],
   },
 };
+
+/** Libellé du prix d'un pack au catalogue : « 1 000 MAD » ou « Prix à convenir ». */
+export function prixPackLabel(pack: PackKey): string {
+  const prix = PACKS[pack].prix;
+  return prix === null ? "Prix à convenir" : `${prix.toLocaleString("fr-FR")} MAD`;
+}
+
+/**
+ * Prix effectif du pack d'un dossier : le tarif catalogue, ou le prix convenu pour un
+ * pack sans tarif fixe. `null` si ce prix n'a pas encore été saisi.
+ */
+export function prixDuPack(pack: PackKey, packPrix: number | null): number | null {
+  return PACKS[pack].prix ?? packPrix;
+}
 
 export const FRAIS = {
   droitVisaAdulte: "≈ 90 € (≈ 950 MAD), payé en direct par le client au centre",
@@ -131,8 +173,14 @@ export interface Paiement {
  * Échéancier dérivé du pack et de la modalité — jamais saisi à la main.
  * Ne produit que des lignes non encaissées : l'appelant fusionne avec l'historique déjà encaissé.
  */
-export function planPaiement(pack: PackKey, modalite: Modalite): Paiement[] {
-  const { label, prix } = PACKS[pack];
+export function planPaiement(
+  pack: PackKey,
+  modalite: Modalite,
+  packPrix: number | null = null,
+): Paiement[] {
+  const { label } = PACKS[pack];
+  const prix = prixDuPack(pack, packPrix);
+  if (prix === null) throw new Error(`${label} : saisir le prix convenu avec le client.`);
   if (modalite === "acompte") {
     const acompte = Math.round(prix * ACOMPTE_PCT);
     return [
@@ -172,12 +220,15 @@ export function reglerEcheancier(
   paiements: Paiement[],
   pack: PackKey,
   modalite: Modalite,
+  packPrix: number | null = null,
 ): Paiement[] {
   const gardees = paiements.filter((p) => p.encaisse || p.echeance === "option");
   const echeancesReglees = new Set(
     gardees.filter((p) => p.encaisse).map((p) => p.echeance ?? "solde"),
   );
-  const fraiches = planPaiement(pack, modalite).filter((l) => !echeancesReglees.has(l.echeance!));
+  const fraiches = planPaiement(pack, modalite, packPrix).filter(
+    (l) => !echeancesReglees.has(l.echeance!),
+  );
   const ordre: Record<Echeance, number> = { acompte: 0, solde: 1, option: 2 };
   return [...gardees, ...fraiches].sort(
     (a, b) => ordre[a.echeance ?? "solde"] - ordre[b.echeance ?? "solde"],
@@ -246,6 +297,8 @@ export interface Dossier {
   categorie: string;
   niveau: Level;
   pack: PackKey;
+  /** Prix convenu pour un pack sans tarif fixe (Pack Global) — `null` pour les autres. */
+  packPrix: number | null;
   /** `comptant` par défaut pour les dossiers créés avant l'ajout de la modalité. */
   modalitePaiement: Modalite;
   etape: number;

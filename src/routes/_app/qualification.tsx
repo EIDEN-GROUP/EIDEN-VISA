@@ -367,6 +367,7 @@ function Qualification() {
       categorie: result.c.cat,
       niveau: result.c.level,
       pack: "base",
+      packPrix: null,
       modalitePaiement: modalite,
       etape: 1,
       centre,

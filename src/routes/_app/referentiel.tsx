@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ETAPES, PACKS, FRAIS, type PackKey } from "@/lib/dossier-model";
+import { ETAPES, PACKS, FRAIS, prixPackLabel, type PackKey } from "@/lib/dossier-model";
+import { PackContenu } from "@/components/dossier/pack-contenu";
 import { SCOPE, FIXED_KEYS, getFixedCase } from "@/lib/visa-rules";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -153,14 +154,16 @@ function Referentiel() {
                   <div key={k} className="rounded-xl border border-border p-4">
                     <img src={PACK_ICON[k]} alt="" className="mb-2 h-9 w-9" />
                     <div className="text-sm font-semibold text-foreground">{PACKS[k].label}</div>
-                    <div className="ref mt-1 text-primary">{PACKS[k].prix} MAD</div>
+                    <div className="ref mt-1 text-primary">{prixPackLabel(k)}</div>
                     <div className="ref text-muted-foreground">
                       Marge nette{" "}
                       {PACKS[k].margeNette !== null
                         ? `${PACKS[k].margeNette} MAD`
-                        : "à confirmer (courtier assurance)"}
+                        : "à confirmer (prix convenu au dossier)"}
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">{PACKS[k].contenu}</p>
+                    <div className="mt-2">
+                      <PackContenu pack={k} />
+                    </div>
                   </div>
                 ))}
               </div>

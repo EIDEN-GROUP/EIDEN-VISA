@@ -74,6 +74,7 @@ function rowToDossier(row: DossierRow): Dossier {
     categorie: row.categorie,
     niveau: row.niveau,
     pack: row.pack,
+    packPrix: row.packPrix,
     modalitePaiement: row.modalitePaiement,
     etape: row.etape,
     centre: row.centre,
@@ -459,6 +460,7 @@ const dossierInput = z.object({
   categorie: z.string().min(1).max(160),
   niveau: z.enum(["standard", "attention", "complexe"]),
   pack: z.enum(["base", "voyage", "global"]),
+  packPrix: z.number().int().min(1).max(1_000_000).nullable().default(null),
   modalitePaiement: z.enum(["comptant", "acompte"]).default("comptant"),
   etape: z.number().int().min(1).max(5),
   centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
@@ -518,6 +520,7 @@ export const createDossier = createServerFn({ method: "POST" })
       categorie: data.categorie,
       niveau: data.niveau,
       pack: data.pack as PackKey,
+      packPrix: PACKS[data.pack as PackKey].prix === null ? data.packPrix : null,
       modalitePaiement: data.modalitePaiement as Modalite,
       etape: data.etape,
       centre: data.centre as Dossier["centre"],
@@ -626,23 +629,35 @@ export const encaisser = createServerFn({ method: "POST" })
 
 export const changerPack = createServerFn({ method: "POST" })
   .validator(
-    z.object({ id: z.string().min(1).max(32), pack: z.enum(["base", "voyage", "global"]) }),
+    z.object({
+      id: z.string().min(1).max(32),
+      pack: z.enum(["base", "voyage", "global"]),
+      // Exigé pour un pack sans tarif fixe (Pack Global), ignoré sinon.
+      prix: z.number().int().min(1).max(1_000_000).nullable().default(null),
+    }),
   )
   .handler(async ({ data }) => {
     await requireRoles("ceo", "reception", "back_office");
+    const packPrix = PACKS[data.pack].prix === null ? data.prix : null;
+    if (PACKS[data.pack].prix === null && packPrix === null)
+      throw new Error(`${PACKS[data.pack].label} : saisir le prix convenu avec le client.`);
     await db.transaction(async (tx) => {
       const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
       if (!row) throw new Error("Dossier introuvable.");
       // On régénère l'échéancier (acompte + solde, ou solde comptant) selon le nouveau pack
       // et la modalité en cours : les lignes déjà encaissées et les options à la carte sont
       // conservées telles quelles, seules les lignes dues sont recalculées.
-      const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement);
+      const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement, packPrix);
       await tx
         .update(dossiersTable)
-        .set({ pack: data.pack, paiements })
+        .set({ pack: data.pack, packPrix, paiements })
         .where(eq(dossiersTable.id, data.id));
     });
-    await logActivity("paiement.pack", `Pack changé -> ${PACKS[data.pack].label}`, data.id);
+    await logActivity(
+      "paiement.pack",
+      `Pack changé -> ${PACKS[data.pack].label}${packPrix !== null ? ` (${packPrix} MAD convenus)` : ""}`,
+      data.id,
+    );
   });
 
 /** Le client choisit de régler comptant ou par acompte de 50 % — régénère l'échéancier dû. */
@@ -653,7 +668,7 @@ export const setModalitePaiement = createServerFn({ method: "POST" })
     await db.transaction(async (tx) => {
       const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
       if (!row) throw new Error("Dossier introuvable.");
-      const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite);
+      const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite, row.packPrix);
       await tx
         .update(dossiersTable)
         .set({ modalitePaiement: data.modalite, paiements })

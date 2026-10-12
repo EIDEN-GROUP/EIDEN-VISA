@@ -20,6 +20,8 @@ interface SeedInput {
   caseKey: string;
   profile: Profile;
   pack: PackKey;
+  /** Prix convenu, uniquement pour un pack sans tarif fixe (Pack Global). */
+  packPrix?: number;
   modalite?: Modalite;
   etape: number;
   centre: Centre;
@@ -49,15 +51,15 @@ const SEED: SeedInput[] = [
     // dû à la remise du dossier scellé (étape 6). Aucun "frais de rendez-vous" en plus.
     paiements: [
       {
-        libelle: "Acompte 50 % · Pack + pré-réservation voyage",
-        montant: 500,
+        libelle: "Acompte 50 % · Pack Confort",
+        montant: 675,
         date: "05/09/2026",
         encaisse: true,
         echeance: "acompte",
       },
       {
-        libelle: "Solde 50 % · Pack + pré-réservation voyage",
-        montant: 500,
+        libelle: "Solde 50 % · Pack Confort",
+        montant: 675,
         date: null,
         encaisse: false,
         echeance: "solde",
@@ -78,7 +80,7 @@ const SEED: SeedInput[] = [
     etape: 2,
     centre: "TLScontact Agadir",
     fournis: [0, 1],
-    paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
+    paiements: [{ libelle: "Pack Essentiel", montant: 1000, date: null, encaisse: false }],
     notes: [
       "Employeur contacté le 03/09 : autorisation de travail pas encore déposée sur le portail.",
     ],
@@ -98,7 +100,7 @@ const SEED: SeedInput[] = [
     centre: "TLScontact Agadir",
     autorise: true,
     fournis: [0, 1, 3, 4, 6, 7],
-    paiements: [{ libelle: "Pack Dossier", montant: 700, date: "30/08/2026", encaisse: true }],
+    paiements: [{ libelle: "Pack Essentiel", montant: 1000, date: "30/08/2026", encaisse: true }],
     notes: [
       "Fille française résidant à Lyon : attestation d'accueil déposée en mairie, en attente du tampon.",
     ],
@@ -114,6 +116,7 @@ const SEED: SeedInput[] = [
     caseKey: "tc1",
     profile: {},
     pack: "global",
+    packPrix: 1300,
     etape: 5,
     centre: "TLScontact Agadir",
     autorise: true,
@@ -154,7 +157,7 @@ const SEED: SeedInput[] = [
     etape: 3,
     centre: "TLScontact Agadir",
     fournis: [0, 1, 3, 4],
-    paiements: [{ libelle: "Pack Dossier", montant: 700, date: null, encaisse: false }],
+    paiements: [{ libelle: "Pack Essentiel", montant: 1000, date: null, encaisse: false }],
     notes: [
       "Rejoint son père, ressortissant espagnol résidant à Valence. Ne pas ajouter de pièces hors liste UE.",
     ],
@@ -176,8 +179,8 @@ const SEED: SeedInput[] = [
     fournis: [0, 1, 3, 4, 5, 6, 8, 9],
     paiements: [
       {
-        libelle: "Pack + pré-réservation voyage",
-        montant: 1000,
+        libelle: "Pack Confort",
+        montant: 1350,
         date: "23/08/2026",
         encaisse: true,
       },
@@ -221,7 +224,7 @@ const SEED: SeedInput[] = [
     centre: "TLScontact Agadir",
     autorise: true,
     fournis: "tout",
-    paiements: [{ libelle: "Pack Dossier", montant: 700, date: "31/08/2026", encaisse: true }],
+    paiements: [{ libelle: "Pack Essentiel", montant: 1000, date: "31/08/2026", encaisse: true }],
   },
 ];
 
@@ -254,6 +257,7 @@ export function buildSeed(): Dossier[] {
       categorie: c.cat,
       niveau: c.level,
       pack: s.pack,
+      packPrix: s.packPrix ?? null,
       modalitePaiement: s.modalite ?? "comptant",
       etape: s.etape,
       centre: s.centre,
