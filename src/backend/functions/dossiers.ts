@@ -497,6 +497,11 @@ export const createDossier = createServerFn({ method: "POST" })
     // Le compte réel qui crée le dossier vient de la session, jamais du client — sinon
     // n'importe qui pourrait attribuer un dossier à quelqu'un d'autre en modifiant la requête.
     const agentUserId = await requireUserId();
+    const sansTarif = PACKS[data.pack as PackKey].prix === null;
+    if (sansTarif && data.packPrix === null)
+      throw new Error(
+        `${PACKS[data.pack as PackKey].label} : saisir le prix convenu avec le client.`,
+      );
     await db.insert(dossiersTable).values({
       id: data.id,
       clientNom: data.client.nom,
@@ -520,7 +525,7 @@ export const createDossier = createServerFn({ method: "POST" })
       categorie: data.categorie,
       niveau: data.niveau,
       pack: data.pack as PackKey,
-      packPrix: PACKS[data.pack as PackKey].prix === null ? data.packPrix : null,
+      packPrix: sansTarif ? data.packPrix : null,
       modalitePaiement: data.modalitePaiement as Modalite,
       etape: data.etape,
       centre: data.centre as Dossier["centre"],
