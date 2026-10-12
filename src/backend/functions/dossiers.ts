@@ -11,11 +11,14 @@ import {
 } from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
 import {
-  PACKS,
   reglerEcheancier,
+  erreurServices,
+  formuleLabel,
+  prixFormule,
   MODALITE_LABEL,
   type Dossier,
-  type PackKey,
+  type FormuleKey,
+  type ServiceKey,
   type Modalite,
 } from "@/lib/dossier-model";
 import { TREE_FIELDS, type Profile } from "@/lib/visa-rules";
@@ -74,7 +77,7 @@ function rowToDossier(row: DossierRow): Dossier {
     categorie: row.categorie,
     niveau: row.niveau,
     pack: row.pack,
-    packPrix: row.packPrix,
+    services: row.services,
     modalitePaiement: row.modalitePaiement,
     etape: row.etape,
     centre: row.centre,
@@ -314,7 +317,7 @@ export const getPackCounts = createServerFn({ method: "GET" })
       .from(dossiersTable)
       .where(range.length > 0 ? and(...range) : undefined)
       .groupBy(dossiersTable.pack);
-    return rows as { pack: PackKey; n: number }[];
+    return rows as { pack: FormuleKey; n: number }[];
   });
 
 export const getDossier = createServerFn({ method: "GET" })
@@ -338,6 +341,27 @@ const clientInput = z.object({
   passeportExpiration: z.string().max(64).nullable().default(null),
   passeportLieu: z.string().max(120).nullable().default(null),
 });
+
+const serviceKey = z.enum([
+  "verification",
+  "formulaire_rdv",
+  "prereservation",
+  "prereservation_hotel",
+  "prereservation_avion",
+  "assurance_6m",
+  "assurance_1an",
+]);
+
+/**
+ * Services retenus pour une formule : obligatoires et cohérents pour `carte`, ignorés
+ * (vidés) pour un pack — un pack inclut déjà ses services.
+ */
+function servicesValides(formule: FormuleKey, services: ServiceKey[]): ServiceKey[] {
+  if (formule !== "carte") return [];
+  const erreur = erreurServices(services);
+  if (erreur) throw new Error(erreur);
+  return services;
+}
 
 const dossierInput = z.object({
   id: z.string().min(1).max(32),
@@ -459,8 +483,8 @@ const dossierInput = z.object({
   titre: z.string().min(1).max(160),
   categorie: z.string().min(1).max(160),
   niveau: z.enum(["standard", "attention", "complexe"]),
-  pack: z.enum(["base", "voyage", "global"]),
-  packPrix: z.number().int().min(1).max(1_000_000).nullable().default(null),
+  pack: z.enum(["base", "voyage", "global", "carte"]),
+  services: z.array(serviceKey).max(10).default([]),
   modalitePaiement: z.enum(["comptant", "acompte"]).default("comptant"),
   etape: z.number().int().min(1).max(5),
   centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
@@ -497,11 +521,7 @@ export const createDossier = createServerFn({ method: "POST" })
     // Le compte réel qui crée le dossier vient de la session, jamais du client — sinon
     // n'importe qui pourrait attribuer un dossier à quelqu'un d'autre en modifiant la requête.
     const agentUserId = await requireUserId();
-    const sansTarif = PACKS[data.pack as PackKey].prix === null;
-    if (sansTarif && data.packPrix === null)
-      throw new Error(
-        `${PACKS[data.pack as PackKey].label} : saisir le prix convenu avec le client.`,
-      );
+    const services = servicesValides(data.pack, data.services);
     await db.insert(dossiersTable).values({
       id: data.id,
       clientNom: data.client.nom,
@@ -524,8 +544,8 @@ export const createDossier = createServerFn({ method: "POST" })
       titre: data.titre,
       categorie: data.categorie,
       niveau: data.niveau,
-      pack: data.pack as PackKey,
-      packPrix: sansTarif ? data.packPrix : null,
+      pack: data.pack,
+      services,
       modalitePaiement: data.modalitePaiement as Modalite,
       etape: data.etape,
       centre: data.centre as Dossier["centre"],
@@ -636,31 +656,28 @@ export const changerPack = createServerFn({ method: "POST" })
   .validator(
     z.object({
       id: z.string().min(1).max(32),
-      pack: z.enum(["base", "voyage", "global"]),
-      // Exigé pour un pack sans tarif fixe (Pack Global), ignoré sinon.
-      prix: z.number().int().min(1).max(1_000_000).nullable().default(null),
+      pack: z.enum(["base", "voyage", "global", "carte"]),
+      services: z.array(serviceKey).max(10).default([]),
     }),
   )
   .handler(async ({ data }) => {
     await requireRoles("ceo", "reception", "back_office");
-    const packPrix = PACKS[data.pack].prix === null ? data.prix : null;
-    if (PACKS[data.pack].prix === null && packPrix === null)
-      throw new Error(`${PACKS[data.pack].label} : saisir le prix convenu avec le client.`);
+    const services = servicesValides(data.pack, data.services);
     await db.transaction(async (tx) => {
       const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
       if (!row) throw new Error("Dossier introuvable.");
-      // On régénère l'échéancier (acompte + solde, ou solde comptant) selon le nouveau pack
-      // et la modalité en cours : les lignes déjà encaissées et les options à la carte sont
-      // conservées telles quelles, seules les lignes dues sont recalculées.
-      const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement, packPrix);
+      // On régénère l'échéancier (acompte + solde, ou solde comptant) selon la nouvelle
+      // formule et la modalité en cours : les lignes déjà encaissées et les options à la
+      // carte sont conservées telles quelles, seules les lignes dues sont recalculées.
+      const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement, services);
       await tx
         .update(dossiersTable)
-        .set({ pack: data.pack, packPrix, paiements })
+        .set({ pack: data.pack, services, paiements })
         .where(eq(dossiersTable.id, data.id));
     });
     await logActivity(
       "paiement.pack",
-      `Pack changé -> ${PACKS[data.pack].label}${packPrix !== null ? ` (${packPrix} MAD convenus)` : ""}`,
+      `Formule changée -> ${formuleLabel(data.pack)} (${prixFormule(data.pack, services)} MAD)`,
       data.id,
     );
   });
@@ -673,7 +690,7 @@ export const setModalitePaiement = createServerFn({ method: "POST" })
     await db.transaction(async (tx) => {
       const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
       if (!row) throw new Error("Dossier introuvable.");
-      const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite, row.packPrix);
+      const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite, row.services);
       await tx
         .update(dossiersTable)
         .set({ modalitePaiement: data.modalite, paiements })

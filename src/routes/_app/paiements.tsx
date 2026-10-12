@@ -7,7 +7,7 @@ import {
   useDossiersAvecEncaissement,
   type DateRange,
 } from "@/lib/store";
-import { PACKS, prixPackLabel, type PackKey } from "@/lib/dossier-model";
+import { PACKS, PACK_KEYS, mad, type PackKey } from "@/lib/dossier-model";
 import { PackContenu } from "@/components/dossier/pack-contenu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ function Paiements() {
   const nbPaiements = (stats?.nEncaisse ?? 0) + (stats?.nAttente ?? 0);
 
   const countByPack = new Map(counts.map((c) => [c.pack, c.n]));
-  const parPack = (Object.keys(PACKS) as PackKey[]).map((k) => ({
+  const parPack = PACK_KEYS.map((k) => ({
     key: k,
     ...PACKS[k],
     count: countByPack.get(k) ?? 0,
@@ -95,13 +95,13 @@ function Paiements() {
         <CardHeader>
           <CardTitle className="text-base">Paliers de pack</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {parPack.map((p) => (
             <div key={p.key} className="rounded-xl border border-border p-4">
               <img src={PACK_ICON[p.key]} alt="" className="mb-2 h-9 w-9" />
               <div className="text-sm font-semibold text-foreground">{p.label}</div>
               <div className="ref mt-1 text-muted-foreground">
-                {prixPackLabel(p.key)} · marge nette{" "}
+                {mad(p.prix)} · marge nette{" "}
                 {p.margeNette !== null ? `${p.margeNette} MAD` : "à confirmer"}
               </div>
               <div className="mt-2">
@@ -110,6 +110,13 @@ function Paiements() {
               <div className="mt-3 text-xs font-medium text-foreground">{p.count} dossier(s)</div>
             </div>
           ))}
+          <div className="rounded-xl border border-border p-4">
+            <div className="text-sm font-semibold text-foreground">Services à l'unité</div>
+            <div className="ref mt-1 text-muted-foreground">Total = somme des services choisis</div>
+            <div className="mt-3 text-xs font-medium text-foreground">
+              {countByPack.get("carte") ?? 0} dossier(s)
+            </div>
+          </div>
         </CardContent>
       </Card>
 

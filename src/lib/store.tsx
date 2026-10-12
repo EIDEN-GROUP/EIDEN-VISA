@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Dossier, PackKey, Centre, Decision, Modalite } from "./dossier-model";
+import type { Dossier, FormuleKey, ServiceKey, Centre, Decision, Modalite } from "./dossier-model";
 import {
   listDossiers,
   listDossiersPage,
@@ -140,7 +140,7 @@ function useDossierMutations() {
     onSuccess: invalidateAll,
   });
   const changerPackMutation = useMutation({
-    mutationFn: (vars: { id: string; pack: PackKey; prix: number | null }) =>
+    mutationFn: (vars: { id: string; pack: FormuleKey; services: ServiceKey[] }) =>
       changerPackFn({ data: vars }),
     onSuccess: invalidateAll,
   });
@@ -255,8 +255,8 @@ function useDossierMutations() {
     avancer: (id: string) => avancerMutation.mutateAsync(id),
     reculer: (id: string) => reculerMutation.mutateAsync(id),
     encaisser: (id: string, index: number) => encaisserMutation.mutateAsync({ id, index }),
-    changerPack: (id: string, pack: PackKey, prix: number | null = null) =>
-      changerPackMutation.mutateAsync({ id, pack, prix }),
+    changerPack: (id: string, pack: FormuleKey, services: ServiceKey[] = []) =>
+      changerPackMutation.mutateAsync({ id, pack, services }),
     changerModalite: (id: string, modalite: Modalite) =>
       changerModaliteMutation.mutateAsync({ id, modalite }),
     changerCentre: (id: string, centre: Centre) =>

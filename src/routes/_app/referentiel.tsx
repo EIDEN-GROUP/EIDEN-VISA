@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ETAPES, PACKS, FRAIS, prixPackLabel, type PackKey } from "@/lib/dossier-model";
+import {
+  ETAPES,
+  PACKS,
+  PACK_KEYS,
+  SERVICES,
+  SERVICE_KEYS,
+  FRAIS,
+  mad,
+  type PackKey,
+} from "@/lib/dossier-model";
 import { PackContenu } from "@/components/dossier/pack-contenu";
 import { SCOPE, FIXED_KEYS, getFixedCase } from "@/lib/visa-rules";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -150,22 +159,45 @@ function Referentiel() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {(Object.keys(PACKS) as PackKey[]).map((k) => (
+                {PACK_KEYS.map((k) => (
                   <div key={k} className="rounded-xl border border-border p-4">
                     <img src={PACK_ICON[k]} alt="" className="mb-2 h-9 w-9" />
                     <div className="text-sm font-semibold text-foreground">{PACKS[k].label}</div>
-                    <div className="ref mt-1 text-primary">{prixPackLabel(k)}</div>
+                    <div className="ref mt-1 text-primary">{mad(PACKS[k].prix)}</div>
                     <div className="ref text-muted-foreground">
                       Marge nette{" "}
                       {PACKS[k].margeNette !== null
                         ? `${PACKS[k].margeNette} MAD`
-                        : "à confirmer (prix convenu au dossier)"}
+                        : "à confirmer (coût assurance)"}
                     </div>
                     <div className="mt-2">
                       <PackContenu pack={k} />
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="border-t border-border pt-4">
+                <div className="text-sm font-semibold text-foreground">Services à l'unité</div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Pour le client qui ne prend pas de pack : services cochés un par un, total =
+                  somme. Une seule assurance ; la pré-réservation combinée remplace hôtel seul /
+                  avion seul.
+                </p>
+                <ul className="mt-3 divide-y divide-border rounded-xl border border-border">
+                  {SERVICE_KEYS.map((k) => (
+                    <li key={k} className="flex items-start justify-between gap-3 p-3 text-sm">
+                      <span>
+                        <span className="text-foreground">{SERVICES[k].label}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {SERVICES[k].detail}
+                        </span>
+                      </span>
+                      <span className="ref whitespace-nowrap text-primary">
+                        {mad(SERVICES[k].prix)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div className="grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-2">
                 {[

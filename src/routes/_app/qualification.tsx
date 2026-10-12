@@ -15,16 +15,14 @@ import {
 import {
   piecesFromCase,
   planPaiement,
-  prixPackLabel,
+  erreurServices,
   MODALITE_LABEL,
-  PACKS,
   CENTRES,
   type Dossier,
   type Centre,
   type Modalite,
-  type PackKey,
 } from "@/lib/dossier-model";
-import { PackContenu } from "@/components/dossier/pack-contenu";
+import { ChoixFormule, type Formule } from "@/components/dossier/choix-formule";
 import { useDossiers, useCurrentUser, ROLE_LABEL } from "@/lib/store";
 import {
   joursEntre,
@@ -154,9 +152,8 @@ function Qualification() {
   const [passLieu, setPassLieu] = useState("");
   const [centre, setCentre] = useState<Centre>(CENTRES[0]);
   const [modalite, setModalite] = useState<Modalite>("comptant");
-  const [pack, setPack] = useState<PackKey>("base");
-  // Prix convenu, saisi seulement pour un pack sans tarif fixe (Pack Global).
-  const [packPrix, setPackPrix] = useState("");
+  // Pack (Essentiel par défaut) ou services à l'unité.
+  const [formule, setFormule] = useState<Formule>({ pack: "base", services: [] });
 
   // Nombre de jours du séjour envisagé — jour de fin exclu (méthode calculconversion.com
   // validée par l'équipe : 21→25 mars = 4 jours, pas 5). `null` tant que les deux dates ne
@@ -316,8 +313,7 @@ function Qualification() {
     setOrigine(null);
     setCentre(CENTRES[0]);
     setModalite("comptant");
-    setPack("base");
-    setPackPrix("");
+    setFormule({ pack: "base", services: [] });
     setHistoOuverte(true);
   }
 
@@ -334,10 +330,7 @@ function Qualification() {
     setResult(null);
   }
 
-  const packSansTarif = PACKS[pack].prix === null;
-  const prixSaisi = Number(packPrix);
-  const prixConvenu =
-    packSansTarif && Number.isInteger(prixSaisi) && prixSaisi > 0 ? prixSaisi : null;
+  const formuleIncomplete = formule.pack === "carte" && erreurServices(formule.services) !== null;
 
   async function creerDossier() {
     if (!result || !nom) return;
@@ -380,8 +373,8 @@ function Qualification() {
       titre: result.c.title,
       categorie: result.c.cat,
       niveau: result.c.level,
-      pack,
-      packPrix: prixConvenu,
+      pack: formule.pack,
+      services: formule.services,
       modalitePaiement: modalite,
       etape: 1,
       centre,
@@ -389,7 +382,7 @@ function Qualification() {
       pieces,
       // Échéancier dérivé du pack et de la modalité choisis à l'accueil :
       // comptant = une ligne de solde, acompte = 50 % + solde 50 %.
-      paiements: planPaiement(pack, modalite, prixConvenu),
+      paiements: planPaiement(formule.pack, modalite, formule.services),
       // Les réponses libres ne sont plus aplaties ici : elles vivent dans `profile.details`,
       // et la fiche dossier les affiche groupées par sujet.
       notes: result.c.notes,
@@ -946,41 +939,9 @@ function Qualification() {
                   </Select>
                 </div>
                 <div className="col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">Pack</label>
-                  <Select value={pack} onValueChange={(v) => setPack(v as PackKey)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(PACKS) as PackKey[]).map((k) => (
-                        <SelectItem key={k} value={k}>
-                          {PACKS[k].label} · {prixPackLabel(k)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {packSansTarif && (
-                    <div className="mt-2">
-                      <label
-                        htmlFor="creation-pack-prix"
-                        className="text-xs font-medium text-muted-foreground"
-                      >
-                        Prix convenu avec le client (MAD)
-                      </label>
-                      <Input
-                        id="creation-pack-prix"
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        step={1}
-                        value={packPrix}
-                        onChange={(e) => setPackPrix(e.target.value)}
-                        placeholder="ex. 1800"
-                      />
-                    </div>
-                  )}
-                  <div className="mt-2">
-                    <PackContenu pack={pack} />
+                  <div className="text-xs font-medium text-muted-foreground">Pack ou services</div>
+                  <div className="mt-1 rounded-xl border border-border p-3">
+                    <ChoixFormule value={formule} onChange={setFormule} />
                   </div>
                 </div>
                 <div className="col-span-2">
@@ -1012,7 +973,7 @@ function Qualification() {
                       !origine ||
                       !nom ||
                       (dureeSejour !== null && dureeSejour <= 0) ||
-                      (packSansTarif && prixConvenu === null)
+                      formuleIncomplete
                     }
                     onClick={creerDossier}
                   >

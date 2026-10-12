@@ -47,7 +47,7 @@ async function main() {
         categorie: d.categorie,
         niveau: d.niveau,
         pack: d.pack,
-        packPrix: d.packPrix,
+        services: d.services,
         modalitePaiement: d.modalitePaiement,
         etape: d.etape,
         centre: d.centre,

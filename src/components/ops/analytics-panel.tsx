@@ -15,7 +15,14 @@ import {
 } from "recharts";
 import { useRef, useState } from "react";
 import { useAnalytics, ROLE_LABEL, type Role } from "@/lib/store";
-import { ETAPES, PACKS, DECISION_LABEL, MODALITE_LABEL, type PackKey } from "@/lib/dossier-model";
+import {
+  ETAPES,
+  PACKS,
+  DECISION_LABEL,
+  MODALITE_LABEL,
+  formuleLabel,
+  type PackKey,
+} from "@/lib/dossier-model";
 import { LEVEL_LABEL, type Level } from "@/lib/visa-rules";
 import { exportElementPdf, exportOpsPdf } from "@/lib/ops-pdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,7 +145,10 @@ export function AnalyticsPanel() {
     key: r.k,
     value: r.n,
   }));
-  const pack = data.parPack.map((r) => ({ name: PACKS[r.k as PackKey]?.label ?? r.k, n: r.n }));
+  const pack = data.parPack.map((r) => ({
+    name: r.k === "carte" ? formuleLabel("carte") : (PACKS[r.k as PackKey]?.label ?? r.k),
+    n: r.n,
+  }));
   const centre = data.parCentre.map((r) => ({ name: r.k, n: r.n }));
   const modalite = data.parModalite.map((r, i) => ({
     name: MODALITE_LABEL[r.k as keyof typeof MODALITE_LABEL] ?? r.k,
@@ -493,7 +503,9 @@ async function exportRapportTable(data: AnalyticsData) {
           { header: "Pack", w: 4 },
           { header: "Dossiers", w: 2, align: "right" },
         ],
-        rows: kv(data.parPack, (x) => PACKS[x as PackKey]?.label ?? x),
+        rows: kv(data.parPack, (x) =>
+          x === "carte" ? formuleLabel("carte") : (PACKS[x as PackKey]?.label ?? x),
+        ),
       },
       {
         heading: "Centre de dépôt",

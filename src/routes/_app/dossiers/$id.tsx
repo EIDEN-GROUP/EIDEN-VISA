@@ -10,11 +10,10 @@ import {
   passeportStatut,
   passeportExpirationMinimale,
   ETAPES,
-  PACKS,
-  prixPackLabel,
+  formuleLabel,
+  erreurServices,
   CENTRES,
   MODALITE_LABEL,
-  type PackKey,
   type Centre,
   type Modalite,
   type Echeance,
@@ -26,7 +25,7 @@ import {
   AutorisationBadge,
 } from "@/components/dossier/badges";
 import { DocumentsPanel } from "@/components/dossier/documents-panel";
-import { PackContenu } from "@/components/dossier/pack-contenu";
+import { ChoixFormule, type Formule } from "@/components/dossier/choix-formule";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -225,11 +224,10 @@ function DossierDetail() {
   const [refusOpen, setRefusOpen] = useState(false);
   const [refusMotif, setRefusMotif] = useState("");
   const [toutAfficher, setToutAfficher] = useState(false);
-  // Pack sans tarif fixe (Pack Global) en cours de choix : le prix convenu est saisi avant
-  // d'appliquer, puisque l'échéancier en dépend.
-  const [packAttente, setPackAttente] = useState<PackKey | null>(null);
-  const [prixSaisi, setPrixSaisi] = useState("");
-  const [prixErreur, setPrixErreur] = useState<string | null>(null);
+  // Brouillon pack / services : appliqué d'un bloc (l'échéancier est régénéré à chaque fois),
+  // pas à chaque case cochée. `null` = pas de modification en cours.
+  const [formuleBrouillon, setFormuleBrouillon] = useState<Formule | null>(null);
+  const [formuleErreur, setFormuleErreur] = useState<string | null>(null);
   const [noteTexte, setNoteTexte] = useState("");
   const [noteEnCours, setNoteEnCours] = useState(false);
   const [fvRef, setFvRef] = useState("");
@@ -1050,115 +1048,57 @@ function DossierDetail() {
                     <CardTitle className="text-lg">Pack & paiements</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Select
-                      value={packAttente ?? d.pack}
+                    <div className="text-sm font-medium text-foreground">
+                      {formuleLabel(d.pack)}
+                    </div>
+                    <ChoixFormule
+                      value={formuleBrouillon ?? { pack: d.pack, services: d.services }}
                       disabled={cloture}
-                      onValueChange={(v) => {
-                        const k = v as PackKey;
-                        setPrixErreur(null);
-                        if (PACKS[k].prix === null) {
-                          setPackAttente(k);
-                          setPrixSaisi(d.packPrix !== null ? String(d.packPrix) : "");
-                        } else {
-                          setPackAttente(null);
-                          void changerPack(d.id, k);
-                        }
+                      onChange={(f) => {
+                        setFormuleErreur(null);
+                        setFormuleBrouillon(f);
                       }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.keys(PACKS) as PackKey[]).map((k) => (
-                          <SelectItem key={k} value={k}>
-                            {PACKS[k].label} · {prixPackLabel(k)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {packAttente ? (
-                      <form
-                        className="space-y-2 rounded-lg border border-border p-3"
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          const prix = Number(prixSaisi);
-                          if (!Number.isInteger(prix) || prix <= 0) {
-                            setPrixErreur("Saisir un montant entier en MAD.");
-                            return;
-                          }
-                          try {
-                            await changerPack(d.id, packAttente, prix);
-                            setPackAttente(null);
-                          } catch (err) {
-                            setPrixErreur(err instanceof Error ? err.message : String(err));
-                          }
-                        }}
-                      >
-                        <label
-                          htmlFor="pack-prix"
-                          className="text-xs font-medium text-muted-foreground"
-                        >
-                          Prix convenu avec le client — {PACKS[packAttente].label}
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="pack-prix"
-                            type="number"
-                            inputMode="numeric"
-                            min={1}
-                            step={1}
-                            autoFocus
-                            value={prixSaisi}
-                            onChange={(e) => setPrixSaisi(e.target.value)}
-                            placeholder="ex. 1800"
-                          />
-                          <span className="text-sm text-muted-foreground">MAD</span>
-                        </div>
-                        {prixErreur && <p className="text-xs text-destructive">{prixErreur}</p>}
+                    />
+                    {formuleBrouillon && (
+                      <div className="space-y-2">
+                        {formuleErreur && (
+                          <p className="text-xs text-destructive">{formuleErreur}</p>
+                        )}
                         <div className="flex gap-2">
-                          <Button type="submit" size="sm">
+                          <Button
+                            size="sm"
+                            disabled={
+                              formuleBrouillon.pack === "carte" &&
+                              erreurServices(formuleBrouillon.services) !== null
+                            }
+                            onClick={async () => {
+                              try {
+                                await changerPack(
+                                  d.id,
+                                  formuleBrouillon.pack,
+                                  formuleBrouillon.services,
+                                );
+                                setFormuleBrouillon(null);
+                              } catch (err) {
+                                setFormuleErreur(err instanceof Error ? err.message : String(err));
+                              }
+                            }}
+                          >
                             Appliquer
                           </Button>
                           <Button
-                            type="button"
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              setPackAttente(null);
-                              setPrixErreur(null);
+                              setFormuleBrouillon(null);
+                              setFormuleErreur(null);
                             }}
                           >
                             Annuler
                           </Button>
                         </div>
-                      </form>
-                    ) : (
-                      PACKS[d.pack].prix === null && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            Prix convenu :{" "}
-                            <span className="ref text-foreground">
-                              {d.packPrix !== null
-                                ? `${d.packPrix.toLocaleString("fr-FR")} MAD`
-                                : "non saisi"}
-                            </span>
-                          </span>
-                          {!cloture && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setPackAttente(d.pack);
-                                setPrixSaisi(d.packPrix !== null ? String(d.packPrix) : "");
-                              }}
-                            >
-                              Modifier le prix
-                            </Button>
-                          )}
-                        </div>
-                      )
+                      </div>
                     )}
-                    <PackContenu pack={packAttente ?? d.pack} />
 
                     <div className="border-t border-border pt-3">
                       <label className="text-xs font-medium text-muted-foreground">

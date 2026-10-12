@@ -64,16 +64,20 @@ export const ETAPES = [
 export type PackKey = "base" | "voyage" | "global";
 
 /**
+ * Ce que le client achète : un pack, ou `carte` = des services choisis un par un
+ * (`Dossier.services`). Stocké dans la colonne historique `dossiers.pack`.
+ */
+export type FormuleKey = PackKey | "carte";
+
+/**
  * Les trois packs vendus, alignés sur la landing (Essentiel / Confort / Global). Les clés
  * `base`/`voyage`/`global` sont historiques (colonne `dossiers.pack`) et ne changent pas.
- * `prix: null` = pas de tarif fixe : le prix est convenu avec le client et saisi sur le
- * dossier (`Dossier.packPrix`) au moment où ce pack est choisi.
  */
 export const PACKS: Record<
   PackKey,
   {
     label: string;
-    prix: number | null;
+    prix: number;
     margeNette: number | null;
     contenu: string;
     /** Pack dont celui-ci reprend tout le contenu (« Tout le pack X, plus »). */
@@ -106,9 +110,8 @@ export const PACKS: Record<
   },
   global: {
     label: "Pack Global",
-    /** Tarif « à définir » : prix convenu dossier par dossier. */
-    prix: null,
-    /** Commission courtier assurance non encore figée (EV/2026-08) : pas de chiffre tant qu'elle n'est pas confirmée. */
+    prix: 1900,
+    /** Coût de l'assurance / commission courtier non encore figés : pas de chiffre tant qu'ils ne sont pas confirmés. */
     margeNette: null,
     contenu: "Un accompagnement complet pour préparer votre dossier et anticiper votre voyage.",
     herite: "voyage",
@@ -116,18 +119,105 @@ export const PACKS: Record<
   },
 };
 
-/** Libellé du prix d'un pack au catalogue : « 1 000 MAD » ou « Prix à convenir ». */
-export function prixPackLabel(pack: PackKey): string {
-  const prix = PACKS[pack].prix;
-  return prix === null ? "Prix à convenir" : `${prix.toLocaleString("fr-FR")} MAD`;
-}
+export const PACK_KEYS = Object.keys(PACKS) as PackKey[];
+
+/** Services vendus à l'unité, pour le client qui ne veut pas de pack. */
+export type ServiceKey =
+  | "verification"
+  | "formulaire_rdv"
+  | "prereservation"
+  | "prereservation_hotel"
+  | "prereservation_avion"
+  | "assurance_6m"
+  | "assurance_1an";
+
+export const SERVICES: Record<ServiceKey, { label: string; prix: number; detail: string }> = {
+  verification: {
+    label: "Vérification et Rassemblement du dossier",
+    prix: 400,
+    detail: "Vérification des pièces justificatives et contrôle de la complétude du dossier.",
+  },
+  formulaire_rdv: {
+    label: "Formulaire de demande et rendez-vous visa",
+    prix: 600,
+    detail:
+      "Remplissage du formulaire de demande de visa et accompagnement pour le rendez-vous auprès du centre concerné, TLS Contact ou BLS selon le cas.",
+  },
+  prereservation: {
+    label: "Pré-réservation hôtel et billet d'avion",
+    prix: 350,
+    detail: "Assistance pour les pré-réservations nécessaires au dossier de voyage.",
+  },
+  prereservation_hotel: {
+    label: "Pré-réservation hôtel",
+    prix: 170,
+    detail: "Pré-réservation d'hôtel seule.",
+  },
+  prereservation_avion: {
+    label: "Pré-réservation billet d'avion",
+    prix: 170,
+    detail: "Pré-réservation du billet d'avion seule.",
+  },
+  assurance_6m: {
+    label: "Assurance voyage — 6 mois",
+    prix: 550,
+    detail: "Assurance selon les conditions et garanties du contrat proposé.",
+  },
+  assurance_1an: {
+    label: "Assurance voyage — 1 an",
+    prix: 750,
+    detail: "Assurance selon les conditions et garanties du contrat proposé.",
+  },
+};
+
+export const SERVICE_KEYS = Object.keys(SERVICES) as ServiceKey[];
 
 /**
- * Prix effectif du pack d'un dossier : le tarif catalogue, ou le prix convenu pour un
- * pack sans tarif fixe. `null` si ce prix n'a pas encore été saisi.
+ * Services qui font double emploi : cocher l'un décoche les autres (une seule assurance ;
+ * la pré-réservation combinée remplace hôtel seul / avion seul).
  */
-export function prixDuPack(pack: PackKey, packPrix: number | null): number | null {
-  return PACKS[pack].prix ?? packPrix;
+const SERVICES_EXCLUSIFS: ServiceKey[][] = [
+  ["assurance_6m", "assurance_1an"],
+  ["prereservation", "prereservation_hotel"],
+  ["prereservation", "prereservation_avion"],
+];
+
+/** Coche / décoche un service en retirant ceux qui feraient double emploi avec lui. */
+export function basculerService(services: ServiceKey[], s: ServiceKey): ServiceKey[] {
+  if (services.includes(s)) return services.filter((x) => x !== s);
+  const exclus = new Set(
+    SERVICES_EXCLUSIFS.filter((g) => g.includes(s)).flatMap((g) => g.filter((x) => x !== s)),
+  );
+  return SERVICE_KEYS.filter((x) => x === s || (services.includes(x) && !exclus.has(x)));
+}
+
+/** Message d'erreur si la sélection est invalide (vide ou services en double emploi), sinon null. */
+export function erreurServices(services: ServiceKey[]): string | null {
+  if (services.length === 0) return "Choisir au moins un service.";
+  if (new Set(services).size !== services.length) return "Service en double.";
+  for (const g of SERVICES_EXCLUSIFS)
+    if (g.filter((x) => services.includes(x)).length > 1)
+      return `Services incompatibles : ${g.map((x) => SERVICES[x].label).join(" / ")}.`;
+  return null;
+}
+
+export function totalServices(services: ServiceKey[]): number {
+  return services.reduce((t, s) => t + SERVICES[s].prix, 0);
+}
+
+/** Libellé de ce que le client achète : le pack, ou « Services à la carte ». */
+export function formuleLabel(formule: FormuleKey): string {
+  return formule === "carte" ? "Services à la carte" : PACKS[formule].label;
+}
+
+/** Prix de la formule : tarif du pack, ou somme des services choisis. */
+export function prixFormule(formule: FormuleKey, services: ServiceKey[]): number {
+  return formule === "carte" ? totalServices(services) : PACKS[formule].prix;
+}
+
+/** « 1 000 MAD » */
+export function mad(n: number): string {
+  return `${n.toLocaleString("fr-FR")} MAD`;
 }
 
 export const FRAIS = {
@@ -174,13 +264,16 @@ export interface Paiement {
  * Ne produit que des lignes non encaissées : l'appelant fusionne avec l'historique déjà encaissé.
  */
 export function planPaiement(
-  pack: PackKey,
+  formule: FormuleKey,
   modalite: Modalite,
-  packPrix: number | null = null,
+  services: ServiceKey[] = [],
 ): Paiement[] {
-  const { label } = PACKS[pack];
-  const prix = prixDuPack(pack, packPrix);
-  if (prix === null) throw new Error(`${label} : saisir le prix convenu avec le client.`);
+  if (formule === "carte") {
+    const erreur = erreurServices(services);
+    if (erreur) throw new Error(erreur);
+  }
+  const label = formuleLabel(formule);
+  const prix = prixFormule(formule, services);
   if (modalite === "acompte") {
     const acompte = Math.round(prix * ACOMPTE_PCT);
     return [
@@ -218,15 +311,15 @@ export function planPaiement(
  */
 export function reglerEcheancier(
   paiements: Paiement[],
-  pack: PackKey,
+  formule: FormuleKey,
   modalite: Modalite,
-  packPrix: number | null = null,
+  services: ServiceKey[] = [],
 ): Paiement[] {
   const gardees = paiements.filter((p) => p.encaisse || p.echeance === "option");
   const echeancesReglees = new Set(
     gardees.filter((p) => p.encaisse).map((p) => p.echeance ?? "solde"),
   );
-  const fraiches = planPaiement(pack, modalite, packPrix).filter(
+  const fraiches = planPaiement(formule, modalite, services).filter(
     (l) => !echeancesReglees.has(l.echeance!),
   );
   const ordre: Record<Echeance, number> = { acompte: 0, solde: 1, option: 2 };
@@ -296,9 +389,10 @@ export interface Dossier {
   titre: string;
   categorie: string;
   niveau: Level;
-  pack: PackKey;
-  /** Prix convenu pour un pack sans tarif fixe (Pack Global) — `null` pour les autres. */
-  packPrix: number | null;
+  /** Pack choisi, ou `carte` quand le client prend des services à l'unité. */
+  pack: FormuleKey;
+  /** Services à l'unité retenus — vide sauf si `pack === "carte"`. */
+  services: ServiceKey[];
   /** `comptant` par défaut pour les dossiers créés avant l'ajout de la modalité. */
   modalitePaiement: Modalite;
   etape: number;

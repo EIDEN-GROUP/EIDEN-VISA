@@ -20,8 +20,6 @@ interface SeedInput {
   caseKey: string;
   profile: Profile;
   pack: PackKey;
-  /** Prix convenu, uniquement pour un pack sans tarif fixe (Pack Global). */
-  packPrix?: number;
   modalite?: Modalite;
   etape: number;
   centre: Centre;
@@ -116,7 +114,6 @@ const SEED: SeedInput[] = [
     caseKey: "tc1",
     profile: {},
     pack: "global",
-    packPrix: 1300,
     etape: 5,
     centre: "TLScontact Agadir",
     autorise: true,
@@ -257,7 +254,7 @@ export function buildSeed(): Dossier[] {
       categorie: c.cat,
       niveau: c.level,
       pack: s.pack,
-      packPrix: s.packPrix ?? null,
+      services: [],
       modalitePaiement: s.modalite ?? "comptant",
       etape: s.etape,
       centre: s.centre,
