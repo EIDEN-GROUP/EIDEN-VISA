@@ -29,6 +29,11 @@ export const Route = createFileRoute("/dossiers/$id/recu")({
   component: Recu,
 });
 
+/** Pays de destination, déduit du centre de dépôt (BLS = Espagne, sinon France) — sans le nom du centre. */
+function paysDestination(d: Dossier): string {
+  return d.centre.includes("BLS") ? "Espagne" : "France";
+}
+
 /** Le reçu « avant paiement » est identique, sans la section des paiements. */
 type ModeRecu = "apres" | "avant";
 
@@ -37,6 +42,8 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
     ([{ jsPDF }, logo]) => {
       const paye = d.paiements.filter((p) => p.encaisse);
       const total = paye.reduce((s, p) => s + p.montant, 0);
+      const du = d.paiements.filter((p) => !p.encaisse);
+      const reste = du.reduce((s, p) => s + p.montant, 0);
       const emisLe = new Date().toLocaleDateString("fr-FR");
 
       const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -80,15 +87,18 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       doc.setFontSize(10.5);
       doc.setTextColor(...forest);
       doc.text(d.client.nom, marginX, y);
-      doc.text(d.titre, marginX + contentW / 2, y, { maxWidth: contentW / 2 - 4 });
+      // Le titre peut tenir sur plusieurs lignes : le pays se place juste dessous.
+      const titreLignes: string[] = doc.splitTextToSize(d.titre, contentW / 2 - 4);
+      doc.text(titreLignes, marginX + contentW / 2, y);
+      const yPays = y + titreLignes.length * 5;
 
-      y += 5.5;
       doc.setFontSize(9);
       doc.setTextColor(...gray);
-      doc.text(d.client.telephone, marginX, y);
+      doc.text(d.client.telephone, marginX, y + 5.5);
+      doc.text(d.client.ville, marginX, y + 10.5);
+      doc.text(paysDestination(d), marginX + contentW / 2, yPays);
 
-      y += 5;
-      doc.text(d.client.ville, marginX, y);
+      y = Math.max(y + 10.5, yPays);
 
       y += 12;
       doc.setDrawColor(220, 214, 200);
@@ -199,6 +209,26 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
         doc.text("Total encaissé", marginX, y);
         doc.setFontSize(13);
         doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
+
+        // Ce qu'il reste à régler, ligne par ligne : le client sait quoi apporter et pour quoi.
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        for (const p of du) {
+          ensureSpace(6);
+          y += 5.5;
+          doc.setTextColor(...gray);
+          doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.7 });
+          doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
+        }
+        ensureSpace(10);
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...forest);
+        doc.text(reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé", marginX, y);
+        doc.setFontSize(13);
+        doc.text(`${reste} MAD`, pageW - marginX, y, { align: "right" });
       }
 
       // Signature du client seule : bon pour accord sur les montants.
@@ -250,6 +280,8 @@ function Recu() {
 
   const paye = d.paiements.filter((p) => p.encaisse);
   const total = paye.reduce((s, p) => s + p.montant, 0);
+  const du = d.paiements.filter((p) => !p.encaisse);
+  const reste = du.reduce((s, p) => s + p.montant, 0);
 
   return (
     <div className="min-h-screen bg-background px-4 py-8">
@@ -302,6 +334,7 @@ function Recu() {
           <div>
             <div className="ref text-muted-foreground">Dossier</div>
             <div className="mt-1 font-medium text-foreground">{d.titre}</div>
+            <div className="mt-0.5 text-muted-foreground">{paysDestination(d)}</div>
           </div>
         </div>
 
@@ -362,6 +395,21 @@ function Recu() {
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm font-semibold">
               <span className="text-foreground">Total encaissé</span>
               <span className="num-display text-lg text-foreground">{total} MAD</span>
+            </div>
+            {du.map((p, i) => (
+              <div
+                key={i}
+                className="mt-2 flex items-center justify-between text-sm text-muted-foreground"
+              >
+                <span>{p.libelle}</span>
+                <span>{p.montant} MAD</span>
+              </div>
+            ))}
+            <div className="mt-3 flex items-center justify-between text-sm font-semibold">
+              <span className="text-foreground">
+                {reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé"}
+              </span>
+              <span className="num-display text-lg text-foreground">{reste} MAD</span>
             </div>
           </div>
         )}
