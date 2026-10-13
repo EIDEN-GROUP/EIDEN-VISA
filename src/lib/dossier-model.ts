@@ -234,18 +234,32 @@ export interface Piece {
 
 /**
  * Modalité de règlement choisie par le client à l'ouverture du dossier :
- * - `comptant` : il règle le pack en une fois (encaissement au solde, étape 6) ;
- * - `acompte`  : il verse 50 % du prix du pack pour sécuriser l'engagement
- *   (à l'ouverture du dossier, étape 2), le solde des 50 % restant dû à l'étape 6.
+ * - `comptant`  : il règle le pack en une fois (encaissement au solde, étape 6) ;
+ * - `acompte`   : il verse 50 % du prix pour sécuriser l'engagement (à l'ouverture du
+ *   dossier, étape 2), les 50 % restants dus à l'étape 6 ;
+ * - `acompte15` : même principe avec un acompte de 15 %, solde de 85 %.
  * Les options à la carte (voyage, assurance) sont toujours facturées à part,
- * hors du calcul des 50 %.
+ * hors du calcul de l'acompte.
  */
-export type Modalite = "comptant" | "acompte";
+export type Modalite = "comptant" | "acompte" | "acompte15";
 export const MODALITE_LABEL: Record<Modalite, string> = {
   comptant: "Paiement comptant",
   acompte: "Acompte 50 % + solde",
+  acompte15: "Acompte 15 % + solde",
 };
-export const ACOMPTE_PCT = 0.5;
+/** Part du prix versée en acompte, par modalité (0 = comptant, pas d'acompte). */
+export const ACOMPTE_PCT: Record<Modalite, number> = {
+  comptant: 0,
+  acompte: 0.5,
+  acompte15: 0.15,
+};
+/** Explication courte de la modalité, affichée sous le sélecteur. */
+export function modaliteDetail(m: Modalite): string {
+  const pct = Math.round(ACOMPTE_PCT[m] * 100);
+  return pct === 0
+    ? "Règlement du pack en une fois, à la remise du dossier."
+    : `${pct} % à l'ouverture du dossier, solde des ${100 - pct} % à la remise du dossier.`;
+}
 
 /** Quand une ligne de paiement est due — la règle métier n'est plus cachée dans le libellé. */
 export type Echeance = "acompte" | "solde" | "option";
@@ -274,18 +288,20 @@ export function planPaiement(
   }
   const label = formuleLabel(formule);
   const prix = prixFormule(formule, services);
-  if (modalite === "acompte") {
-    const acompte = Math.round(prix * ACOMPTE_PCT);
+  const pct = ACOMPTE_PCT[modalite];
+  if (pct > 0) {
+    const acompte = Math.round(prix * pct);
+    const pctLabel = Math.round(pct * 100);
     return [
       {
-        libelle: `Acompte 50 % · ${label}`,
+        libelle: `Acompte ${pctLabel} % · ${label}`,
         montant: acompte,
         date: null,
         encaisse: false,
         echeance: "acompte",
       },
       {
-        libelle: `Solde 50 % · ${label}`,
+        libelle: `Solde ${100 - pctLabel} % · ${label}`,
         montant: prix - acompte,
         date: null,
         encaisse: false,
@@ -560,8 +576,13 @@ export function checklistEtape(d: Dossier): PointEtape[] {
         { label: "Passeport renseigné", fait: Boolean(d.client.passeportNumero) },
         { label: "Dossier créé sur France-Visas", fait: d.franceVisasFait },
         { label: "Numéro France-Visas / RCPC enregistré", fait: Boolean(d.franceVisasRef) },
-        ...(d.modalitePaiement === "acompte" && acompte
-          ? [{ label: "Acompte de 50 % encaissé", fait: acompte.encaisse }]
+        ...(ACOMPTE_PCT[d.modalitePaiement] > 0 && acompte
+          ? [
+              {
+                label: `Acompte de ${Math.round(ACOMPTE_PCT[d.modalitePaiement] * 100)} % encaissé`,
+                fait: acompte.encaisse,
+              },
+            ]
           : []),
       ];
     case 3:

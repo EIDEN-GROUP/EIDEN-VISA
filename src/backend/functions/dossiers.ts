@@ -485,7 +485,7 @@ const dossierInput = z.object({
   niveau: z.enum(["standard", "attention", "complexe"]),
   pack: z.enum(["base", "voyage", "global", "carte"]),
   services: z.array(serviceKey).max(10).default([]),
-  modalitePaiement: z.enum(["comptant", "acompte"]).default("comptant"),
+  modalitePaiement: z.enum(["comptant", "acompte", "acompte15"]).default("comptant"),
   etape: z.number().int().min(1).max(5),
   centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
   pieces: z
@@ -682,9 +682,14 @@ export const changerPack = createServerFn({ method: "POST" })
     );
   });
 
-/** Le client choisit de régler comptant ou par acompte de 50 % — régénère l'échéancier dû. */
+/** Le client choisit de régler comptant ou par acompte (50 % ou 15 %) — régénère l'échéancier dû. */
 export const setModalitePaiement = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string().min(1).max(32), modalite: z.enum(["comptant", "acompte"]) }))
+  .validator(
+    z.object({
+      id: z.string().min(1).max(32),
+      modalite: z.enum(["comptant", "acompte", "acompte15"]),
+    }),
+  )
   .handler(async ({ data }) => {
     await requireRoles("ceo", "reception", "back_office");
     await db.transaction(async (tx) => {
@@ -736,7 +741,7 @@ export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async
       select d.id, d.client_nom as nom, d.etape,
         coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and p->>'echeance' = 'acompte'), 0) as montant
       from ${dossiersTable} d, jsonb_array_elements(d.paiements) p
-      where d.modalite_paiement = 'acompte' and d.etape >= 2
+      where d.modalite_paiement <> 'comptant' and d.etape >= 2
       group by d.id, d.client_nom, d.etape
       having coalesce(sum((p->>'montant')::numeric) filter (where not (p->>'encaisse')::boolean and p->>'echeance' = 'acompte'), 0) > 0
       order by d.etape desc
@@ -776,6 +781,7 @@ export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async
     parModalite: {
       comptant: Number(mod.find((m) => m.modalite === "comptant")?.n ?? 0),
       acompte: Number(mod.find((m) => m.modalite === "acompte")?.n ?? 0),
+      acompte15: Number(mod.find((m) => m.modalite === "acompte15")?.n ?? 0),
     },
     soldesDus: toRows(soldesDus),
     acomptesEnRetard: toRows(acomptesEnRetard),

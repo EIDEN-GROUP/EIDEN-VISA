@@ -17,6 +17,7 @@ import {
   planPaiement,
   erreurServices,
   MODALITE_LABEL,
+  modaliteDetail,
   CENTRES,
   type Dossier,
   type Centre,
@@ -381,7 +382,7 @@ function Qualification() {
       uploadAutorise: false,
       pieces,
       // Échéancier dérivé du pack et de la modalité choisis à l'accueil :
-      // comptant = une ligne de solde, acompte = 50 % + solde 50 %.
+      // comptant = une ligne de solde, acompte = 50 % (ou 15 %) + solde.
       paiements: planPaiement(formule.pack, modalite, formule.services),
       // Les réponses libres ne sont plus aplaties ici : elles vivent dans `profile.details`,
       // et la fiche dossier les affiche groupées par sujet.
@@ -960,11 +961,7 @@ function Qualification() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {modalite === "acompte"
-                      ? "50 % à l'ouverture du dossier, solde des 50 % à la remise du dossier."
-                      : "Règlement du pack en une fois, à la remise du dossier."}
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{modaliteDetail(modalite)}</p>
                 </div>
                 <div className="col-span-2 pt-2">
                   <Button

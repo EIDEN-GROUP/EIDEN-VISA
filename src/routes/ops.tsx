@@ -758,7 +758,7 @@ function PaiementsSection({ suivi }: { suivi: Suivi }) {
 
       <p className="mb-6 text-xs text-muted-foreground">
         {suivi
-          ? `${suivi.parModalite.acompte} dossier(s) en « ${MODALITE_LABEL.acompte} », ${suivi.parModalite.comptant} en « ${MODALITE_LABEL.comptant} ».`
+          ? `${suivi.parModalite.acompte} dossier(s) en « ${MODALITE_LABEL.acompte} », ${suivi.parModalite.acompte15} en « ${MODALITE_LABEL.acompte15} », ${suivi.parModalite.comptant} en « ${MODALITE_LABEL.comptant} ».`
           : "Chargement…"}
       </p>
 

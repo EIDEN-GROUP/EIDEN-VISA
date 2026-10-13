@@ -4,6 +4,26 @@ import { useDossier } from "@/lib/store";
 import type { Dossier } from "@/lib/dossier-model";
 import { Button } from "@/components/ui/button";
 import { Download, ArrowLeft, Check } from "lucide-react";
+import logoEidenVisa from "@/assets/decorations/logo-eiden-visa.webp";
+// jsPDF ne lit pas le WebP : même logo en PNG pour le PDF.
+import logoEidenVisaPng from "@/assets/decorations/logo-eiden-visa.png";
+
+/** Logo officiel (900 × 264 px) : ratio largeur / hauteur. */
+const LOGO_RATIO = 900 / 264;
+
+function chargerDataUrl(url: string): Promise<string> {
+  return fetch(url)
+    .then((r) => r.blob())
+    .then(
+      (blob) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        }),
+    );
+}
 
 export const Route = createFileRoute("/dossiers/$id/recu")({
   component: Recu,
@@ -13,216 +33,203 @@ export const Route = createFileRoute("/dossiers/$id/recu")({
 type ModeRecu = "apres" | "avant";
 
 function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
-  return import("jspdf").then(({ jsPDF }) => {
-    const paye = d.paiements.filter((p) => p.encaisse);
-    const total = paye.reduce((s, p) => s + p.montant, 0);
-    const emisLe = new Date().toLocaleDateString("fr-FR");
+  return Promise.all([import("jspdf"), chargerDataUrl(logoEidenVisaPng)]).then(
+    ([{ jsPDF }, logo]) => {
+      const paye = d.paiements.filter((p) => p.encaisse);
+      const total = paye.reduce((s, p) => s + p.montant, 0);
+      const emisLe = new Date().toLocaleDateString("fr-FR");
 
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const marginX = 20;
-    const contentW = pageW - marginX * 2;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const marginX = 20;
+      const contentW = pageW - marginX * 2;
 
-    // Encre marine = --primary du système (oklch(0.24 0.03 280) → RVB 28, 30, 45),
-    // forest pour la structure.
-    const marine: [number, number, number] = [28, 30, 45];
-    const forest: [number, number, number] = [42, 51, 41];
-    const gray: [number, number, number] = [110, 110, 105];
+      // Encre marine = --primary du système (oklch(0.24 0.03 280) → RVB 28, 30, 45),
+      // forest pour la structure.
+      const marine: [number, number, number] = [28, 30, 45];
+      const forest: [number, number, number] = [42, 51, 41];
+      const gray: [number, number, number] = [110, 110, 105];
 
-    let y = 22;
-    doc.setFont("times", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(...forest);
-    doc.text("Eiden Visa", marginX, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(...gray);
-    doc.text("EIDEN Group · Agadir, Maroc", marginX, y + 5);
+      let y = 22;
+      const logoH = 14;
+      doc.addImage(logo, "PNG", marginX, y - 11, logoH * LOGO_RATIO, logoH);
 
-    doc.setFont("courier", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(...gray);
-    doc.text("REÇU DE PAIEMENT", pageW - marginX, y - 3, { align: "right" });
-    doc.setTextColor(...forest);
-    doc.text(d.id, pageW - marginX, y + 2, { align: "right" });
-    doc.setTextColor(...gray);
-    doc.text(`Émis le ${emisLe}`, pageW - marginX, y + 7, { align: "right" });
-
-    y += 16;
-    doc.setDrawColor(...marine);
-    doc.setLineWidth(0.6);
-    doc.line(marginX, y, pageW - marginX, y);
-
-    y += 10;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...gray);
-    doc.text("CLIENT", marginX, y);
-    doc.text("DOSSIER", marginX + contentW / 2, y);
-
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10.5);
-    doc.setTextColor(...forest);
-    doc.text(d.client.nom, marginX, y);
-    doc.text(d.titre, marginX + contentW / 2, y, { maxWidth: contentW / 2 - 4 });
-
-    y += 5.5;
-    doc.setFontSize(9);
-    doc.setTextColor(...gray);
-    doc.text(d.client.telephone, marginX, y);
-    doc.text(
-      d.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact",
-      marginX + contentW / 2,
-      y,
-    );
-
-    y += 5;
-    doc.text(d.client.ville, marginX, y);
-
-    y += 12;
-    doc.setDrawColor(220, 214, 200);
-    doc.setLineWidth(0.3);
-    doc.line(marginX, y, pageW - marginX, y);
-
-    // Checklist des pièces — même contenu que l'onglet Documents du dossier, pour que le
-    // client reparte avec la liste exacte de ce qui a déjà été fourni ou reste à apporter.
-    y += 8;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...gray);
-    doc.text("PIÈCES DU DOSSIER", marginX, y);
-
-    const ensureSpace = (needed: number) => {
-      if (y + needed > 280) {
-        doc.addPage();
-        y = 20;
-      }
-    };
-
-    y += 7;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-    const pieceLineHeight = 4.6;
-    const pieceIndent = 6.5;
-    for (const p of d.pieces) {
-      // Une pièce dont le libellé tient sur plusieurs lignes doit pousser la suivante
-      // d'autant de lignes, sinon le texte suivant se superpose (bug observé en prod).
-      const lines = doc.splitTextToSize(p.label, contentW - pieceIndent) as string[];
-      ensureSpace(lines.length * pieceLineHeight + 2);
-      doc.setDrawColor(...gray);
-      doc.setLineWidth(0.35);
-      doc.rect(marginX, y - 3, 3, 3);
-      if (p.fourni) {
-        doc.setFillColor(...marine);
-        doc.rect(marginX, y - 3, 3, 3, "F");
-        doc.setDrawColor(255, 255, 255);
-        doc.setLineWidth(0.5);
-        doc.line(marginX + 0.5, y - 1.6, marginX + 1.3, y - 0.7);
-        doc.line(marginX + 1.3, y - 0.7, marginX + 2.6, y - 2.7);
-      }
-      doc.setTextColor(
-        p.fourni ? forest[0] : gray[0],
-        p.fourni ? forest[1] : gray[1],
-        p.fourni ? forest[2] : gray[2],
-      );
-      doc.text(lines, marginX + pieceIndent, y);
-      y += lines.length * pieceLineHeight + 2;
-    }
-    if (d.pieces.length === 0) {
+      doc.setFont("courier", "normal");
+      doc.setFontSize(9);
       doc.setTextColor(...gray);
-      doc.text("Aucune pièce listée pour ce dossier.", marginX, y);
-      y += 6;
-    }
+      doc.text("REÇU DE PAIEMENT", pageW - marginX, y - 3, { align: "right" });
+      doc.setTextColor(...forest);
+      doc.text(d.id, pageW - marginX, y + 2, { align: "right" });
+      doc.setTextColor(...gray);
+      doc.text(`Émis le ${emisLe}`, pageW - marginX, y + 7, { align: "right" });
 
-    if (mode === "apres") {
-      y += 4;
-      ensureSpace(16);
+      y += 16;
+      doc.setDrawColor(...marine);
+      doc.setLineWidth(0.6);
+      doc.line(marginX, y, pageW - marginX, y);
+
+      y += 10;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...gray);
+      doc.text("CLIENT", marginX, y);
+      doc.text("DOSSIER", marginX + contentW / 2, y);
+
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10.5);
+      doc.setTextColor(...forest);
+      doc.text(d.client.nom, marginX, y);
+      doc.text(d.titre, marginX + contentW / 2, y, { maxWidth: contentW / 2 - 4 });
+
+      y += 5.5;
+      doc.setFontSize(9);
+      doc.setTextColor(...gray);
+      doc.text(d.client.telephone, marginX, y);
+
+      y += 5;
+      doc.text(d.client.ville, marginX, y);
+
+      y += 12;
       doc.setDrawColor(220, 214, 200);
       doc.setLineWidth(0.3);
       doc.line(marginX, y, pageW - marginX, y);
 
+      // Checklist des pièces — même contenu que l'onglet Documents du dossier, pour que le
+      // client reparte avec la liste exacte de ce qui a déjà été fourni ou reste à apporter.
       y += 8;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
       doc.setTextColor(...gray);
-      doc.text("LIBELLÉ", marginX, y);
-      doc.text("DATE", marginX + contentW * 0.55, y);
-      doc.text("MONTANT", pageW - marginX, y, { align: "right" });
+      doc.text("PIÈCES DU DOSSIER", marginX, y);
 
-      y += 3;
-      doc.setDrawColor(...forest);
-      doc.line(marginX, y, pageW - marginX, y);
-
-      y += 6;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(...forest);
-      if (paye.length === 0) {
-        doc.setTextColor(...gray);
-        doc.text("Aucun paiement encaissé à ce jour.", marginX, y);
-        y += 6;
-      } else {
-        for (const p of paye) {
-          ensureSpace(7);
-          doc.setTextColor(...forest);
-          doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.5 });
-          doc.setTextColor(...gray);
-          doc.text(p.date ?? "—", marginX + contentW * 0.55, y);
-          doc.setTextColor(...forest);
-          doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
-          y += 7;
-          doc.setDrawColor(238, 232, 220);
-          doc.setLineWidth(0.2);
-          doc.line(marginX, y - 3, pageW - marginX, y - 3);
+      const ensureSpace = (needed: number) => {
+        if (y + needed > 280) {
+          doc.addPage();
+          y = 20;
         }
+      };
+
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      const pieceLineHeight = 4.6;
+      const pieceIndent = 6.5;
+      for (const p of d.pieces) {
+        // Une pièce dont le libellé tient sur plusieurs lignes doit pousser la suivante
+        // d'autant de lignes, sinon le texte suivant se superpose (bug observé en prod).
+        const lines = doc.splitTextToSize(p.label, contentW - pieceIndent) as string[];
+        ensureSpace(lines.length * pieceLineHeight + 2);
+        doc.setDrawColor(...gray);
+        doc.setLineWidth(0.35);
+        doc.rect(marginX, y - 3, 3, 3);
+        if (p.fourni) {
+          doc.setFillColor(...marine);
+          doc.rect(marginX, y - 3, 3, 3, "F");
+          doc.setDrawColor(255, 255, 255);
+          doc.setLineWidth(0.5);
+          doc.line(marginX + 0.5, y - 1.6, marginX + 1.3, y - 0.7);
+          doc.line(marginX + 1.3, y - 0.7, marginX + 2.6, y - 2.7);
+        }
+        doc.setTextColor(
+          p.fourni ? forest[0] : gray[0],
+          p.fourni ? forest[1] : gray[1],
+          p.fourni ? forest[2] : gray[2],
+        );
+        doc.text(lines, marginX + pieceIndent, y);
+        y += lines.length * pieceLineHeight + 2;
+      }
+      if (d.pieces.length === 0) {
+        doc.setTextColor(...gray);
+        doc.text("Aucune pièce listée pour ce dossier.", marginX, y);
+        y += 6;
       }
 
-      y += 3;
-      doc.setDrawColor(...marine);
-      doc.setLineWidth(0.5);
-      doc.line(marginX, y, pageW - marginX, y);
-      y += 8;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(...forest);
-      doc.text("Total encaissé", marginX, y);
-      doc.setFontSize(13);
-      doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
-    }
+      if (mode === "apres") {
+        y += 4;
+        ensureSpace(16);
+        doc.setDrawColor(220, 214, 200);
+        doc.setLineWidth(0.3);
+        doc.line(marginX, y, pageW - marginX, y);
 
-    // Signature block — client acknowledgment and the Eiden Visa agent's countersignature.
-    // Bornée à la page courante : jamais forcée à une position fixe qui déborderait sur une
-    // nouvelle page si la checklist des pièces a déjà poussé le contenu plus bas.
-    ensureSpace(40);
-    const sigY = y + 20;
-    const colW = contentW / 2 - 6;
-    doc.setDrawColor(...gray);
-    doc.setLineWidth(0.3);
-    doc.line(marginX, sigY, marginX + colW, sigY);
-    doc.line(marginX + contentW - colW, sigY, pageW - marginX, sigY);
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...gray);
+        doc.text("LIBELLÉ", marginX, y);
+        doc.text("DATE", marginX + contentW * 0.55, y);
+        doc.text("MONTANT", pageW - marginX, y, { align: "right" });
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...gray);
-    doc.text("Signature du client", marginX, sigY + 5);
-    doc.text("Bon pour accord sur les montants ci-dessus.", marginX, sigY + 9.5);
+        y += 3;
+        doc.setDrawColor(...forest);
+        doc.line(marginX, y, pageW - marginX, y);
 
-    doc.text("Pour Eiden Visa", marginX + contentW - colW, sigY + 5);
-    doc.text(d.agent, marginX + contentW - colW, sigY + 9.5);
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(...forest);
+        if (paye.length === 0) {
+          doc.setTextColor(...gray);
+          doc.text("Aucun paiement encaissé à ce jour.", marginX, y);
+          y += 6;
+        } else {
+          for (const p of paye) {
+            ensureSpace(7);
+            doc.setTextColor(...forest);
+            doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.5 });
+            doc.setTextColor(...gray);
+            doc.text(p.date ?? "—", marginX + contentW * 0.55, y);
+            doc.setTextColor(...forest);
+            doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
+            y += 7;
+            doc.setDrawColor(238, 232, 220);
+            doc.setLineWidth(0.2);
+            doc.line(marginX, y - 3, pageW - marginX, y - 3);
+          }
+        }
 
-    y = sigY + 22;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...gray);
-    const note =
-      "Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de l'accompagnement de ce dossier. " +
-      "Les droits de visa réglés directement au centre de dépôt (TLScontact ou BLS) n'apparaissent " +
-      "ici que s'ils ont transité par Eiden Visa.";
-    doc.text(note, marginX, y, { maxWidth: contentW, lineHeightFactor: 1.4 });
+        y += 3;
+        doc.setDrawColor(...marine);
+        doc.setLineWidth(0.5);
+        doc.line(marginX, y, pageW - marginX, y);
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...forest);
+        doc.text("Total encaissé", marginX, y);
+        doc.setFontSize(13);
+        doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
+      }
 
-    doc.save(`Recu-${d.id}.pdf`);
-  });
+      // Signature du client seule : bon pour accord sur les montants.
+      // Bornée à la page courante : jamais forcée à une position fixe qui déborderait sur une
+      // nouvelle page si la checklist des pièces a déjà poussé le contenu plus bas.
+      ensureSpace(40);
+      const sigY = y + 20;
+      const colW = contentW / 2 - 6;
+      doc.setDrawColor(...gray);
+      doc.setLineWidth(0.3);
+      doc.line(marginX, sigY, marginX + colW, sigY);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...gray);
+      doc.text("Signature du client", marginX, sigY + 5);
+      doc.text("Bon pour accord sur les montants ci-dessus.", marginX, sigY + 9.5);
+
+      y = sigY + 22;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...gray);
+      const note =
+        "Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de l'accompagnement de ce dossier. " +
+        "Les droits de visa réglés directement au centre de dépôt (TLScontact ou BLS) n'apparaissent " +
+        "ici que s'ils ont transité par Eiden Visa.";
+      doc.text(note, marginX, y, { maxWidth: contentW, lineHeightFactor: 1.4 });
+
+      doc.save(`Recu-${d.id}.pdf`);
+    },
+  );
 }
 
 function Recu() {
@@ -277,8 +284,7 @@ function Recu() {
       <div className="mx-auto max-w-2xl border border-border bg-card p-10">
         <div className="flex items-start justify-between border-b border-border pb-6">
           <div>
-            <div className="page-title text-2xl">Eiden Visa</div>
-            <p className="mt-1 text-xs text-muted-foreground">EIDEN Group · Agadir, Maroc</p>
+            <img src={logoEidenVisa} alt="Eiden Visa" className="h-14 w-auto" />
           </div>
           <div className="text-right">
             <div className="ref text-muted-foreground">Reçu de paiement</div>
@@ -296,9 +302,6 @@ function Recu() {
           <div>
             <div className="ref text-muted-foreground">Dossier</div>
             <div className="mt-1 font-medium text-foreground">{d.titre}</div>
-            <div className="mt-0.5 text-muted-foreground">
-              {d.centre.includes("BLS") ? "Espagne · BLS" : "France · TLScontact"}
-            </div>
           </div>
         </div>
 
@@ -368,11 +371,6 @@ function Recu() {
             <div className="h-10 border-b border-border" />
             <div className="mt-1.5 font-medium text-foreground">Signature du client</div>
             <div className="mt-0.5">Bon pour accord sur les montants ci-dessus.</div>
-          </div>
-          <div>
-            <div className="h-10 border-b border-border" />
-            <div className="mt-1.5 font-medium text-foreground">Pour Eiden Visa</div>
-            <div className="mt-0.5">{d.agent}</div>
           </div>
         </div>
 

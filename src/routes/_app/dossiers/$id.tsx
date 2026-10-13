@@ -14,6 +14,7 @@ import {
   erreurServices,
   CENTRES,
   MODALITE_LABEL,
+  modaliteDetail,
   type Centre,
   type Modalite,
   type Echeance,
@@ -1121,9 +1122,7 @@ function DossierDetail() {
                         </SelectContent>
                       </Select>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {d.modalitePaiement === "acompte"
-                          ? "50 % à l'ouverture du dossier, solde des 50 % à la remise du dossier."
-                          : "Règlement du pack en une fois, à la remise du dossier."}
+                        {modaliteDetail(d.modalitePaiement)}
                       </p>
                     </div>
 
