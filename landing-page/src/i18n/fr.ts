@@ -168,6 +168,16 @@ export const fr = {
       },
     ],
   },
+  conversion: {
+    surtitre: "Votre projet de voyage commence ici",
+    titre: "Prêt à préparer votre demande de visa ?",
+    texte:
+      "Chaque projet de voyage est différent. Choisissez la solution qui vous convient et faites le premier pas avec EIDEN Visa.",
+    commencer: "Commencer mon dossier",
+    whatsapp: "WhatsApp",
+    fermer: "Fermer",
+    note: "Sans engagement : l'équipe EIDEN vous répond.",
+  },
   faq: {
     surtitre: "Questions fréquentes",
     titre: "FAQ",

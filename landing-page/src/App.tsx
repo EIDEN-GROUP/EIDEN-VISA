@@ -5,6 +5,7 @@ import { DemandeRapide } from "./components/DemandeRapide";
 import { Loader } from "./components/Loader";
 import { PreferencesCookies } from "./components/PreferencesCookies";
 import { SmoothScroll } from "./components/SmoothScroll";
+import { SuiviSections } from "./components/SuiviSections";
 import { useLangue } from "./i18n";
 import { prefersReducedMotion, ScrollTrigger } from "./lib/gsap";
 import { lancerIntro } from "./lib/intro";
@@ -19,7 +20,6 @@ import { Methode } from "./sections/Methode";
 import { Packs } from "./sections/Packs";
 import { Pourquoi } from "./sections/Pourquoi";
 import { Temoignages } from "./sections/Temoignages";
-
 export function App() {
   const { langue } = useLangue();
   // attente : loader seul · vol : landing montée sous le rideau, l'avion passe · fini.
@@ -62,6 +62,7 @@ export function App() {
             <Header />
             {/* Remonté à chaque changement de langue : SplitText redécoupe les nouveaux textes. */}
             <main key={langue} className="filigrane-rond relative overflow-x-clip">
+              <SuiviSections />
               <Hero />
               <Destination />
               <Methode />

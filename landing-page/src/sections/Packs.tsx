@@ -5,6 +5,7 @@ import { useDemande } from "../components/DemandeRapide";
 import { Reveal, SplitReveal } from "../components/motion";
 import { PACKS } from "../content";
 import { useLangue } from "../i18n";
+import { suivreContenu } from "../lib/suivi";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
@@ -109,7 +110,10 @@ export function Packs() {
                         <div className="pt-5">
                           <AnimatedButton
                             popup
-                            onClick={() => ouvrirDemande({ pack: id })}
+                            onClick={() => {
+                              suivreContenu("bouton", `choisir-pack-${id}`, "packs");
+                              ouvrirDemande({ pack: id });
+                            }}
                             variant={vedette ? "primary" : "sand"}
                             size="md"
                             full

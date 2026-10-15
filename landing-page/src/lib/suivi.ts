@@ -17,19 +17,25 @@
 // `select_content` sont standard et réutilisés avec nos paramètres) :
 //   page_view                              { page_path, langue }   (chargement + changement de langue)
 //   scroll                                 { profondeur: 25/50/75/90_pourcent }   (une fois chacun)
+//   section_vue                            { section }             (section réellement vue, une fois par langue)
 //   click_phone / click_whatsapp / click_email   { section }       (clic tel / WhatsApp / e-mail)
 //   contact_form_start                     {}                      (première saisie dans la demande)
 //   contact_form_error                     { champ }               (validation refusée)
 //   contact_form_submit                    { destination, pack }   (demande envoyée)
 //   appointment_request                    {}                      (bouton WhatsApp de l'écran de succès)
+//   popup_commencer                        {}                      (clic « Commencer » de la popup, relayé Clarity)
 //   download                               { file_name, link_url } (prêt pour les futurs fichiers)
 //   select_content                         { content_type: "cta"|"lien"|"bouton"|"faq"|"langue", item_id, section }
 //   consentement                           { choix: "accepte"|"partiel"|"refuse", detail }
+// Tous les événements portent aussi `langue` (fr/ar, depuis `<html lang>`) et
+// `consentement` : le décompte FR vs AR se fait en GA4 en ventilant n'importe
+// quel événement par la dimension personnalisée `langue` (Explore > Users ou
+// Events > breakdown `langue`, sans code supplémentaire).
 // Note GTM : ne PAS créer de balises Event pour `page_view` / `scroll` (déjà couverts
 // par le Google tag + Enhanced measurement   doublons garantis). Créer des balises
 // « GA4 Event » déclenchées sur l'événement personnalisé de même nom pour les autres,
 // puis déclarer leurs paramètres en dimensions personnalisées (Admin > Custom
-// definitions) : `destination`, `pack`, `profondeur`, `section`, `champ`.
+// definitions) : `langue`, `destination`, `pack`, `profondeur`, `section`, `champ`.
 // Les balises de vérification moteurs (Search Console, Bing) sont injectées depuis
 // l'environnement (`installerBalisesVerification`) : ce ne sont pas des traceurs.
 
@@ -208,7 +214,8 @@ async function chargerClarity(id: string): Promise<void> {
 /** Relaye les conversions vers Clarity en « smart events » (visibles dans les filtres). */
 function relayerClarity(nom: string): void {
   if (!instanceClarity) return;
-  if (nom !== "contact_form_submit" && nom !== "appointment_request") return;
+  if (nom !== "contact_form_submit" && nom !== "appointment_request" && nom !== "popup_commencer")
+    return;
   try {
     instanceClarity.event(nom);
   } catch {
@@ -385,6 +392,16 @@ export function suivreEnvoiDemande(destination: string, pack: string): void {
 /** Écran de succès : le visiteur poursuit sur WhatsApp pour caler son rendez-vous. */
 export function suivreDemandeRendezVous(): void {
   suivreEvenement("appointment_request");
+}
+
+/** Popup de conversion : clic « Commencer » (événement clé GA4 + smart event Clarity). */
+export function suivrePopupCommencer(): void {
+  suivreEvenement("popup_commencer");
+}
+
+/** Section réellement vue (une fois par affichage, relancé au changement de langue). */
+export function suivreSectionVue(section: string): void {
+  suivreEvenement("section_vue", { section });
 }
 
 /** Clic téléphone / WhatsApp / e-mail (noms d'événements imposés par le pilotage). */

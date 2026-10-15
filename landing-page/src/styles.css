@@ -169,6 +169,15 @@
     transform-origin: right center;
   }
 
+  /* Popup de conversion : défilement interne sans barre visible (le contenu
+     reste accessible au doigt, à la molette et au clavier). */
+  .sans-barre {
+    scrollbar-width: none;
+  }
+  .sans-barre::-webkit-scrollbar {
+    display: none;
+  }
+
   /*
    * Hero : photo plein cadre sous un voile crème, comme la maquette. Mobile : le bas du
    * bandeau photo se fond dans le texte (partie pleine = chevauchement -mt-14 du texte).

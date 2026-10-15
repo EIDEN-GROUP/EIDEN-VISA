@@ -19,7 +19,16 @@ function langueEnregistree(): Langue {
     const valeur = localStorage.getItem(CLE_STOCKAGE);
     if (valeur === "fr" || valeur === "ar") return valeur;
   } catch {
-    // Stockage indisponible (navigation privée…) : langue par défaut.
+    // Stockage indisponible (navigation privée…) : on ignore le choix mémorisé.
+  }
+  // Première visite : l'appareil arabophone bascule en arabe, sinon français
+  // par défaut. Un choix explicite (stocké ci-dessus) gagne toujours.
+  try {
+    const preferee =
+      typeof navigator !== "undefined" ? (navigator.languages?.[0] ?? navigator.language) : "";
+    if (preferee?.toLowerCase().startsWith("ar")) return "ar";
+  } catch {
+    // Langue indisponible : français par défaut.
   }
   return "fr";
 }

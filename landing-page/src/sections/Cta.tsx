@@ -18,6 +18,7 @@ export function Cta() {
   return (
     <section
       ref={ref}
+      id="cta"
       aria-labelledby="cta-titre"
       className="relative isolate flex flex-col overflow-hidden bg-[#0d0c0e] text-white lg:p-10"
     >

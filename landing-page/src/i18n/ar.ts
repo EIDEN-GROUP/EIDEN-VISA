@@ -169,6 +169,15 @@ export const ar: Dictionnaire = {
       },
     ],
   },
+  conversion: {
+    surtitre: "مشروع سفرك يبدأ من هنا",
+    titre: "مستعد لتحضير طلب التأشيرة؟",
+    texte: "كل مشروع سفر مختلف. اختر الحل الذي يناسبك وابدأ الخطوة الأولى مع EIDEN Visa.",
+    commencer: "ابدأ ملفي",
+    whatsapp: "واتساب",
+    fermer: "إغلاق",
+    note: "بدون التزام: يجيبك فريق EIDEN.",
+  },
   faq: {
     surtitre: "أسئلة شائعة",
     titre: "الأسئلة الشائعة",
