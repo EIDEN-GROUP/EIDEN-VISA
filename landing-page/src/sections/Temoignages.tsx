@@ -1,11 +1,20 @@
-import { Avatar } from "@heroui/react";
 import { LayoutGroup, motion } from "framer-motion";
 import { Star, User } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { IconButton } from "../components/buttons";
 import { Reveal, SplitReveal } from "../components/motion";
 import { useLangue } from "../i18n";
 import { ar } from "../i18n/ar";
+
+/**
+ * Avatar HeroUI en lot séparé : la section est sous la ligne de flottaison, son
+ * coût (react-aria…) ne doit pas peser sur le premier affichage. Un seul lot
+ * (même module dynamique) pour le conteneur et son repli.
+ */
+const Avatar = lazy(() => import("@heroui/react").then((m) => ({ default: m.Avatar })));
+const AvatarRepli = lazy(() =>
+  import("@heroui/react").then((m) => ({ default: m.AvatarFallback })),
+);
 
 export function Temoignages() {
   const { t, langue } = useLangue();
@@ -79,11 +88,20 @@ export function Temoignages() {
                   >
                     <Reveal delay={i * 0.12} y={48} className="h-full">
                       <article className="flex h-full gap-4 rounded-[16px] bg-card p-5 shadow-[var(--shadow-soft)] xl:p-6">
-                        <Avatar className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sand text-muted">
-                          <Avatar.Fallback className="flex size-full items-center justify-center">
-                            <User className="size-4" aria-hidden="true" />
-                          </Avatar.Fallback>
-                        </Avatar>
+                        <Suspense
+                          fallback={
+                            <span
+                              aria-hidden="true"
+                              className="grid size-9 shrink-0 place-items-center rounded-full bg-sand"
+                            />
+                          }
+                        >
+                          <Avatar className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sand text-muted">
+                            <AvatarRepli className="flex size-full items-center justify-center">
+                              <User className="size-4" aria-hidden="true" />
+                            </AvatarRepli>
+                          </Avatar>
+                        </Suspense>
                         <div>
                           <div className="flex gap-1 text-brand" aria-label={t.temoignages.note}>
                             {Array.from({ length: 5 }, (_, k) => (

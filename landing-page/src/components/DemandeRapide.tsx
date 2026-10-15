@@ -147,6 +147,60 @@ function suggestionsEmail(valeur: string): string[] {
 /** Brouillon local : fermer la popup puis la rouvrir retrouve tout ce qui était saisi. */
 const CLE_BROUILLON = "eiden-demande-v1";
 
+/**
+ * Anti-robots (robots qui remplissent le formulaire) : trois filets, sans
+ * friction humaine et sans dépendance. Le piège (`piege`) est un champ invisible
+ * que seuls les robots remplissent ; le délai minimal écarte les envois
+ * instantanés (inaudible pour un humain : 3 étapes) ; le quota borne les rafales.
+ * Un robot détecté termine sur l'écran de succès sans rien envoyer.
+ */
+const CLE_ENVOIS = "eiden-envois";
+const ENVOIS_MAX = 3;
+const ENVOIS_FENETRE_MS = 10 * 60_000;
+const DELAI_MIN_MS = 4_000;
+
+function quotaDepasse(): boolean {
+  try {
+    const brut = window.sessionStorage.getItem(CLE_ENVOIS);
+    if (!brut) return false;
+    const passe = JSON.parse(brut) as { n?: unknown; premier?: unknown };
+    if (typeof passe.n !== "number" || typeof passe.premier !== "number") return false;
+    if (Date.now() - passe.premier > ENVOIS_FENETRE_MS) return false;
+    return passe.n >= ENVOIS_MAX;
+  } catch {
+    return false;
+  }
+}
+
+function compterEnvoi(): void {
+  try {
+    const maintenant = Date.now();
+    const brut = window.sessionStorage.getItem(CLE_ENVOIS);
+    const passe = brut ? (JSON.parse(brut) as { n?: unknown; premier?: unknown }) : null;
+    const base: { n: number; premier: number } =
+      passe && typeof passe.n === "number" && typeof passe.premier === "number"
+        ? { n: passe.n, premier: passe.premier }
+        : { n: 0, premier: maintenant };
+    const fenetre =
+      maintenant - base.premier <= ENVOIS_FENETRE_MS ? base : { n: 0, premier: maintenant };
+    window.sessionStorage.setItem(
+      CLE_ENVOIS,
+      JSON.stringify({ n: fenetre.n + 1, premier: fenetre.premier }),
+    );
+  } catch {
+    /* stockage indisponible : l'envoi marche sans quota */
+  }
+}
+
+/** `piege` = valeur du champ invisible ; `ouvertLe` = horodatage d'ouverture. */
+function estRobot(piegeValeur: string, ouvertLe: number, desLeDebut: boolean): boolean {
+  if (piegeValeur.trim() !== "") return true;
+  // Reprise d'un brouillon à une étape avancée exclue : un humain peut alors
+  // légitimement envoyer vite, le délai minimal ne s'applique qu'au parcours complet.
+  if (desLeDebut && Date.now() - ouvertLe < DELAI_MIN_MS) return true;
+  return quotaDepasse();
+}
+
 function estValeur<T extends readonly string[]>(liste: T, v: string): v is T[number] {
   return (liste as readonly string[]).includes(v);
 }
@@ -746,6 +800,11 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
   const [erreurs, setErreurs] = useState<Erreurs>({});
   // Première saisie suivie une seule fois (la popup se démonte à la fermeture).
   const saisieSuivie = useRef(false);
+  // Anti-robots : piège hors état (jamais dans le brouillon ni l'envoi),
+  // horodatage d'ouverture et quota d'envois (voir `robotDetecte`).
+  const piege = useRef<HTMLInputElement>(null);
+  const [ouvertLe] = useState(() => Date.now());
+  const desLeDebut = (brouillonInitial?.etape ?? 0) === 0;
 
   const mobile = useMemo(() => window.matchMedia("(max-width: 639px)").matches, []);
   const long = estLong(d.typeVisa);
@@ -883,31 +942,39 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       return;
     }
     if (etape === ETAPES.length - 1) {
-      // Sauvegarde Supabase en arrière-plan (silencieuse en cas d'échec),
-      // puis ouverture WhatsApp comme avant   les deux portent le même contenu.
-      await saveContact({
-        nom: d.nom.trim(),
-        prenom: d.prenom.trim(),
-        email: d.email.trim(),
-        telephone: d.telephone.trim(),
-        typeVisa: d.typeVisa,
-        depart: d.depart,
-        retour: long ? "" : d.retour,
-        destination: d.destination,
-        pack: d.pack,
-        // Nom français, quelle que soit la langue de la page : colonne lisible côté BMS.
-        ville: nomVille(d.ville, fr.demande),
-        demandeurs: d.demandeurs,
-        langue,
-        message: message(d, t),
-        pageUrl: window.location.href,
-        userAgent: window.navigator.userAgent,
-      }).catch(() => false);
-      // Envoi réussi : le brouillon est oublié, la prochaine ouverture repart de zéro.
-      effacerBrouillon();
-      marquerDemandeEnvoyee();
-      suivreEnvoiDemande(d.destination, d.pack);
-      window.open(lien, "_blank", "noopener,noreferrer");
+      // Robot détecté : écran de succès sans rien envoyer (ni WhatsApp ni
+      // Supabase), pour ne pas signaler la détection. Un humain ne déclenche
+      // jamais ces cas (piège invisible, 3 étapes en 4 s, 3 envois / 10 min).
+      if (estRobot(piege.current?.value ?? "", ouvertLe, desLeDebut)) {
+        effacerBrouillon();
+      } else {
+        // Sauvegarde Supabase en arrière-plan (silencieuse en cas d'échec),
+        // puis ouverture WhatsApp comme avant   les deux portent le même contenu.
+        await saveContact({
+          nom: d.nom.trim(),
+          prenom: d.prenom.trim(),
+          email: d.email.trim(),
+          telephone: d.telephone.trim(),
+          typeVisa: d.typeVisa,
+          depart: d.depart,
+          retour: long ? "" : d.retour,
+          destination: d.destination,
+          pack: d.pack,
+          // Nom français, quelle que soit la langue de la page : colonne lisible côté BMS.
+          ville: nomVille(d.ville, fr.demande),
+          demandeurs: d.demandeurs,
+          langue,
+          message: message(d, t),
+          pageUrl: window.location.href,
+          userAgent: window.navigator.userAgent,
+        }).catch(() => false);
+        // Envoi réussi : le brouillon est oublié, la prochaine ouverture repart de zéro.
+        effacerBrouillon();
+        marquerDemandeEnvoyee();
+        suivreEnvoiDemande(d.destination, d.pack);
+        window.open(lien, "_blank", "noopener,noreferrer");
+        compterEnvoi();
+      }
     }
     aller(etape + 1);
   };
@@ -951,6 +1018,18 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
         <span
           aria-hidden="true"
           className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-ink/15 sm:hidden"
+        />
+        {/* Champ piège anti-robots : invisible aux humains (hors tabulation,
+            masqué aux lecteurs d'écran, jamais dans le brouillon ni l'envoi),
+            rempli par les robots qui complètent tous les champs. */}
+        <input
+          ref={piege}
+          type="text"
+          name="site-web"
+          autoComplete="off"
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-none absolute h-px w-px opacity-0"
         />
         <header className="shrink-0 px-5 pt-4 sm:px-8 sm:pt-7">
           <div className="flex items-center justify-between gap-4">

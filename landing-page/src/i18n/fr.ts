@@ -11,6 +11,7 @@ export const fr = {
     slogan: "Le monde vous attend",
     chargement: "Chargement de la page",
   },
+  allerContenu: "Aller au contenu",
   nav: {
     accueil: "Accueil",
     visa: "Méthodes",
@@ -205,6 +206,11 @@ export const fr = {
         question: "Est-ce que vous garantissez l'obtention du visa ?",
         reponse:
           "Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches associées. La décision finale appartient exclusivement aux autorités compétentes.",
+      },
+      {
+        question: "Le rendez-vous se prend-il chez TLScontact ou BLS ?",
+        reponse:
+          "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre — TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.",
       },
     ],
   },

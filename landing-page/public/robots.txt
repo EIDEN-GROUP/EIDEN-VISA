@@ -29,5 +29,11 @@ User-agent: Amazonbot
 Allow: /
 User-agent: Meta-ExternalAgent
 Allow: /
+User-agent: Applebot
+Allow: /
+User-agent: Cohere-ai
+Allow: /
+User-agent: Diffbot
+Allow: /
 
 Sitemap: https://visa.eiden-group.com/sitemap.xml

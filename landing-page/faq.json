@@ -30,5 +30,13 @@
       "@type": "Answer",
       "text": "Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches associées. La décision finale appartient exclusivement aux autorités compétentes."
     }
+  },
+  {
+    "@type": "Question",
+    "name": "Le rendez-vous se prend-il chez TLScontact ou BLS ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre — TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne."
+    }
   }
 ]

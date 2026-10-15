@@ -12,11 +12,12 @@ EIDEN Visa est le service d'accompagnement voyage d'EIDEN, SARL à associé uniq
 
 ## Services
 
-- Étude et préparation du dossier de demande de visa Schengen (tourisme, études, travail, regroupement familial, soins médicaux, autres motifs).
+- Étude et préparation du dossier de demande de visa Schengen : tourisme et visite privée, visite familiale, déplacements professionnels et autres motifs de court séjour, installation familiale et visas de retour pour le long séjour. Études : orientation vers Campus France (pas de dossier construit). Santé : non couvert au lancement.
 - Pré-réservations d'hôtel, billets d'avion et assurance voyage.
-- Prise de rendez-vous auprès des consulats et prestataires habilités (frais de rendez-vous inclus dans les packs).
-- Formules d'accompagnement (« packs », contenu détaillé sur le site, sans prix affichés).
-- Demande rapide en 3 étapes depuis le site : identité et contact, voyage (type de visa, dates, destination), dossier (formule, ville de résidence, nombre de demandeurs). Envoi = message WhatsApp pré-rempli + sauvegarde interne pour être recontacté.
+- Accompagnement jusqu'à la prise de rendez-vous au centre : TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait par le client, en personne.
+- Formules d'accompagnement (« packs », sans prix affichés) : Standard (dossier simple), Essentiel (accompagnement complet jusqu'au rendez-vous), Global (prise en charge totale).
+- Méthode en 6 étapes : analyse, documents, préparation, vérification, formulaire et démarches, rendez-vous.
+- Demande rapide en 3 étapes depuis le site (français ou arabe, détection automatique) : identité et contact, voyage (type de visa, dates, destination), dossier (formule, ville de résidence, nombre de demandeurs). Envoi = message WhatsApp pré-rempli + sauvegarde interne pour être recontacté.
 
 ## À savoir absolument
 
@@ -41,6 +42,10 @@ Oui, les frais de prise de rendez-vous sont inclus dans nos packs.
 ### Est-ce que vous garantissez l'obtention du visa ?
 
 Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches associées. La décision finale appartient exclusivement aux autorités compétentes.
+
+### Le rendez-vous se prend-il chez TLScontact ou BLS ?
+
+Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre — TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.
 
 ## Données personnelles et cookies (résumé, loi marocaine 09-08)
 

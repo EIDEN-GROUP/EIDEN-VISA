@@ -15,7 +15,7 @@
 // snake_case, ≤ 40 caractères, aucun nom réservé   `download` est libre,
 // `file_download` étant le nom réservé ; `page_view`, `scroll` et
 // `select_content` sont standard et réutilisés avec nos paramètres) :
-//   page_view                              { page_path, langue }   (chargement + changement de langue)
+//   page_view                              { page_path, langue, detection? } (chargement + changement de langue)
 //   scroll                                 { profondeur: 25/50/75/90_pourcent }   (une fois chacun)
 //   section_vue                            { section }             (section réellement vue, une fois par langue)
 //   click_phone / click_whatsapp / click_email   { section }       (clic tel / WhatsApp / e-mail)
@@ -24,6 +24,7 @@
 //   contact_form_submit                    { destination, pack }   (demande envoyée)
 //   appointment_request                    {}                      (bouton WhatsApp de l'écran de succès)
 //   popup_commencer                        {}                      (clic « Commencer » de la popup, relayé Clarity)
+//   erreur_js                              { message, source }     (diagnostic temps réel/DebugView, sans dimension)
 //   download                               { file_name, link_url } (prêt pour les futurs fichiers)
 //   select_content                         { content_type: "cta"|"lien"|"bouton"|"faq"|"langue", item_id, section }
 //   consentement                           { choix: "accepte"|"partiel"|"refuse", detail }
@@ -35,7 +36,7 @@
 // par le Google tag + Enhanced measurement   doublons garantis). Créer des balises
 // « GA4 Event » déclenchées sur l'événement personnalisé de même nom pour les autres,
 // puis déclarer leurs paramètres en dimensions personnalisées (Admin > Custom
-// definitions) : `langue`, `destination`, `pack`, `profondeur`, `section`, `champ`.
+// definitions) : `langue`, `detection`, `destination`, `pack`, `profondeur`, `section`, `champ`.
 // Les balises de vérification moteurs (Search Console, Bing) sont injectées depuis
 // l'environnement (`installerBalisesVerification`) : ce ne sont pas des traceurs.
 
@@ -343,8 +344,9 @@ export function initialiserSuivi(): void {
   const prefs = lirePreferences();
   if (!prefs) return;
   chargerTraceurs(prefs);
-  suivrePageVue();
+  suivrePageVue(detectionLangue());
   installerEcouteClics();
+  installerEcouteErreurs();
 }
 
 /** Pousse un événement vers la file GTM/GA4 (inerte si aucun conteneur). */
@@ -358,8 +360,33 @@ export function suivreEvenement(nom: string, parametres: Record<string, unknown>
   relayerClarity(nom);
 }
 
-export function suivrePageVue(): void {
-  suivreEvenement("page_view", { page_path: window.location.pathname });
+export function suivrePageVue(detection?: "auto" | "memorisee" | "defaut"): void {
+  suivreEvenement("page_view", {
+    page_path: window.location.pathname,
+    ...(detection ? { detection } : {}),
+  });
+}
+
+/**
+ * Origine de la langue au chargement : choix mémorisé, détection auto (appareil
+ * arabophone) ou français par défaut. Clé dupliquée depuis `i18n/index.tsx`
+ * (un import créerait un cycle : i18n importe déjà ce module).
+ */
+function detectionLangue(): "auto" | "memorisee" | "defaut" {
+  try {
+    const memorisee = window.localStorage.getItem("eiden-langue");
+    if (memorisee === "fr" || memorisee === "ar") return "memorisee";
+  } catch {
+    // Stockage indisponible : on retombe sur la détection.
+  }
+  try {
+    const preferee =
+      typeof navigator !== "undefined" ? (navigator.languages?.[0] ?? navigator.language) : "";
+    if (preferee?.toLowerCase().startsWith("ar")) return "auto";
+  } catch {
+    // Langue indisponible : français par défaut.
+  }
+  return "defaut";
 }
 
 /** CTA, lien, bouton, FAQ, changement de langue. */
@@ -412,6 +439,29 @@ export function suivreClicContact(moyen: "whatsapp" | "telephone" | "email"): vo
 /** Téléchargement de fichier (aucun sur le site à ce jour : prêt à l'emploi). */
 export function suivreTelechargement(nomFichier: string, url: string): void {
   suivreEvenement("download", { file_name: nomFichier, link_url: url });
+}
+
+/**
+ * Erreurs JavaScript non rattrapées (message + source tronqués, sans pile ni
+ * données saisies). Diagnostic uniquement : à lire dans GA4 temps réel ou
+ * DebugView, sans dimension personnalisée (cardinalité trop élevée pour Explore).
+ */
+let ecouteErreursInstallee = false;
+export function installerEcouteErreurs(): void {
+  if (ecouteErreursInstallee) return;
+  ecouteErreursInstallee = true;
+  const tronquer = (v: unknown) =>
+    String(v ?? "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160) || "inconnue";
+  window.addEventListener("error", (e) => {
+    suivreEvenement("erreur_js", { message: tronquer(e.message), source: tronquer(e.filename) });
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    const raison = e.reason instanceof Error ? e.reason.message : e.reason;
+    suivreEvenement("erreur_js", { message: tronquer(raison), source: "promesse" });
+  });
 }
 
 function libelleElement(el: HTMLElement): string {

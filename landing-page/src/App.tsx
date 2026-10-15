@@ -21,7 +21,7 @@ import { Packs } from "./sections/Packs";
 import { Pourquoi } from "./sections/Pourquoi";
 import { Temoignages } from "./sections/Temoignages";
 export function App() {
-  const { langue } = useLangue();
+  const { langue, t } = useLangue();
   // attente : loader seul · vol : landing montée sous le rideau, l'avion passe · fini.
   const [intro, setIntro] = useState<"attente" | "vol" | "fini">(() => {
     if (!prefersReducedMotion()) return "attente";
@@ -59,9 +59,15 @@ export function App() {
             survit au changement de langue. */}
         {intro !== "attente" && (
           <DemandeRapide>
+            <a
+              href="#contenu"
+              className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[80] focus:rounded-xl focus:bg-ink focus:px-4 focus:py-2 focus:text-[14px] focus:font-bold focus:text-white"
+            >
+              {t.allerContenu}
+            </a>
             <Header />
             {/* Remonté à chaque changement de langue : SplitText redécoupe les nouveaux textes. */}
-            <main key={langue} className="filigrane-rond relative overflow-x-clip">
+            <main key={langue} id="contenu" className="filigrane-rond relative overflow-x-clip">
               <SuiviSections />
               <Hero />
               <Destination />
