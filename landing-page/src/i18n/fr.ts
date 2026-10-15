@@ -155,24 +155,6 @@ export const fr = {
     note: "Note : 5 sur 5",
     avis: [
       {
-        nom: "Fatima El Hadi",
-        visa: "Visa France",
-        texte:
-          "C’est la première fois que je fais une demande de visa et j’étais un peu perdue dans les démarches. Mais on m’a expliqué chaque étape une par une, ce qui m’a grandement facilité les choses.",
-      },
-      {
-        nom: "Imane Tijar",
-        visa: "Visa France",
-        texte:
-          "À chaque fois que je déposais ma demande de visa, mon dossier était refusé, et je ne savais pas d’où venait le problème. Puis, j’ai fait appel à cette agence, qui m’a expliqué la raison et aidée à préparer correctement mon dossier. Merci pour votre accueil chaleureux et votre suivi.",
-      },
-      {
-        nom: "Aïcha Yousri",
-        visa: "Visa France",
-        texte:
-          "Ce que j’ai particulièrement apprécié, c’est qu’ils m’ont expliqué clairement quels documents fournir en fonction de ma situation, sans que j’aie à me perdre dans les démarches ni à poser des questions à chaque fois.",
-      },
-      {
         nom: "Radia Bernoussi",
         visa: "Visa France",
         texte:
