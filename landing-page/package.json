@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
+    "@heroui/react": "^3.2.6",
     "@microsoft/clarity": "^1.0.2",
     "@supabase/supabase-js": "^2.117.2",
     "framer-motion": "^14.0.0",

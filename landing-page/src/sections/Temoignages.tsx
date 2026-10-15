@@ -1,14 +1,14 @@
+import { Avatar } from "@heroui/react";
 import { LayoutGroup, motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, User } from "lucide-react";
 import { useState } from "react";
 import { IconButton } from "../components/buttons";
 import { Reveal, SplitReveal } from "../components/motion";
-import { AVATARS } from "../content";
 import { useLangue } from "../i18n";
 
 export function Temoignages() {
   const { t } = useLangue();
-  const avis = t.temoignages.avis.map((a, i) => ({ ...a, avatar: AVATARS[i]! }));
+  const avis = t.temoignages.avis;
   const n = avis.length;
   // Carrousel en rotation : le premier avis passe en fin de file (animation de layout).
   const [debut, setDebut] = useState(0);
@@ -64,20 +64,18 @@ export function Temoignages() {
                 {ordre.map((a, i) => (
                   <motion.li
                     layout
-                    key={a.avatar}
+                    key={a.nom}
                     transition={{ type: "spring", stiffness: 170, damping: 26 }}
                     style={{ zIndex: n - i }}
                     className="w-full font-bold shrink-0 sm:w-[calc(50%-8px)] lg:w-[calc((100%-32px)/3)] xl:w-[calc((100%-40px)/3)]"
                   >
                     <Reveal delay={i * 0.12} y={48} className="h-full">
                       <article className="flex h-full gap-4 rounded-[16px] bg-card p-5 shadow-[var(--shadow-soft)] xl:p-6">
-                        <img
-                          src={a.avatar}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="size-[52px] shrink-0 rounded-full object-cover object-top"
-                        />
+                        <Avatar className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sand text-muted">
+                          <Avatar.Fallback className="flex size-full items-center justify-center">
+                            <User className="size-4" aria-hidden="true" />
+                          </Avatar.Fallback>
+                        </Avatar>
                         <div>
                           <div className="flex gap-1 text-brand" aria-label={t.temoignages.note}>
                             {Array.from({ length: 5 }, (_, k) => (
@@ -102,7 +100,7 @@ export function Temoignages() {
             <div role="tablist" aria-label={t.temoignages.choisir} className="flex gap-1">
               {avis.map((a, i) => (
                 <button
-                  key={a.avatar}
+                  key={a.nom}
                   type="button"
                   role="tab"
                   aria-selected={debut === i}

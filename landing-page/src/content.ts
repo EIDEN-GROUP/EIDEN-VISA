@@ -141,9 +141,3 @@ export const PACKS: { id: PackId; image: string; position: string; vedette?: boo
   },
   { id: "essentiel", image: "/images/06-valise-aeroport.webp", position: "50% 50%" },
 ];
-
-export const AVATARS = [
-  "/images/avatar-salma.webp",
-  "/images/avatar-yassine.webp",
-  "/images/avatar-meriem.webp",
-];

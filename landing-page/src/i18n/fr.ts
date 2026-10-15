@@ -155,21 +155,40 @@ export const fr = {
     note: "Note : 5 sur 5",
     avis: [
       {
-        nom: "Salma E.",
-        visa: "Visa étudiant",
+        nom: "Fatima El Hadi",
+        visa: "Visa France",
         texte:
-          "Un accompagnement très professionnel et rassurant. Mon dossier a été accepté sans problème. Merci à toute l'équipe !",
+          "C’est la première fois que je fais une demande de visa et j’étais un peu perdue dans les démarches. Mais on m’a expliqué chaque étape une par une, ce qui m’a grandement facilité les choses.",
       },
       {
-        nom: "Yassine K.",
-        visa: "Visa touristique",
+        nom: "Imane Tijar",
+        visa: "Visa France",
         texte:
-          "Équipe réactive et à l'écoute. Le processus est clair et bien organisé. Je recommande vivement.",
+          "À chaque fois que je déposais ma demande de visa, mon dossier était refusé, et je ne savais pas d’où venait le problème. Puis, j’ai fait appel à cette agence, qui m’a expliqué la raison et aidée à préparer correctement mon dossier. Merci pour votre accueil chaleureux et votre suivi.",
       },
       {
-        nom: "Meriem A.",
-        visa: "Visa visite familiale",
-        texte: "Service de qualité, un vrai suivi du début à la fin.",
+        nom: "Aïcha Yousri",
+        visa: "Visa France",
+        texte:
+          "Ce que j’ai particulièrement apprécié, c’est qu’ils m’ont expliqué clairement quels documents fournir en fonction de ma situation, sans que j’aie à me perdre dans les démarches ni à poser des questions à chaque fois.",
+      },
+      {
+        nom: "Radia Bernoussi",
+        visa: "Visa France",
+        texte:
+          "Je suis satisfaite de l’accompagnement. Grâce aux conseils et au suivi de l’équipe, les démarches m’ont paru plus simples et plus claires.",
+      },
+      {
+        nom: "Siham Yaacoubi",
+        visa: "Visa France",
+        texte:
+          "Le service était bien organisé et, chaque fois que je les contactais, j’obtenais une réponse. Un grand merci à toute l’équipe pour les efforts fournis.",
+      },
+      {
+        nom: "Younes Zaaim",
+        visa: "Visa France",
+        texte:
+          "Très bonne expérience ! L’équipe a pris le temps de m’expliquer les démarches et de répondre à mes questions.",
       },
     ],
   },
