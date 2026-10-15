@@ -5,10 +5,18 @@ import { useState } from "react";
 import { IconButton } from "../components/buttons";
 import { Reveal, SplitReveal } from "../components/motion";
 import { useLangue } from "../i18n";
+import { ar } from "../i18n/ar";
 
 export function Temoignages() {
-  const { t } = useLangue();
-  const avis = t.temoignages.avis;
+  const { t, langue } = useLangue();
+  // FR : tous les avis (FR + AR) défilent ; AR : seuls les avis arabes.
+  const avis =
+    langue === "ar"
+      ? t.temoignages.avis.map((a) => ({ ...a, lang: "ar" as const }))
+      : [
+          ...t.temoignages.avis.map((a) => ({ ...a, lang: "fr" as const })),
+          ...ar.temoignages.avis.map((a) => ({ ...a, lang: "ar" as const })),
+        ];
   const n = avis.length;
   // Carrousel en rotation : le premier avis passe en fin de file (animation de layout).
   const [debut, setDebut] = useState(0);
@@ -64,7 +72,7 @@ export function Temoignages() {
                 {ordre.map((a, i) => (
                   <motion.li
                     layout
-                    key={a.nom}
+                    key={`${a.lang}-${a.nom}`}
                     transition={{ type: "spring", stiffness: 170, damping: 26 }}
                     style={{ zIndex: n - i }}
                     className="w-full font-bold shrink-0 sm:w-[calc(50%-8px)] lg:w-[calc((100%-32px)/3)] xl:w-[calc((100%-40px)/3)]"
@@ -82,7 +90,10 @@ export function Temoignages() {
                               <Star key={k} className="size-3.5 fill-current" strokeWidth={0} />
                             ))}
                           </div>
-                          <blockquote className="mt-3 text-[13px] leading-[1.65] text-muted">
+                          <blockquote
+                            lang={a.lang}
+                            className="mt-3 text-[13px] leading-[1.65] text-muted"
+                          >
                             “{a.texte}”
                           </blockquote>
                           <p className="mt-4 text-[15px] font-bold text-ink">{a.nom}</p>
@@ -100,7 +111,7 @@ export function Temoignages() {
             <div role="tablist" aria-label={t.temoignages.choisir} className="flex gap-1">
               {avis.map((a, i) => (
                 <button
-                  key={a.nom}
+                  key={`${a.lang}-${a.nom}`}
                   type="button"
                   role="tab"
                   aria-selected={debut === i}

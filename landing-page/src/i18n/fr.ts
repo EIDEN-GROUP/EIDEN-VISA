@@ -179,12 +179,6 @@ export const fr = {
           "Je suis satisfaite de l’accompagnement. Grâce aux conseils et au suivi de l’équipe, les démarches m’ont paru plus simples et plus claires.",
       },
       {
-        nom: "Siham Yaacoubi",
-        visa: "Visa France",
-        texte:
-          "Le service était bien organisé et, chaque fois que je les contactais, j’obtenais une réponse. Un grand merci à toute l’équipe pour les efforts fournis.",
-      },
-      {
         nom: "Younes Zaaim",
         visa: "Visa France",
         texte:
