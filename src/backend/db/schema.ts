@@ -8,6 +8,7 @@ import type {
   Modalite,
   QualificationReponse,
   NoteAgent,
+  RecuDonnees,
 } from "@/lib/dossier-model";
 import type { Level, Profile } from "@/lib/visa-rules";
 
@@ -164,4 +165,22 @@ export const documents = pgTable("documents", {
   // Stocké en base64 : volumes modestes (PDF de dossier), évite de gérer un type bytea dédié.
   dataBase64: text("data_base64").notNull(),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Brouillons de reçu enregistrés d'un dossier — instantanés immuables (pas de
+ * modification : reprendre un brouillon en crée un nouveau). Le reçu officiel
+ * reste dérivé du dossier ; un brouillon téléchargé dont les lignes diffèrent
+ * du grand livre porte le filigrane BROUILLON (`ecartLedger`, calculé serveur).
+ */
+export const recuBrouillons = pgTable("recu_brouillons", {
+  id: text("id").primaryKey(),
+  dossierId: text("dossier_id")
+    .notNull()
+    .references(() => dossiers.id, { onDelete: "cascade" }),
+  nom: text("nom").notNull(),
+  donnees: jsonb("donnees").$type<RecuDonnees>().notNull(),
+  ecartLedger: boolean("ecart_ledger").notNull().default(false),
+  createdByUserId: text("created_by_user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

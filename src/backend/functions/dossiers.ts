@@ -51,7 +51,7 @@ function dateRangeConditions(data: {
 
 type DossierRow = typeof dossiersTable.$inferSelect;
 
-function rowToDossier(row: DossierRow): Dossier {
+export function rowToDossier(row: DossierRow): Dossier {
   return {
     id: row.id,
     client: {

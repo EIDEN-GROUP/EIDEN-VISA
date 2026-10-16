@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useDossier } from "@/lib/store";
-import type { Dossier } from "@/lib/dossier-model";
+import { useBrouillons, useDossier } from "@/lib/store";
+import { defaultRecuDonnees, recuTotaux, type RecuDonnees } from "@/lib/dossier-model";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft, Check } from "lucide-react";
+import { Download, ArrowLeft, Pencil } from "lucide-react";
 import logoEidenVisa from "@/assets/decorations/logo-eiden-visa.webp";
 // jsPDF ne lit pas le WebP : même logo en PNG pour le PDF.
 import logoEidenVisaPng from "@/assets/decorations/logo-eiden-visa.png";
+import { ApercuRecu, EditeurBrouillon, ListeBrouillons } from "@/components/dossier/recu-brouillon";
 
 /** Logo officiel (900 × 264 px) : ratio largeur / hauteur. */
 const LOGO_RATIO = 900 / 264;
@@ -29,22 +30,45 @@ export const Route = createFileRoute("/dossiers/$id/recu")({
   component: Recu,
 });
 
-/** Pays de destination, déduit du centre de dépôt (BLS = Espagne, sinon France) — sans le nom du centre. */
-function paysDestination(d: Dossier): string {
-  return d.centre.includes("BLS") ? "Espagne" : "France";
+/** Le reçu « avant paiement » est identique, sans la section des paiements. */
+export type ModeRecu = "apres" | "avant";
+
+/** Filigrane diagonal sur chaque page : un brouillon modifié n'atteste rien. */
+function filigraneBrouillon(
+  doc: {
+    getNumberOfPages: () => number;
+    setPage: (n: number) => void;
+    setFont: (f: string, s: string) => void;
+    setFontSize: (n: number) => void;
+    setTextColor: (r: number, g: number, b: number) => void;
+    text: (t: string, x: number, y: number, o?: object) => void;
+    internal: { pageSize: { getWidth: () => number } };
+  },
+  ecart: boolean,
+) {
+  if (!ecart) return;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pages = doc.getNumberOfPages();
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(205, 195, 180);
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(44);
+    doc.text("BROUILLON", pageW / 2, 150, { align: "center", angle: 45 });
+    doc.setFontSize(13);
+    doc.text("sans valeur comptable", pageW / 2, 168, { align: "center", angle: 45 });
+  }
 }
 
-/** Le reçu « avant paiement » est identique, sans la section des paiements. */
-type ModeRecu = "apres" | "avant";
-
-function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
+/**
+ * Génère le PDF d'un reçu résolu (`RecuDonnees`) : officiel comme brouillon,
+ * l'écran (`ApercuRecu`) et le PDF partent des mêmes données.
+ */
+export function buildReceiptPdf(id: string, r: RecuDonnees, ecart: boolean) {
   return Promise.all([import("jspdf"), chargerDataUrl(logoEidenVisaPng)]).then(
     ([{ jsPDF }, logo]) => {
-      const paye = d.paiements.filter((p) => p.encaisse);
-      const total = paye.reduce((s, p) => s + p.montant, 0);
-      const du = d.paiements.filter((p) => !p.encaisse);
-      const reste = du.reduce((s, p) => s + p.montant, 0);
-      const emisLe = new Date().toLocaleDateString("fr-FR");
+      const { paye, du, total, reste } = recuTotaux(r);
+      const mode = r.mode;
 
       const doc = new jsPDF({ unit: "mm", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
@@ -66,9 +90,9 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       doc.setTextColor(...gray);
       doc.text("REÇU DE PAIEMENT", pageW - marginX, y - 3, { align: "right" });
       doc.setTextColor(...forest);
-      doc.text(d.id, pageW - marginX, y + 2, { align: "right" });
+      doc.text(id, pageW - marginX, y + 2, { align: "right" });
       doc.setTextColor(...gray);
-      doc.text(`Émis le ${emisLe}`, pageW - marginX, y + 7, { align: "right" });
+      doc.text(`Émis le ${r.emisLe}`, pageW - marginX, y + 7, { align: "right" });
 
       y += 16;
       doc.setDrawColor(...marine);
@@ -86,17 +110,17 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10.5);
       doc.setTextColor(...forest);
-      doc.text(d.client.nom, marginX, y);
+      doc.text(r.clientNom, marginX, y);
       // Le titre peut tenir sur plusieurs lignes : le pays se place juste dessous.
-      const titreLignes: string[] = doc.splitTextToSize(d.titre, contentW / 2 - 4);
+      const titreLignes: string[] = doc.splitTextToSize(r.dossierTitre, contentW / 2 - 4);
       doc.text(titreLignes, marginX + contentW / 2, y);
       const yPays = y + titreLignes.length * 5;
 
       doc.setFontSize(9);
       doc.setTextColor(...gray);
-      doc.text(d.client.telephone, marginX, y + 5.5);
-      doc.text(d.client.ville, marginX, y + 10.5);
-      doc.text(paysDestination(d), marginX + contentW / 2, yPays);
+      doc.text(r.clientTelephone, marginX, y + 5.5);
+      doc.text(r.clientVille, marginX, y + 10.5);
+      doc.text(r.pays, marginX + contentW / 2, yPays);
 
       y = Math.max(y + 10.5, yPays);
 
@@ -105,13 +129,58 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       doc.setLineWidth(0.3);
       doc.line(marginX, y, pageW - marginX, y);
 
-      // Checklist des pièces — même contenu que l'onglet Documents du dossier, pour que le
-      // client reparte avec la liste exacte de ce qui a déjà été fourni ou reste à apporter.
-      y += 8;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.setTextColor(...gray);
-      doc.text("PIÈCES DU DOSSIER", marginX, y);
+      const visibles = r.pieces.filter((p) => !p.masque);
+      if (r.afficherPieces) {
+        // Checklist des pièces — même contenu que l'onglet Documents du dossier, pour que le
+        // client reparte avec la liste exacte de ce qui a déjà été fourni ou reste à apporter.
+        y += 8;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...gray);
+        doc.text("PIÈCES DU DOSSIER", marginX, y);
+
+        const ensureSpace = (needed: number) => {
+          if (y + needed > 280) {
+            doc.addPage();
+            y = 20;
+          }
+        };
+
+        y += 7;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        const pieceLineHeight = 4.6;
+        const pieceIndent = 6.5;
+        for (const p of visibles) {
+          // Une pièce dont le libellé tient sur plusieurs lignes doit pousser la suivante
+          // d'autant de lignes, sinon le texte suivant se superpose (bug observé en prod).
+          const lines = doc.splitTextToSize(p.label, contentW - pieceIndent) as string[];
+          ensureSpace(lines.length * pieceLineHeight + 2);
+          doc.setDrawColor(...gray);
+          doc.setLineWidth(0.35);
+          doc.rect(marginX, y - 3, 3, 3);
+          if (p.fourni) {
+            doc.setFillColor(...marine);
+            doc.rect(marginX, y - 3, 3, 3, "F");
+            doc.setDrawColor(255, 255, 255);
+            doc.setLineWidth(0.5);
+            doc.line(marginX + 0.5, y - 1.6, marginX + 1.3, y - 0.7);
+            doc.line(marginX + 1.3, y - 0.7, marginX + 2.6, y - 2.7);
+          }
+          doc.setTextColor(
+            p.fourni ? forest[0] : gray[0],
+            p.fourni ? forest[1] : gray[1],
+            p.fourni ? forest[2] : gray[2],
+          );
+          doc.text(lines, marginX + pieceIndent, y);
+          y += lines.length * pieceLineHeight + 2;
+        }
+        if (visibles.length === 0) {
+          doc.setTextColor(...gray);
+          doc.text("Aucune pièce listée pour ce dossier.", marginX, y);
+          y += 6;
+        }
+      }
 
       const ensureSpace = (needed: number) => {
         if (y + needed > 280) {
@@ -119,41 +188,6 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
           y = 20;
         }
       };
-
-      y += 7;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9.5);
-      const pieceLineHeight = 4.6;
-      const pieceIndent = 6.5;
-      for (const p of d.pieces) {
-        // Une pièce dont le libellé tient sur plusieurs lignes doit pousser la suivante
-        // d'autant de lignes, sinon le texte suivant se superpose (bug observé en prod).
-        const lines = doc.splitTextToSize(p.label, contentW - pieceIndent) as string[];
-        ensureSpace(lines.length * pieceLineHeight + 2);
-        doc.setDrawColor(...gray);
-        doc.setLineWidth(0.35);
-        doc.rect(marginX, y - 3, 3, 3);
-        if (p.fourni) {
-          doc.setFillColor(...marine);
-          doc.rect(marginX, y - 3, 3, 3, "F");
-          doc.setDrawColor(255, 255, 255);
-          doc.setLineWidth(0.5);
-          doc.line(marginX + 0.5, y - 1.6, marginX + 1.3, y - 0.7);
-          doc.line(marginX + 1.3, y - 0.7, marginX + 2.6, y - 2.7);
-        }
-        doc.setTextColor(
-          p.fourni ? forest[0] : gray[0],
-          p.fourni ? forest[1] : gray[1],
-          p.fourni ? forest[2] : gray[2],
-        );
-        doc.text(lines, marginX + pieceIndent, y);
-        y += lines.length * pieceLineHeight + 2;
-      }
-      if (d.pieces.length === 0) {
-        doc.setTextColor(...gray);
-        doc.text("Aucune pièce listée pour ce dossier.", marginX, y);
-        y += 6;
-      }
 
       if (mode === "apres") {
         y += 4;
@@ -210,25 +244,27 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
         doc.setFontSize(13);
         doc.text(`${total} MAD`, pageW - marginX, y, { align: "right" });
 
-        // Ce qu'il reste à régler, ligne par ligne : le client sait quoi apporter et pour quoi.
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9.5);
-        for (const p of du) {
-          ensureSpace(6);
-          y += 5.5;
-          doc.setTextColor(...gray);
-          doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.7 });
-          doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
+        if (r.afficherReste) {
+          // Ce qu'il reste à régler, ligne par ligne : le client sait quoi apporter et pour quoi.
+          y += 6;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9.5);
+          for (const p of du) {
+            ensureSpace(6);
+            y += 5.5;
+            doc.setTextColor(...gray);
+            doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.7 });
+            doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
+          }
+          ensureSpace(10);
+          y += 8;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(...forest);
+          doc.text(reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé", marginX, y);
+          doc.setFontSize(13);
+          doc.text(`${reste} MAD`, pageW - marginX, y, { align: "right" });
         }
-        ensureSpace(10);
-        y += 8;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(...forest);
-        doc.text(reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé", marginX, y);
-        doc.setFontSize(13);
-        doc.text(`${reste} MAD`, pageW - marginX, y, { align: "right" });
       }
 
       // Signature du client seule : bon pour accord sur les montants.
@@ -244,20 +280,17 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...gray);
-      doc.text("Signature du client", marginX, sigY + 5);
-      doc.text("Bon pour accord sur les montants ci-dessus.", marginX, sigY + 9.5);
+      doc.text(r.signature, marginX, sigY + 5);
+      doc.text(r.mentionAccord, marginX, sigY + 9.5);
 
       y = sigY + 22;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7.5);
       doc.setTextColor(...gray);
-      const note =
-        "Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de l'accompagnement de ce dossier. " +
-        "Les droits de visa réglés directement au centre de dépôt (TLScontact ou BLS) n'apparaissent " +
-        "ici que s'ils ont transité par Eiden Visa.";
-      doc.text(note, marginX, y, { maxWidth: contentW, lineHeightFactor: 1.4 });
+      doc.text(r.note, marginX, y, { maxWidth: contentW, lineHeightFactor: 1.4 });
 
-      doc.save(`Recu-${d.id}.pdf`);
+      filigraneBrouillon(doc, ecart);
+      doc.save(`Recu-${id}${ecart ? "-brouillon" : ""}.pdf`);
     },
   );
 }
@@ -265,8 +298,21 @@ function buildReceiptPdf(d: Dossier, mode: ModeRecu) {
 function Recu() {
   const { id } = Route.useParams();
   const { dossier: d, isLoading } = useDossier(id);
+  const { sauver } = useBrouillons(id);
   // Avant paiement : même reçu, sans la section des paiements.
   const [mode, setMode] = useState<ModeRecu>("apres");
+  // Brouillon en cours d'édition : temporaire, rien n'est enregistré ni modifié
+  // dans le dossier tant que l'agent ne télécharge pas ou n'enregistre pas.
+  const [edition, setEdition] = useState<RecuDonnees | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  // Remonte l'éditeur à chaque nouveau point de départ (officiel ou reprise) :
+  // `initial` n'est lu qu'au montage, la clé force le remontage.
+  const [cleEdition, setCleEdition] = useState(0);
+  const demarrerEdition = (donnees: RecuDonnees) => {
+    setEdition(donnees);
+    setMessage(null);
+    setCleEdition((c) => c + 1);
+  };
 
   if (!d) {
     return (
@@ -278,10 +324,8 @@ function Recu() {
     );
   }
 
-  const paye = d.paiements.filter((p) => p.encaisse);
-  const total = paye.reduce((s, p) => s + p.montant, 0);
-  const du = d.paiements.filter((p) => !p.encaisse);
-  const reste = du.reduce((s, p) => s + p.montant, 0);
+  const officiel = defaultRecuDonnees(d);
+  officiel.mode = mode;
 
   return (
     <div className="min-h-screen bg-background px-4 py-8">
@@ -293,7 +337,7 @@ function Recu() {
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Retour au dossier
         </Link>
-        <Button size="sm" onClick={() => buildReceiptPdf(d, mode)}>
+        <Button size="sm" onClick={() => buildReceiptPdf(d.id, officiel, false)}>
           <Download className="h-3.5 w-3.5" /> Télécharger le reçu (PDF)
         </Button>
       </div>
@@ -313,120 +357,64 @@ function Recu() {
         </select>
       </div>
 
-      <div className="mx-auto max-w-2xl border border-border bg-card p-10">
-        <div className="flex items-start justify-between border-b border-border pb-6">
-          <div>
-            <img src={logoEidenVisa} alt="Eiden Visa" className="h-14 w-auto" />
-          </div>
-          <div className="text-right">
-            <div className="ref text-muted-foreground">Reçu de paiement</div>
-            <div className="ref mt-1 text-foreground">{d.id}</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6 border-b border-border py-6 text-sm">
-          <div>
-            <div className="ref text-muted-foreground">Client</div>
-            <div className="mt-1 font-medium text-foreground">{d.client.nom}</div>
-            <div className="mt-0.5 text-muted-foreground">{d.client.telephone}</div>
-            <div className="text-muted-foreground">{d.client.ville}</div>
-          </div>
-          <div>
-            <div className="ref text-muted-foreground">Dossier</div>
-            <div className="mt-1 font-medium text-foreground">{d.titre}</div>
-            <div className="mt-0.5 text-muted-foreground">{paysDestination(d)}</div>
-          </div>
-        </div>
-
-        <div className="border-b border-border py-6">
-          <div className="ref mb-3 text-muted-foreground">Pièces du dossier</div>
-          <ul className="space-y-1.5">
-            {d.pieces.map((p, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm">
-                <span
-                  className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center border ${
-                    p.fourni ? "border-primary bg-primary text-primary-foreground" : "border-border"
-                  }`}
-                >
-                  {p.fourni && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
-                </span>
-                <span className={p.fourni ? "text-foreground" : "text-muted-foreground"}>
-                  {p.label}
-                </span>
-              </li>
-            ))}
-            {d.pieces.length === 0 && (
-              <li className="text-sm text-muted-foreground">
-                Aucune pièce listée pour ce dossier.
-              </li>
+      {/* Reçu unique : officiel en lecture seule, ou brouillon éditable en place.
+          Rien d'autre sur la page ne duplique le reçu. */}
+      <div className="mx-auto mb-10 max-w-2xl space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            {edition ? (
+              <>
+                Brouillon temporaire{" "}
+                <span className="font-normal text-muted-foreground">— non enregistré</span>
+              </>
+            ) : (
+              <>
+                Reçu officiel{" "}
+                <span className="font-normal text-muted-foreground">— celui du dossier</span>
+              </>
             )}
-          </ul>
+          </h2>
+          {!edition && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => demarrerEdition(defaultRecuDonnees(d))}
+            >
+              <Pencil className="h-3.5 w-3.5" /> Modifier
+            </Button>
+          )}
         </div>
-
-        {mode === "apres" && (
-          <div className="py-6">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="ref border-b border-border text-left text-muted-foreground">
-                  <th className="pb-2 font-medium">Libellé</th>
-                  <th className="pb-2 font-medium">Date</th>
-                  <th className="pb-2 text-right font-medium">Montant</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paye.map((p, i) => (
-                  <tr key={i} className="border-b border-border/60">
-                    <td className="py-2.5 text-foreground">{p.libelle}</td>
-                    <td className="py-2.5 text-muted-foreground">{p.date}</td>
-                    <td className="py-2.5 text-right font-medium text-foreground">
-                      {p.montant} MAD
-                    </td>
-                  </tr>
-                ))}
-                {paye.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-center text-muted-foreground">
-                      Aucun paiement encaissé à ce jour.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm font-semibold">
-              <span className="text-foreground">Total encaissé</span>
-              <span className="num-display text-lg text-foreground">{total} MAD</span>
-            </div>
-            {du.map((p, i) => (
-              <div
-                key={i}
-                className="mt-2 flex items-center justify-between text-sm text-muted-foreground"
-              >
-                <span>{p.libelle}</span>
-                <span>{p.montant} MAD</span>
-              </div>
-            ))}
-            <div className="mt-3 flex items-center justify-between text-sm font-semibold">
-              <span className="text-foreground">
-                {reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé"}
-              </span>
-              <span className="num-display text-lg text-foreground">{reste} MAD</span>
-            </div>
-          </div>
+        {message && <p className="text-sm text-muted-foreground">{message}</p>}
+        {edition ? (
+          <EditeurBrouillon
+            key={cleEdition}
+            dossier={d}
+            initial={edition}
+            onAbandon={() => setEdition(null)}
+            onEnregistre={async (nom, donnees) => {
+              await sauver(nom, donnees);
+              setEdition(null);
+              setMessage(`Brouillon « ${nom} » enregistré.`);
+            }}
+          />
+        ) : (
+          <ApercuRecu r={officiel} ecart={false} />
         )}
+      </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-6 border-t border-border pt-6 text-xs text-muted-foreground">
-          <div>
-            <div className="h-10 border-b border-border" />
-            <div className="mt-1.5 font-medium text-foreground">Signature du client</div>
-            <div className="mt-0.5">Bon pour accord sur les montants ci-dessus.</div>
-          </div>
-        </div>
-
-        <p className="mt-6 text-xs text-muted-foreground">
-          Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de
-          l'accompagnement de ce dossier. Les droits de visa réglés directement au centre de dépôt
-          (TLScontact ou BLS) n'apparaissent ici que s'ils ont transité par Eiden Visa.
-        </p>
+      {/* Brouillons enregistrés : instantanés nommés, à part du reçu officiel. */}
+      <div className="mx-auto mb-10 max-w-2xl space-y-2">
+        <h2 className="text-sm font-semibold text-foreground">
+          Brouillons enregistrés{" "}
+          <span className="font-normal text-muted-foreground">— versions de travail</span>
+        </h2>
+        <ListeBrouillons
+          dossier={d}
+          onReprendre={(donnees) => {
+            demarrerEdition(donnees);
+            window.scrollTo({ top: 0 });
+          }}
+        />
       </div>
     </div>
   );

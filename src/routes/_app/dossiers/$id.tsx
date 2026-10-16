@@ -26,6 +26,7 @@ import {
   AutorisationBadge,
 } from "@/components/dossier/badges";
 import { DocumentsPanel } from "@/components/dossier/documents-panel";
+import { CarteBrouillons } from "@/components/dossier/recu-brouillon";
 import { ChoixFormule, type Formule } from "@/components/dossier/choix-formule";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -497,6 +498,9 @@ function DossierDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Brouillons de reçu : compteur + accès (tout se passe sur la page du reçu). */}
+      <CarteBrouillons dossierId={d.id} />
 
       <div className="flex flex-col gap-6">
         {voir("decision") && (

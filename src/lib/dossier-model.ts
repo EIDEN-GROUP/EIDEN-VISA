@@ -664,3 +664,106 @@ export function alertes(d: Dossier): string[] {
 
   return out;
 }
+
+/** Pays de destination, déduit du centre de dépôt (BLS = Espagne, sinon France). */
+export function paysCentre(centre: Centre): string {
+  return centre.includes("BLS") ? "Espagne" : "France";
+}
+
+/** Une ligne de reçu : libellé, montant, date (texte libre, ex. « aujourd'hui »), encaissement. */
+export interface RecuLigne {
+  libelle: string;
+  montant: number;
+  date: string | null;
+  encaisse: boolean;
+}
+
+/** Une pièce telle qu'imprimée sur un reçu : affichée ou masquée, fournie ou non. */
+export interface RecuPiece {
+  label: string;
+  source: "officiel" | "eiden";
+  fourni: boolean;
+  /** Ligne masquée du reçu (reste dans le dossier). Absent = affichée. */
+  masque?: boolean | undefined;
+}
+
+/**
+ * Données complètes d'un reçu (officiel ou brouillon) : tout ce qui s'affiche à
+ * l'écran et s'imprime en PDF. Le reçu officiel est dérivé du dossier
+ * (`defaultRecuDonnees`) ; un brouillon en est une copie modifiable.
+ */
+export interface RecuDonnees {
+  mode: "avant" | "apres";
+  clientNom: string;
+  clientTelephone: string;
+  clientVille: string;
+  dossierTitre: string;
+  pays: string;
+  afficherPieces: boolean;
+  pieces: RecuPiece[];
+  lignes: RecuLigne[];
+  afficherReste: boolean;
+  signature: string;
+  mentionAccord: string;
+  note: string;
+  emisLe: string;
+}
+
+/** Dérive le reçu officiel du dossier : montants et pièces toujours à jour. */
+export function defaultRecuDonnees(d: Dossier): RecuDonnees {
+  return {
+    mode: "apres",
+    clientNom: d.client.nom,
+    clientTelephone: d.client.telephone,
+    clientVille: d.client.ville,
+    dossierTitre: d.titre,
+    pays: paysCentre(d.centre),
+    afficherPieces: true,
+    pieces: d.pieces.map((p) => ({ label: p.label, source: p.source, fourni: p.fourni })),
+    lignes: d.paiements.map((p) => ({
+      libelle: p.libelle,
+      montant: p.montant,
+      date: p.date,
+      encaisse: p.encaisse,
+    })),
+    afficherReste: true,
+    signature: "Signature du client",
+    mentionAccord: "Bon pour accord sur les montants ci-dessus.",
+    note:
+      "Ce reçu atteste des sommes effectivement encaissées par Eiden Visa au titre de " +
+      "l'accompagnement de ce dossier. Les droits de visa réglés directement au centre de dépôt " +
+      "(TLScontact ou BLS) n'apparaissent ici que s'ils ont transité par Eiden Visa.",
+    emisLe: new Date().toLocaleDateString("fr-FR"),
+  };
+}
+
+/** Totaux d'un reçu à partir de ses lignes (jamais ceux d'un client : recalculés). */
+export function recuTotaux(r: Pick<RecuDonnees, "lignes">) {
+  const paye = r.lignes.filter((l) => l.encaisse);
+  const du = r.lignes.filter((l) => !l.encaisse);
+  return {
+    paye,
+    du,
+    total: paye.reduce((s, p) => s + p.montant, 0),
+    reste: du.reduce((s, p) => s + p.montant, 0),
+  };
+}
+
+/**
+ * Écart avec le grand livre : les lignes financières diffèrent-elles du dossier ?
+ * Seules les lignes comptent (présentation, notes et pièces n'attestent rien).
+ * Un écart impose le filigrane BROUILLON sur l'aperçu comme sur le PDF.
+ */
+export function recuEcartLedger(d: Dossier, r: RecuDonnees): boolean {
+  if (d.paiements.length !== r.lignes.length) return true;
+  return d.paiements.some((p, i) => {
+    const l = r.lignes[i];
+    if (!l) return true;
+    return (
+      p.libelle !== l.libelle ||
+      p.montant !== l.montant ||
+      (p.date ?? null) !== l.date ||
+      p.encaisse !== l.encaisse
+    );
+  });
+}

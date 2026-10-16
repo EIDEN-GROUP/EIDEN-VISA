@@ -1,5 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Dossier, FormuleKey, ServiceKey, Centre, Decision, Modalite } from "./dossier-model";
+import type {
+  Dossier,
+  FormuleKey,
+  ServiceKey,
+  Centre,
+  Decision,
+  Modalite,
+  RecuDonnees,
+} from "./dossier-model";
 import {
   listDossiers,
   listDossiersPage,
@@ -35,6 +43,11 @@ import {
   uploadDocument as uploadDocumentFn,
   deleteDocument as deleteDocumentFn,
 } from "@/backend/functions/documents";
+import {
+  listBrouillons as listBrouillonsFn,
+  saveBrouillon as saveBrouillonFn,
+  deleteBrouillon as deleteBrouillonFn,
+} from "@/backend/functions/recus";
 import {
   listUsers as listUsersFn,
   createUser as createUserFn,
@@ -644,4 +657,33 @@ export function useAnalytics() {
 export function useCurrentUser() {
   const query = useQuery({ queryKey: CURRENT_USER_KEY, queryFn: () => currentUserFn() });
   return { user: query.data ?? null, isLoading: query.isLoading };
+}
+
+const brouillonsKey = (dossierId: string) => ["brouillons", dossierId] as const;
+
+/** Brouillons de reçu enregistrés d'un dossier, plus récents en tête. */
+export function useBrouillons(dossierId: string) {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: brouillonsKey(dossierId),
+    queryFn: () => listBrouillonsFn({ data: { dossierId } }),
+  });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: brouillonsKey(dossierId) });
+
+  const sauverMutation = useMutation({
+    mutationFn: (vars: { nom: string; donnees: RecuDonnees }) =>
+      saveBrouillonFn({ data: { dossierId, ...vars } }),
+    onSuccess: invalidate,
+  });
+  const supprimerMutation = useMutation({
+    mutationFn: (id: string) => deleteBrouillonFn({ data: { id } }),
+    onSuccess: invalidate,
+  });
+
+  return {
+    brouillons: query.data ?? [],
+    isLoading: query.isLoading,
+    sauver: (nom: string, donnees: RecuDonnees) => sauverMutation.mutateAsync({ nom, donnees }),
+    supprimer: (id: string) => supprimerMutation.mutateAsync(id),
+  };
 }
