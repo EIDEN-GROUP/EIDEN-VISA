@@ -36,7 +36,23 @@
     "name": "Le rendez-vous se prend-il chez TLScontact ou BLS ?",
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre — TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne."
+      "text": "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre - TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne."
+    }
+  },
+  {
+    "@type": "Question",
+    "name": "EIDEN Visa est-elle une agence de visa à Agadir ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Oui. EIDEN Visa est une agence de visa Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre."
+    }
+  },
+  {
+    "@type": "Question",
+    "name": "Comment préparer mon dossier de visa Schengen au Maroc ?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "En six étapes : analyse de votre situation, identification des documents, préparation des pièces, vérification de la complétude du dossier, remplissage du formulaire et démarches, puis rendez-vous au centre. La demande rapide en ligne (3 étapes) permet de démarrer tout de suite."
     }
   }
 ]

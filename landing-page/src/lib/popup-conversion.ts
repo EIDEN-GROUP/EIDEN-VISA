@@ -2,7 +2,7 @@
 // popup (`PopupConversion.tsx`) et le formulaire (`DemandeRapide.tsx`).
 // `sessionStorage` = une seule apparition par session de navigation ; silencieux si
 // le stockage est indisponible (navigation privée…), la popup se comporte alors
-// comme si rien n'avait été vu — jamais bloquante.
+// comme si rien n'avait été vu - jamais bloquante.
 
 const CLE_VUE = "eiden-popup-conversion-vue";
 const CLE_ACTION = "eiden-popup-conversion-action";

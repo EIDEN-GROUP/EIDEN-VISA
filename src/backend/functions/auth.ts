@@ -42,7 +42,7 @@ export const login = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const bloque = echecs.get(data.email.toLowerCase());
     if (bloque && Date.now() < bloque.bloqueJusqua)
-      throw new Error("Trop de tentatives — réessayez dans quelques minutes.");
+      throw new Error("Trop de tentatives - réessayez dans quelques minutes.");
     const user = await db.query.users.findFirst({
       where: eq(users.email, data.email.toLowerCase()),
     });
@@ -79,17 +79,17 @@ export const currentUser = createServerFn({ method: "GET" }).handler(async () =>
 
 /** Échoue fermé : sans session valide, aucune mutation métier ne doit s'exécuter.
  * Le garde de route sur /_app (voir _app.tsx) empêche déjà d'atteindre ce point sans
- * être connecté — ceci est la deuxième ligne de défense, côté serveur.
+ * être connecté - ceci est la deuxième ligne de défense, côté serveur.
  * Vérifie aussi la version de session : un changement de mot de passe incrémente
  * `sessionVersion` et invalide les cookies volés (voir changeMyPassword/resetUserPassword). */
 export const requireUserId = createServerOnlyFn(async () => {
   const session = await getAuthSession();
   const userId = session.data.userId;
-  if (!userId) throw new Error("Non authentifié — veuillez vous reconnecter.");
+  if (!userId) throw new Error("Non authentifié - veuillez vous reconnecter.");
   if (typeof session.data.v === "number") {
     const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!user || user.sessionVersion !== session.data.v)
-      throw new Error("Session révoquée — veuillez vous reconnecter.");
+      throw new Error("Session révoquée - veuillez vous reconnecter.");
   }
   return userId;
 });
@@ -99,7 +99,7 @@ export const requireUserId = createServerOnlyFn(async () => {
  * `createServerOnlyFn` est indispensable ici, comme pour `logActivity` dans ops.ts :
  * une fonction plain qui touche `db` et est importée (même indirectement) depuis une
  * page client (login.tsx importe `currentUser` de ce même fichier) entraîne tout le
- * module — bcrypt/postgres compris — dans le bundle navigateur (incident déjà vu). */
+ * module - bcrypt/postgres compris - dans le bundle navigateur (incident déjà vu). */
 export const requireCeo = createServerOnlyFn(async () => {
   const userId = await requireUserId();
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>EIDEN Visa - accompagnement visa Schengen depuis le Maroc</title>
+    <link>https://visa.eiden-group.com/</link>
+    <description>Agence d'accompagnement aux demandes de visa Schengen basée à Agadir (Maroc) : étude du dossier, pré-réservations hôtel et avion, assurance voyage, prise de rendez-vous TLScontact/BLS. Demande rapide en 3 étapes, en français et en arabe.</description>
+    <language>fr</language>
+    <lastBuildDate>2026-10-19T00:00:00+00:00</lastBuildDate>
+    <atom:link href="https://visa.eiden-group.com/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Visa Schengen depuis le Maroc : accompagnement complet par EIDEN Visa</title>
+      <link>https://visa.eiden-group.com/</link>
+      <guid>https://visa.eiden-group.com/</guid>
+      <pubDate>Mon, 19 Oct 2026 00:00:00 +0000</pubDate>
+      <description>Préparez votre dossier de visa Schengen avec EIDEN Visa : analyse, documents, préparation, vérification, formulaire et rendez-vous. Packs Standard, Essentiel, Global. Rendez-vous TLScontact (France) et BLS (Espagne) à Agadir.</description>
+    </item>
+    <item>
+      <title>Questions fréquentes - visa Schengen, tarifs, rendez-vous, obtention</title>
+      <link>https://visa.eiden-group.com/#faq</link>
+      <guid>https://visa.eiden-group.com/#faq</guid>
+      <pubDate>Mon, 19 Oct 2026 00:00:00 +0000</pubDate>
+      <description>Les frais de rendez-vous sont inclus dans les packs. L'obtention du visa n'est jamais garantie. L'agence ne prend pas le rendez-vous à la place du client.</description>
+    </item>
+  </channel>
+</rss>

@@ -113,7 +113,7 @@ export function PopupConversion({ demandeOuverte }: { demandeOuverte: boolean })
   }, [visible, fermer, lenis]);
 
   // Focus d'entrée sur l'action principale (pas sur mobile, pour ne pas ouvrir
-  // le clavier d'office — même règle que la demande rapide).
+  // le clavier d'office - même règle que la demande rapide).
   useEffect(() => {
     if (!visible) return;
     if (window.matchMedia("(pointer: coarse)").matches) return;

@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://visa.eiden-group.com/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://visa.eiden-group.com/images/bg-hero.webp</image:loc>
+      <image:title>EIDEN Visa - accompagnement visa Schengen depuis le Maroc</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://visa.eiden-group.com/conditions.html</loc>

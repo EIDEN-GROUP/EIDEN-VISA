@@ -24,6 +24,7 @@
 //   contact_form_submit                    { destination, pack }   (demande envoyée)
 //   appointment_request                    {}                      (bouton WhatsApp de l'écran de succès)
 //   popup_commencer                        {}                      (clic « Commencer » de la popup, relayé Clarity)
+//   view_item / select_item                { item_id, item_name, item_category }  (packs.Standard/essentiel/global)
 //   erreur_js                              { message, source }     (diagnostic temps réel/DebugView, sans dimension)
 //   download                               { file_name, link_url } (prêt pour les futurs fichiers)
 //   select_content                         { content_type: "cta"|"lien"|"bouton"|"faq"|"langue", item_id, section }
@@ -335,6 +336,59 @@ function extraireJeton(valeur: string): string {
 }
 
 /**
+ * Attribution de campagne : paramètres UTM de l'URL + identifiants de clic
+ * (gclid / fbclid / msclkid) + page de référence, conservés pour la session.
+ * Ce n'est pas un traceur : lecture de l'URL et du `document.referrer` uniquement,
+ * posés dans le `dataLayer` (donc soumis au consentement comme le reste).
+ */
+const CLE_ATTRIBUTION = "eiden-attribution";
+export type Attribution = Record<string, string>;
+
+const CLES_ATTRIBUTION = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "gclid",
+  "fbclid",
+  "msclkid",
+] as const;
+
+function lireAttribution(): Attribution {
+  try {
+    const brut = window.sessionStorage.getItem(CLE_ATTRIBUTION);
+    return brut ? (JSON.parse(brut) as Attribution) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Capture l'attribution de la première visite de la session (URL + référent). */
+export function capturerAttribution(): Attribution {
+  const existante = lireAttribution();
+  const params = new URLSearchParams(window.location.search);
+  const trouvee: Attribution = {};
+  for (const cle of CLES_ATTRIBUTION) {
+    const v = params.get(cle);
+    if (v) trouvee[cle] = v.slice(0, 200);
+  }
+  if (!Object.keys(trouvee).length && !existante.referrer) {
+    const ref = document.referrer;
+    if (ref && !ref.startsWith(window.location.origin)) {
+      trouvee.referrer = ref.slice(0, 300);
+    }
+  }
+  const fusion = { ...trouvee, ...existante };
+  try {
+    window.sessionStorage.setItem(CLE_ATTRIBUTION, JSON.stringify(fusion));
+  } catch {
+    /* stockage indisponible : l'attribution reste dans le dataLayer de la session */
+  }
+  return fusion;
+}
+
+/**
  * À appeler une fois au démarrage : si le visiteur s'est déjà prononcé, charge
  * uniquement les traceurs acceptés et installe l'écoute des clics. Sinon, ne fait
  * rien (le bandeau cookies recueillera le choix).
@@ -344,7 +398,8 @@ export function initialiserSuivi(): void {
   const prefs = lirePreferences();
   if (!prefs) return;
   chargerTraceurs(prefs);
-  suivrePageVue(detectionLangue());
+  const attribution = capturerAttribution();
+  suivrePageVue(detectionLangue(), attribution);
   installerEcouteClics();
   installerEcouteErreurs();
 }
@@ -360,10 +415,14 @@ export function suivreEvenement(nom: string, parametres: Record<string, unknown>
   relayerClarity(nom);
 }
 
-export function suivrePageVue(detection?: "auto" | "memorisee" | "defaut"): void {
+export function suivrePageVue(
+  detection?: "auto" | "memorisee" | "defaut",
+  attribution?: Attribution,
+): void {
   suivreEvenement("page_view", {
     page_path: window.location.pathname,
     ...(detection ? { detection } : {}),
+    ...(attribution && Object.keys(attribution).length ? { attribution } : {}),
   });
 }
 
@@ -429,6 +488,16 @@ export function suivrePopupCommencer(): void {
 /** Section réellement vue (une fois par affichage, relancé au changement de langue). */
 export function suivreSectionVue(section: string): void {
   suivreEvenement("section_vue", { section });
+}
+
+/** Pack présenté à l'écran (événement e-commerce, une fois par pack et par session). */
+export function suivreVuePack(pack: string, nom: string): void {
+  suivreEvenement("view_item", { item_id: pack, item_name: nom, item_category: "pack" });
+}
+
+/** Pack choisi par le visiteur (avant l'ouverture de la demande rapide). */
+export function suivreSelectionPack(pack: string, nom: string): void {
+  suivreEvenement("select_item", { item_id: pack, item_name: nom, item_category: "pack" });
 }
 
 /** Clic téléphone / WhatsApp / e-mail (noms d'événements imposés par le pilotage). */

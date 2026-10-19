@@ -3,7 +3,7 @@
 Surveillance de disponibilité RDV (TLScontact/BLS ou tout autre site public).
 
 Ce script ne fait QUE lire une page publique et comparer son contenu à la dernière
-lecture — comme un humain qui rafraîchit la page. Il n'automatise ni connexion, ni
+lecture - comme un humain qui rafraîchit la page. Il n'automatise ni connexion, ni
 formulaire, ni réservation : dès qu'un changement est détecté, il pousse une
 notification dans l'app (table `notifications`) et c'est un agent humain qui va
 réserver via le site officiel, comme n'importe quel autre demandeur.
@@ -20,9 +20,9 @@ Utilisation :
                                                 # interval_seconds par ligne
 
 Variables d'environnement :
-    DATABASE_URL   — même valeur que dans .env (obligatoire)
-    RDV_USER_AGENT — user-agent HTTP à envoyer (optionnel)
-    RDV_MIN_INTERVAL — plancher en secondes entre deux lectures d'une même URL,
+    DATABASE_URL   - même valeur que dans .env (obligatoire)
+    RDV_USER_AGENT - user-agent HTTP à envoyer (optionnel)
+    RDV_MIN_INTERVAL - plancher en secondes entre deux lectures d'une même URL,
                        pour rester poli avec le site distant (défaut 60)
 """
 
@@ -136,17 +136,17 @@ def guess_status(html: str) -> str:
     for pat in NO_SLOT_PATTERNS:
         if re.search(pat, lowered):
             return "indisponible (probable)"
-    return "à vérifier — le contenu a changé"
+    return "à vérifier - le contenu a changé"
 
 
 def notify(conn, watch: dict, status: str) -> None:
-    """Insère une notification pour chaque utilisateur — visible dans la cloche de
+    """Insère une notification pour chaque utilisateur - visible dans la cloche de
     l'app (table `notifications`, type "info")."""
     with conn.cursor() as cur:
         cur.execute("SELECT id FROM users")
         user_ids = [row[0] for row in cur.fetchall()]
         message = (
-            f"Changement détecté sur « {watch['label']} » — {status}. "
+            f"Changement détecté sur « {watch['label']} » - {status}. "
             f"Vérifiez manuellement : {watch['url']}"
         )
         for uid in user_ids:
@@ -202,7 +202,7 @@ def run_once(conn) -> None:
         watches = cur.fetchall()
 
     if not watches:
-        print("[info] aucune surveillance active — ajoutez une URL depuis l'écran dédié.")
+        print("[info] aucune surveillance active - ajoutez une URL depuis l'écran dédié.")
         return
 
     now = datetime.now(timezone.utc)
@@ -230,7 +230,7 @@ def main() -> None:
     conn = psycopg2.connect(get_database_url())
     try:
         if args.loop:
-            print("[info] boucle démarrée — Ctrl+C pour arrêter.")
+            print("[info] boucle démarrée - Ctrl+C pour arrêter.")
             while True:
                 run_once(conn)
                 time.sleep(args.poll_seconds)

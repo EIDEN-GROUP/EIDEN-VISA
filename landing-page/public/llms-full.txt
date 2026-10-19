@@ -8,7 +8,7 @@ EIDEN Visa est le service d'accompagnement voyage d'EIDEN, SARL à associé uniq
 
 - Adresse : Agadir Bay, Technopole 1, Bloc B, 1er étage, Bureau 101 B, Agadir (Maroc).
 - Horaires : lundi–jeudi 10h00–17h30, vendredi 10h00–12h30 et 14h00–15h30.
-- Contact : contact@eiden-group.com   Tél/WhatsApp : +212 777 777 428.
+- Contact : visa@eiden-group.com   Tél/WhatsApp : +212 777 777 428.
 
 ## Services
 
@@ -24,6 +24,13 @@ EIDEN Visa est le service d'accompagnement voyage d'EIDEN, SARL à associé uniq
 - EIDEN Visa accompagne la préparation des dossiers mais NE DÉLIVRE PAS les visas et ne garantit jamais leur obtention : la décision appartient exclusivement aux autorités consulaires compétentes.
 - Aucun paiement en ligne, aucun compte utilisateur, aucune pièce d'identité demandée via le formulaire (les documents se traitent en agence).
 - En cas de message suspect imitant EIDEN Visa : appeler l'agence au +212 777 777 428.
+
+## Référentiel de mots-clés
+
+Mots-clés principaux servis par le site (FR) : visa, visa Agadir, visa Eiden, EIDEN Visa, visa Schengen, visa Schengen Maroc, visa Schengen Agadir, visa France Maroc, visa Espagne Maroc, agence de visa Agadir, accompagnement visa Agadir, aide visa Agadir, assistance visa Agadir.
+Mots-clés longue traîne : TLScontact Agadir, TLS Contact, centre TLScontact, rendez-vous TLScontact Agadir, BLS Espagne Agadir, BLS Agadir, dossier visa Schengen Maroc, dossier visa Agadir, préparer visa Schengen Maroc, pré-réservation hôtel et billet d'avion Agadir, assurance voyage visa Schengen, rendez-vous consulaire Agadir, visa tourisme Agadir, visa visite familiale Agadir, visa Europe Maroc, visa Maroc.
+
+Équivalents arabes : فيزا, فيزا أكادير, فيزا شنغن, فيزا شنغن المغرب, فيزا شنغن أكادير, وكالة فيزا أكادير, موعد TLScontact أكادير, BLS إسبانيا أكادير, تأشيرة شنغن المغرب, تجهيز ملف التأشيرة أكادير, مواكبة تأشيرة أكادير.
 
 ## Questions fréquentes (texte intégral du site)
 
@@ -45,14 +52,22 @@ Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches as
 
 ### Le rendez-vous se prend-il chez TLScontact ou BLS ?
 
-Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre — TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.
+Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre - TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.
+
+### EIDEN Visa est-elle une agence de visa à Agadir ?
+
+Oui. EIDEN Visa est une agence de visa Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre.
+
+### Comment préparer mon dossier de visa Schengen au Maroc ?
+
+En six étapes : analyse de votre situation, identification des documents, préparation des pièces, vérification de la complétude du dossier, remplissage du formulaire et démarches, puis rendez-vous au centre. La demande rapide en ligne (3 étapes) permet de démarrer tout de suite.
 
 ## Données personnelles et cookies (résumé, loi marocaine 09-08)
 
 - Formulaire : nom, prénom, téléphone (obligatoires) ; e-mail, type de visa, dates, destination, formule, ville, nombre de demandeurs. Finalité unique : étudier le projet et recontacter. Conservation 13 mois maximum après l'envoi, puis suppression automatique (purge technique).
-- Droits gratuits d'accès, de rectification et d'opposition : contact@eiden-group.com (objet « Données personnelles ») ; recours possible auprès de la CNDP.
+- Droits gratuits d'accès, de rectification et d'opposition : visa@eiden-group.com (objet « Données personnelles ») ; recours possible auprès de la CNDP.
 - Stockage sur l'appareil : langue, brouillon de demande (effacé à l'envoi), choix cookies (12 mois). Aucun traceur tiers sans acceptation explicite, personnalisable par catégorie (mesure d'audience, expérience, marketing).
-- Sécurité : HTTPS, base de données en écriture seule depuis le site, validation et plafonds côté serveur, secrets jamais exposés. Signaler une faille : contact@eiden-group.com, objet « [SÉCURITÉ] ».
+- Sécurité : HTTPS, base de données en écriture seule depuis le site, validation et plafonds côté serveur, secrets jamais exposés. Signaler une faille : visa@eiden-group.com, objet « [SÉCURITÉ] ».
 
 ## Pages de référence
 
@@ -62,4 +77,5 @@ Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre �
 - Cookies : https://visa.eiden-group.com/cookies.html
 - Sécurité : https://visa.eiden-group.com/securite.html
 - Plan du site : https://visa.eiden-group.com/sitemap.xml
+- Flux RSS : https://visa.eiden-group.com/feed.xml
 - Contact sécurité : https://visa.eiden-group.com/.well-known/security.txt

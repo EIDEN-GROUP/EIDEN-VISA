@@ -1,6 +1,6 @@
 /* TEAM */
   EIDEN Visa Agadir, Maroc
-  Contact: contact@eiden-group.com
+  Contact: visa@eiden-group.com
   Site: https://visa.eiden-group.com/
 
 /* SITE */

@@ -34,7 +34,7 @@ export const LIENS = {
 export const CONTACT = {
   telephone: "+212 777 777 428",
   telephoneLien: "tel:+212777777428",
-  email: "contact@eiden-group.com",
+  email: "visa@eiden-group.com",
   carte: "https://www.google.com/maps/search/?api=1&query=Technopole+1+Agadir+Bay+Agadir",
 };
 

@@ -1,17 +1,43 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { AnimatedButton, ArrowLink } from "../components/buttons";
 import { useDemande } from "../components/DemandeRapide";
 import { Reveal, SplitReveal } from "../components/motion";
 import { PACKS } from "../content";
 import { useLangue } from "../i18n";
-import { suivreContenu } from "../lib/suivi";
+import { suivreContenu, suivreSelectionPack, suivreVuePack } from "../lib/suivi";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
 export function Packs() {
   const { t } = useLangue();
   const ouvrirDemande = useDemande();
+  const grille = useRef<HTMLDivElement>(null);
+
+  // Un pack présenté à l'écran = `view_item` (une fois par pack et par session).
+  useEffect(() => {
+    const racine = grille.current;
+    if (!racine) return;
+    const vus = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entrees) => {
+        for (const entree of entrees) {
+          if (!entree.isIntersecting) continue;
+          const carte = (entree.target as HTMLElement).closest("[data-pack]");
+          const id = carte?.getAttribute("data-pack");
+          if (!id || vus.has(id)) continue;
+          vus.add(id);
+          const index = PACKS.findIndex((p) => p.id === id);
+          const nom = t.packs.offres[index]?.nom ?? id;
+          suivreVuePack(id, nom);
+        }
+      },
+      { threshold: 0.4 },
+    );
+    for (const carte of racine.querySelectorAll("[data-pack]")) observer.observe(carte);
+    return () => observer.disconnect();
+  }, [t.packs.offres]);
 
   return (
     <section id="packs" aria-labelledby="packs-titre" className="scroll-mt-24 pt-20 lg:pt-[62px]">
@@ -50,6 +76,7 @@ export function Packs() {
             Écrans tactiles (pas de survol) : tout reste visible. */}
         <div
           id="packs-grille"
+          ref={grille}
           className="mt-10 grid scroll-mt-28 gap-6 pt-3 md:grid-cols-3 md:gap-4 xl:gap-5"
         >
           {PACKS.map(({ id, image, position, vedette }, i) => {
@@ -57,6 +84,7 @@ export function Packs() {
             return (
               <Reveal key={image} delay={i * 0.12} y={64} className="h-full">
                 <motion.article
+                  data-pack={id}
                   whileHover={{ y: -6 }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   className={`group relative isolate flex h-full min-h-[560px] flex-col justify-end overflow-hidden rounded-[24px] bg-ink shadow-[var(--shadow-soft)] transition-shadow duration-500 focus-within:shadow-[var(--shadow-float)] hover:shadow-[var(--shadow-float)] lg:min-h-[500px] ${
@@ -112,6 +140,7 @@ export function Packs() {
                             popup
                             onClick={() => {
                               suivreContenu("bouton", `choisir-pack-${id}`, "packs");
+                              suivreSelectionPack(id, nom);
                               ouvrirDemande({ pack: id });
                             }}
                             variant={vedette ? "primary" : "sand"}

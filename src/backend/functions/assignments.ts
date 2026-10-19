@@ -6,7 +6,7 @@ import { users, dossiers, notifications } from "@/backend/db/schema";
 import { requireUserId } from "@/backend/functions/auth";
 import { logActivity } from "@/backend/functions/ops";
 
-/** Liste légère (id, nom, rôle) pour le sélecteur d'assignation — accessible à tout le personnel. */
+/** Liste légère (id, nom, rôle) pour le sélecteur d'assignation - accessible à tout le personnel. */
 export const listAssignableUsers = createServerFn({ method: "GET" }).handler(async () => {
   await requireUserId();
   return db
@@ -53,7 +53,7 @@ export const assignDossier = createServerFn({ method: "POST" })
 
     await logActivity(
       "dossier.assignation",
-      `Dossier ${dossier.id} assigné à ${assignee.nom}${data.note ? ` — ${data.note}` : ""}`,
+      `Dossier ${dossier.id} assigné à ${assignee.nom}${data.note ? ` - ${data.note}` : ""}`,
       dossier.id,
     );
   });

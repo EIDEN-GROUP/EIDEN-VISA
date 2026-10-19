@@ -3,9 +3,9 @@
 
 export const fr = {
   meta: {
-    title: "Visa Schengen depuis le Maroc | EIDEN Visa Agadir",
+    title: "EIDEN Visa Agadir - visa Schengen Maroc & TLScontact",
     description:
-      "EIDEN Visa à Agadir vous accompagne dans votre dossier de visa Schengen : étude du dossier, pré-réservations hôtel et avion, assurance voyage et prise de rendez-vous. Demande rapide en 3 étapes.",
+      "Agence de visa à Agadir : EIDEN Visa prépare votre dossier de visa Schengen (France, Espagne), rendez-vous TLScontact/BLS, assurance voyage. Demande rapide en 3 étapes.",
   },
   loader: {
     slogan: "Le monde vous attend",
@@ -33,7 +33,7 @@ export const fr = {
     surtitre: "Simplifiez vos démarches",
     titre: ["Le monde", "vous attend."],
     texte:
-      "EIDEN Visa vous accompagne dans la préparation de votre dossier de visa Schengen, avec un accompagnement professionnel et personnalisé et une expertise complète jusqu'à la prise de votre rendez-vous.",
+      "EIDEN Visa, l'agence de visa Agadir, vous accompagne dans la préparation de votre dossier de visa Schengen : accompagnement professionnel et personnalisé, jusqu'à la prise de votre rendez-vous au centre.",
     evaluer: "Évaluer mon dossier",
     commentCaMarche: "Voir comment ça marche",
     script: ["Vos projets", "sans frontières"],
@@ -47,7 +47,8 @@ export const fr = {
   destination: {
     surtitre: "Votre destination",
     titre: "Visa Schengen",
-    texte: "Préparez votre dossier et commencez votre voyage en toute sérénité.",
+    texte:
+      "Préparez votre dossier de visa Schengen depuis Agadir - visa France, visa Espagne - et commencez votre voyage en toute sérénité.",
     drapeau: "Drapeau de l'Union européenne",
     bouton: "Préparer mon dossier visa Schengen",
     imageAlt: "La tour Eiffel encadrée de feuillages rouges d'automne",
@@ -66,12 +67,13 @@ export const fr = {
       },
       {
         titre: "Rendez-vous",
-        texte: "Nous vous accompagnons jusqu'à la prise de votre rendez-vous.",
+        texte:
+          "Nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre TLScontact (France) ou BLS (Espagne) à Agadir.",
       },
     ],
   },
   pourquoi: {
-    surtitre: "Pourquoi EIDEN Visa ?",
+    surtitre: "Pourquoi EIDEN Visa, votre agence de visa à Agadir ?",
     titre: "Un accompagnement complet pour votre visa Schengen.",
     texte:
       "Nous simplifions vos démarches et vous accompagnons à chaque étape, avec une expertise dédiée et un suivi personnalisé.",
@@ -180,7 +182,7 @@ export const fr = {
     note: "Sans engagement : l'équipe EIDEN vous répond.",
   },
   faq: {
-    surtitre: "Questions fréquentes",
+    surtitre: "Questions fréquentes sur le visa Schengen à Agadir",
     titre: "FAQ",
     questions: [
       // {
@@ -210,7 +212,17 @@ export const fr = {
       {
         question: "Le rendez-vous se prend-il chez TLScontact ou BLS ?",
         reponse:
-          "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre — TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.",
+          "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre - TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.",
+      },
+      {
+        question: "EIDEN Visa est-elle une agence de visa à Agadir ?",
+        reponse:
+          "Oui. EIDEN Visa est une agence de visa Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre.",
+      },
+      {
+        question: "Comment préparer mon dossier de visa Schengen au Maroc ?",
+        reponse:
+          "En six étapes : analyse de votre situation, identification des documents, préparation des pièces, vérification de la complétude du dossier, remplissage du formulaire et démarches, puis rendez-vous au centre. La demande rapide en ligne (3 étapes) permet de démarrer tout de suite.",
       },
     ],
   },

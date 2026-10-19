@@ -2,12 +2,23 @@
 
 > Agence d'accompagnement aux demandes de visa Schengen, basée à Agadir (Maroc). Site vitrine en français et en arabe, demande rapide en 3 étapes, réponse de l'équipe EIDEN. EIDEN ne délivre pas les visas et ne garantit jamais leur obtention : la décision appartient aux autorités consulaires.
 
-EIDEN Visa accompagne les voyageurs basés au Maroc dans la préparation de leur dossier de visa : étude du dossier, pré-réservations d'hôtel et de billet d'avion, assurance voyage et prise de rendez-vous consulaire (frais inclus dans les packs). Méthode en 6 étapes : analyse, documents, préparation, vérification, formulaire et démarches, rendez-vous. Packs sans prix affiché : Standard, Essentiel, Global. Contact : contact@eiden-group.com, +212 777 777 428, Agadir Bay (Technopole 1, Bloc B, 1er étage, Bureau 101 B).
+EIDEN Visa accompagne les voyageurs basés au Maroc dans la préparation de leur dossier de visa : étude du dossier, pré-réservations d'hôtel et de billet d'avion, assurance voyage et prise de rendez-vous consulaire (frais inclus dans les packs). Méthode en 6 étapes : analyse, documents, préparation, vérification, formulaire et démarches, rendez-vous. Packs sans prix affiché : Standard, Essentiel, Global. Contact : visa@eiden-group.com, +212 777 777 428, Agadir Bay (Technopole 1, Bloc B, 1er étage, Bureau 101 B).
+
+Mots-clés / keywords : visa, visa Agadir, visa Eiden, EIDEN Visa, visa Schengen, visa Schengen Maroc, visa Schengen Agadir, visa France Maroc, visa Espagne Maroc, agence de visa Agadir, accompagnement visa Agadir, TLScontact Agadir, TLS Contact, centre TLScontact, rendez-vous TLScontact Agadir, BLS Espagne Agadir, dossier visa Schengen Maroc, pré-réservation hôtel et billet d'avion, assurance voyage visa, rendez-vous consulaire Agadir, aide visa Agadir, assistance visa Agadir.
+
+## Services (visa Schengen Maroc, Agadir)
+
+- **Étude et préparation du dossier** : tourisme et visite privée, visite familiale, déplacements professionnels, installation familiale et visas de retour (long séjour).
+- **Pré-réservation d'hôtel et de billet d'avion** et **assurance voyage**.
+- **Prise de rendez-vous** : TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait par le client, en personne.
+- **Formules d'accompagnement** : Pack Standard (dossier simple), Pack Essentiel (accompagnement complet jusqu'au rendez-vous), Pack Global (prise en charge totale, assurance voyage incluse). Tarifs sur demande.
+- **Demande rapide en 3 étapes** (français ou arabe, langue détectée automatiquement) : identité et contact, voyage (type de visa, dates, destination), dossier (formule, ville de résidence, nombre de demandeurs). Envoi = message WhatsApp pré-rempli + sauvegarde interne pour être recontacté.
 
 ## Accueil et contact
 
 - [Site EIDEN Visa](https://visa.eiden-group.com/) : présentation des services, packs, questions fréquentes et demande rapide en français et en arabe.
 - [Contenu complet en un seul fichier](https://visa.eiden-group.com/llms-full.txt) : l'intégralité des informations ci-dessous (services, FAQ, mentions légales résumées) sans navigation.
+- [Flux RSS](https://visa.eiden-group.com/feed.xml) : résumé du site et des questions fréquentes, pour les agrégateurs et les assistants IA.
 - [WhatsApp EIDEN Visa](https://wa.me/212777777428) : discussion directe avec l'équipe.
 
 ## Questions fréquentes (résumé)
@@ -15,6 +26,9 @@ EIDEN Visa accompagne les voyageurs basés au Maroc dans la préparation de leur
 - L'agence fournit les pré-réservations d'hôtel, de billet d'avion et l'assurance voyage selon le dossier.
 - Les tarifs dépendent du pack choisi ; les frais de prise de rendez-vous sont inclus.
 - L'obtention du visa n'est jamais garantie : la décision appartient aux autorités consulaires.
+- Le rendez-vous se prend au centre (TLScontact pour la France, BLS pour l'Espagne, à Agadir) ; le client dépose lui-même son dossier.
+- EIDEN Visa est une agence de visa à Agadir (Agadir Bay, Technopole 1).
+- Préparer un dossier de visa Schengen au Maroc : six étapes, de l'analyse au rendez-vous.
 - Détail mot pour mot : voir `llms-full.txt` et la page d'accueil (données structurées `FAQPage`).
 
 ## Informations légales et confidentialité
