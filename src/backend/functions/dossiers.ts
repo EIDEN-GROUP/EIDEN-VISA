@@ -748,7 +748,7 @@ export const updateQualification = createServerFn({ method: "POST" })
         }.`
       : `Fil de questions corrigé (${modifiees} entrée${modifiees > 1 ? "s" : ""} modifiée${
           modifiees > 1 ? "s" : ""
-        }) — qualification non recalculée (réponse hors arbre).`;
+        }) - qualification non recalculée (réponse hors arbre).`;
     await logActivity("dossier.qualification_correction", detail, data.id);
   });
 

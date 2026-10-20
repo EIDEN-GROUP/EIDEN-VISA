@@ -134,7 +134,7 @@ Détails : `landing-page/README.md`.
 entity):** la landing est une SPA React : le HTML servi porte désormais le contenu réel
 (bloc `#eiden-seo` dans `landing-page/index.html` : H1 « EIDEN Visa, agence de visa Schengen
 à Agadir », méthode, packs, FAQ, contact, liens internes ; remplacé au premier rendu React,
-visible sans JavaScript) — 197 caractères de texte visible sont devenus ~4 500. Le JSON-LD
+visible sans JavaScript) - 197 caractères de texte visible sont devenus ~4 500. Le JSON-LD
 gagne les signaux d'entité (`sameAs`, `identifier`, `hasMap`, `brand`, `slogan`,
 `parentOrganization`, `alternateName`, `knowsAbout`, nœuds `WebPage` / `Brand` /
 `SocialMediaProfile`) et la marque est rattachée à `https://www.eiden-group.com/` (le site

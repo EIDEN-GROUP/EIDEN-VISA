@@ -724,7 +724,7 @@ footer .droits {
 }
 
 /* ---------- Motif signature : anneau d'étoiles UE en filigrane du hero ----------
-   Même ciel, même encre, mêmes étoiles or que la landing — mais en élément
+   Même ciel, même encre, mêmes étoiles or que la landing - mais en élément
    graphique pur (zéro requête, zéro JS). Un seul par page, aria-hidden. */
 .hero {
   position: relative;
