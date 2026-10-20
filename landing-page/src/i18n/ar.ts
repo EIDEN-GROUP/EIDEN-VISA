@@ -31,8 +31,10 @@ export const ar: Dictionnaire = {
     commencer: "ابدأ ملفي",
   },
   hero: {
-    surtitre: "بسّط إجراءاتك",
+    // La marque est dans le surtitre et dans le titre de page (moteurs, lecteurs d'écran).
+    surtitre: "EIDEN Visa - بسّط إجراءاتك",
     titre: ["العالم", "بانتظارك."],
+    titreH1: "EIDEN Visa، وكالة تأشيرة شنغن في أكادير",
     texte:
       "EIDEN Visa، وكالة فيزا أكادير، ترافقك في إعداد ملف تأشيرة شنغن: مواكبة احترافية وشخصية، حتى حجز موعدك في المركز.",
     evaluer: "قيّم ملفي",
@@ -444,6 +446,7 @@ export const ar: Dictionnaire = {
   },
   footer: {
     droits: "جميع الحقوق محفوظة.",
+    groupe: "علامة من مجموعة",
     juridique: "روابط قانونية",
     conditions: "شروط الاستخدام",
     confidentialite: "الخصوصية",

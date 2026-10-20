@@ -89,6 +89,19 @@ export function Footer() {
         <p className="mt-2 pe-20 text-center text-[11px] leading-4 whitespace-nowrap text-white/55 sm:mt-2.5 sm:pe-0">
           © {new Date().getFullYear()} EIDEN Visa. {t.footer.droits}
         </p>
+        {/* Rattache l'entité à son groupe : les moteurs identifient « EIDEN Visa »
+            comme une marque du groupe EIDEN GROUP (et non comme un site orphelin). */}
+        <p className="mt-1 text-center text-[11px] leading-4 text-white/45">
+          {t.footer.groupe}{" "}
+          <a
+            href="https://www.eiden-group.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 transition-colors hover:text-white"
+          >
+            EIDEN GROUP
+          </a>
+        </p>
       </div>
     </footer>
   );

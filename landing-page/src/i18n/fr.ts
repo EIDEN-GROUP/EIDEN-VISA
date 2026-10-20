@@ -3,9 +3,9 @@
 
 export const fr = {
   meta: {
-    title: "EIDEN Visa Agadir - visa Schengen Maroc & TLScontact",
+    title: "EIDEN Visa - Visa Schengen Maroc à Agadir | TLScontact",
     description:
-      "Agence de visa à Agadir : EIDEN Visa prépare votre dossier de visa Schengen (France, Espagne), rendez-vous TLScontact/BLS, assurance voyage. Demande rapide en 3 étapes.",
+      "Agence de visa à Agadir : EIDEN Visa prépare votre dossier de visa Schengen (France, Espagne), rendez-vous TLScontact/BLS. Demande rapide en 3 étapes.",
   },
   loader: {
     slogan: "Le monde vous attend",
@@ -30,8 +30,10 @@ export const fr = {
     commencer: "Commencer mon dossier",
   },
   hero: {
-    surtitre: "Simplifiez vos démarches",
+    // La marque est dans le surtitre et dans le titre de page (moteurs, lecteurs d'écran).
+    surtitre: "EIDEN Visa - simplifiez vos démarches",
     titre: ["Le monde", "vous attend."],
+    titreH1: "EIDEN Visa, agence de visa Schengen à Agadir",
     texte:
       "EIDEN Visa, l'agence de visa Agadir, vous accompagne dans la préparation de votre dossier de visa Schengen : accompagnement professionnel et personnalisé, jusqu'à la prise de votre rendez-vous au centre.",
     evaluer: "Évaluer mon dossier",
@@ -452,6 +454,7 @@ export const fr = {
   },
   footer: {
     droits: "Tous droits réservés.",
+    groupe: "Une marque du groupe",
     juridique: "Liens légaux",
     conditions: "Conditions d'utilisation",
     confidentialite: "Confidentialité",

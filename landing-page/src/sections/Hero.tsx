@@ -84,15 +84,23 @@ export function Hero() {
           <SplitReveal as="p" mode="chars" className="eyebrow text-muted">
             {t.hero.surtitre}
           </SplitReveal>
-          <SplitReveal
-            as="h1"
-            delay={0.2}
-            className="mt-3 font-serif text-[clamp(2.9rem,6.3vw,5.6rem)] leading-[0.98] tracking-[-0.015em] text-ink sm:mt-4 court:text-[2.45rem]"
-          >
-            {t.hero.titre[0]}
-            <br />
-            {t.hero.titre[1]}
-          </SplitReveal>
+          {/*
+            Titre de page : il porte la marque, la ville et le service, pour les
+            moteurs de recherche et les lecteurs d'écran. Le titre poétique
+            ci-dessous reste le titre affiché (décoratif).
+          */}
+          <h1 className="sr-only">{t.hero.titreH1}</h1>
+          <span aria-hidden="true">
+            <SplitReveal
+              as="p"
+              delay={0.2}
+              className="mt-3 font-serif text-[clamp(2.9rem,6.3vw,5.6rem)] leading-[0.98] tracking-[-0.015em] text-ink sm:mt-4 court:text-[2.45rem]"
+            >
+              {t.hero.titre[0]}
+              <br />
+              {t.hero.titre[1]}
+            </SplitReveal>
+          </span>
           <SplitReveal
             as="p"
             mode="lines"
