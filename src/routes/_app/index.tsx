@@ -21,7 +21,7 @@ function Dashboard() {
   const [range, setRange] = useState<DateRange>({});
   const { stats } = useDashboardStats(range);
   // Bornée aux dossiers actifs les plus récents : les alertes sont une logique métier
-  // en JS, pas une agrégation SQL — à l'échelle réelle on la lit sur un lot récent,
+  // en JS, pas une agrégation SQL - à l'échelle réelle on la lit sur un lot récent,
   // pas sur la table entière. Le filtre de date ne s'applique pas à ce lot borné.
   const { dossiers: actifsRecents } = useAlertesDossiers();
   const { dossiers: recents } = useDossiersRecents();
@@ -47,15 +47,15 @@ function Dashboard() {
         <Kpi
           icon={FolderOpen}
           label="Dossiers actifs"
-          value={stats?.actifs ?? "—"}
-          sub={`${stats?.total ?? "—"} au total`}
+          value={stats?.actifs ?? "-"}
+          sub={`${stats?.total ?? "-"} au total`}
           from="#FDBA74"
           to="#F97316"
         />
         <Kpi
           icon={ShieldAlert}
           label="À autoriser"
-          value={stats?.aAutoriser ?? "—"}
+          value={stats?.aAutoriser ?? "-"}
           sub="Upload bloqué"
           from="#34D399"
           to="#0D9488"

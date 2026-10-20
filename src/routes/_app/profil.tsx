@@ -175,7 +175,7 @@ function MyProfile() {
         <ProfileKpi label="Mes dossiers" value={`${k.dossiers}`} hint={`${k.actifs} actifs`} />
         <ProfileKpi
           label="Taux d'approbation"
-          value={k.tauxApprobation == null ? "—" : `${k.tauxApprobation} %`}
+          value={k.tauxApprobation == null ? "-" : `${k.tauxApprobation} %`}
           hint={`${k.approuve} ✓ · ${k.refuse} ✗`}
         />
         <ProfileKpi
@@ -188,8 +188,8 @@ function MyProfile() {
           label="Niveau dominant"
           value={
             data.parNiveau.length
-              ? (LEVEL_LABEL[[...data.parNiveau].sort((a, b) => b.n - a.n)[0]!.k as Level] ?? "—")
-              : "—"
+              ? (LEVEL_LABEL[[...data.parNiveau].sort((a, b) => b.n - a.n)[0]!.k as Level] ?? "-")
+              : "-"
           }
         />
       </div>

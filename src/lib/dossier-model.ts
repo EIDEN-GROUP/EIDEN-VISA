@@ -38,7 +38,7 @@ export const ETAPES = [
     label: "Prise de rendez-vous sur TLScontact",
     detail:
       "Recherche d'un créneau et prise du rendez-vous au centre de dépôt. Étape dépendante des disponibilités du centre.",
-    encaissement: "—",
+    encaissement: "-",
     role: "Back office",
   },
   {
@@ -159,12 +159,12 @@ export const SERVICES: Record<ServiceKey, { label: string; prix: number; detail:
     detail: "Pré-réservation du billet d'avion seule.",
   },
   assurance_6m: {
-    label: "Assurance voyage — 6 mois",
+    label: "Assurance voyage - 6 mois",
     prix: 550,
     detail: "Assurance selon les conditions et garanties du contrat proposé.",
   },
   assurance_1an: {
-    label: "Assurance voyage — 1 an",
+    label: "Assurance voyage - 1 an",
     prix: 750,
     detail: "Assurance selon les conditions et garanties du contrat proposé.",
   },
@@ -261,7 +261,7 @@ export function modaliteDetail(m: Modalite): string {
     : `${pct} % à l'ouverture du dossier, solde des ${100 - pct} % à la remise du dossier.`;
 }
 
-/** Quand une ligne de paiement est due — la règle métier n'est plus cachée dans le libellé. */
+/** Quand une ligne de paiement est due - la règle métier n'est plus cachée dans le libellé. */
 export type Echeance = "acompte" | "solde" | "option";
 
 export interface Paiement {
@@ -274,7 +274,7 @@ export interface Paiement {
 }
 
 /**
- * Échéancier dérivé du pack et de la modalité — jamais saisi à la main.
+ * Échéancier dérivé du pack et de la modalité - jamais saisi à la main.
  * Ne produit que des lignes non encaissées : l'appelant fusionne avec l'historique déjà encaissé.
  */
 export function planPaiement(
@@ -370,6 +370,12 @@ export interface NoteAgent {
 export interface QualificationReponse {
   question: string;
   reponse: string;
+  /**
+   * Nœud de l'arbre d'où vient la question : permet de proposer les réponses
+   * possibles à l'agent quand il corrige le fil. Absent sur les dossiers
+   * ouverts avant cet ajout (le texte reste alors librement modifiable).
+   */
+  nodeKey?: string | undefined;
 }
 
 export interface Dossier {
@@ -384,7 +390,7 @@ export interface Dossier {
      * indécises côté client). */
     voyageDebut: string | null;
     voyageFin: string | null;
-    /** Passeport — `null` tant que la pièce n'est pas passée entre les mains de l'agence. */
+    /** Passeport - `null` tant que la pièce n'est pas passée entre les mains de l'agence. */
     passeportNumero: string | null;
     passeportDelivrance: string | null;
     passeportExpiration: string | null;
@@ -394,7 +400,7 @@ export interface Dossier {
    * créés avant que ce fil ne soit conservé. */
   qualification: QualificationReponse[];
   agent: string;
-  /** Le VRAI compte qui a ouvert ce dossier — sert à filtrer "Mes dossiers" par utilisateur.
+  /** Le VRAI compte qui a ouvert ce dossier - sert à filtrer "Mes dossiers" par utilisateur.
    * `null` pour les dossiers créés avant l'ajout de ce champ. */
   agentUserId: string | null;
   /** À qui le dossier est confié actuellement (assignation), `null` si non assigné. */
@@ -407,12 +413,12 @@ export interface Dossier {
   niveau: Level;
   /** Pack choisi, ou `carte` quand le client prend des services à l'unité. */
   pack: FormuleKey;
-  /** Services à l'unité retenus — vide sauf si `pack === "carte"`. */
+  /** Services à l'unité retenus - vide sauf si `pack === "carte"`. */
   services: ServiceKey[];
   /** `comptant` par défaut pour les dossiers créés avant l'ajout de la modalité. */
   modalitePaiement: Modalite;
   etape: number;
-  /** Centre de dépôt visé (le client dépose lui-même — Eiden ne prend pas le rendez-vous). */
+  /** Centre de dépôt visé (le client dépose lui-même - Eiden ne prend pas le rendez-vous). */
   centre: Centre;
   /** Le service ne peut téléverser des documents qu'une fois ce dossier autorisé (CEO/Réception). */
   uploadAutorise: boolean;
@@ -423,11 +429,11 @@ export interface Dossier {
   notesAgent: NoteAgent[];
   decision: Decision;
   decisionDate: string | null;
-  /** Motif communiqué par le consulat en cas de refus — `null` sinon. */
+  /** Motif communiqué par le consulat en cas de refus - `null` sinon. */
   decisionMotif: string | null;
   /**
    * Démarches faites HORS de l'application : sur le portail France-Visas puis au centre.
-   * L'app ne peut pas les constater elle-même, donc l'agent les déclare — et la référence
+   * L'app ne peut pas les constater elle-même, donc l'agent les déclare - et la référence
    * saisie sert de preuve, sans quoi « étape suivante » ne veut rien dire.
    */
   /** Le reçu papier a été remis au client, en main propre (étape 2). */
@@ -453,7 +459,7 @@ export function resolveCase(caseKey: string, profile: Profile): CaseResult {
     getFixedCase(caseKey) ?? {
       key: caseKey,
       title: "Cas non qualifié",
-      cat: "—",
+      cat: "-",
       level: "attention",
       docs: [],
       extra: [],
@@ -488,7 +494,7 @@ export function encaisse(d: Dossier) {
 }
 
 /**
- * Validité du passeport : règle Schengen — il doit rester valable au moins 3 mois
+ * Validité du passeport : règle Schengen - il doit rester valable au moins 3 mois
  * après la date de retour prévue. `null` si on ne peut pas trancher (dates absentes).
  */
 /**
@@ -542,7 +548,7 @@ export function passeportPerime(d: Dossier): boolean {
 export interface PointEtape {
   label: string;
   fait: boolean;
-  /** Pourquoi ce point compte — affiché quand la raison n'est pas évidente. */
+  /** Pourquoi ce point compte - affiché quand la raison n'est pas évidente. */
   aide?: string;
 }
 
@@ -624,7 +630,7 @@ export function checklistEtape(d: Dossier): PointEtape[] {
 export function alertes(d: Dossier): string[] {
   const out: string[] = [];
 
-  // Passeport — pièce bloquante, indépendante de l'avancement du dossier.
+  // Passeport - pièce bloquante, indépendante de l'avancement du dossier.
   const statutPasseport = passeportStatut(d);
   const minimumPasseport = passeportExpirationMinimale(d);
   const jusquAu = minimumPasseport
@@ -669,6 +675,15 @@ export function alertes(d: Dossier): string[] {
 export function paysCentre(centre: Centre): string {
   return centre.includes("BLS") ? "Espagne" : "France";
 }
+
+/**
+ * Dossier créé AVANT la qualification (l'agent enregistre d'abord le client, la
+ * Boussole qualifie ensuite) : `case_key` provisoire tant que le cas n'est pas
+ * retenu. La fiche affiche alors un bandeau « Qualification à compléter ».
+ */
+export const CASE_PROVISOIRE = "PENDING";
+export const TITRE_PROVISOIRE = "Dossier à qualifier";
+export const CATEGORIE_PROVISOIRE = "Qualification en cours";
 
 /** Une ligne de reçu : libellé, montant, date (texte libre, ex. « aujourd'hui »), encaissement. */
 export interface RecuLigne {

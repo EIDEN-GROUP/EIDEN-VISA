@@ -45,7 +45,7 @@ export function ApercuRecu({ r, ecart }: { r: RecuDonnees; ecart: boolean }) {
     <div className="border border-border bg-card p-10">
       {ecart && (
         <div className="mb-6 rounded-xl border border-[var(--warn)] bg-[var(--warn-soft)] px-4 py-3 text-sm font-medium text-foreground">
-          Brouillon — montants modifiés, sans valeur comptable. Seul le reçu officiel atteste les
+          Brouillon - montants modifiés, sans valeur comptable. Seul le reçu officiel atteste les
           sommes encaissées.
         </div>
       )}
@@ -144,7 +144,7 @@ export function ApercuRecu({ r, ecart }: { r: RecuDonnees; ecart: boolean }) {
               ))}
               <div className="mt-3 flex items-center justify-between text-sm font-semibold">
                 <span className="text-foreground">
-                  {reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé"}
+                  {reste > 0 ? "Reste à payer" : "Reste à payer - dossier soldé"}
                 </span>
                 <span className="num-display text-lg text-foreground">{reste} MAD</span>
               </div>
@@ -356,7 +356,7 @@ export function EditeurBrouillon({
   return (
     <div className="space-y-4" ref={racine}>
       <div className="rounded-xl border border-[var(--warn)] bg-[var(--warn-soft)] px-4 py-3 text-sm">
-        <span className="font-semibold text-foreground">Brouillon — non enregistré.</span>{" "}
+        <span className="font-semibold text-foreground">Brouillon - non enregistré.</span>{" "}
         <span className="text-muted-foreground">
           Modifications temporaires : le dossier n'est pas modifié. Téléchargez ou enregistrez avant
           de quitter, sinon tout est perdu.
@@ -434,7 +434,7 @@ export function EditeurBrouillon({
         <div className="border border-border bg-card p-10">
           {ecart && (
             <div className="mb-6 rounded-xl border border-[var(--warn)] bg-[var(--warn-soft)] px-4 py-3 text-sm font-medium text-foreground">
-              Brouillon — montants modifiés, sans valeur comptable. Seul le reçu officiel atteste
+              Brouillon - montants modifiés, sans valeur comptable. Seul le reçu officiel atteste
               les sommes encaissées.
             </div>
           )}
@@ -636,7 +636,7 @@ export function EditeurBrouillon({
                               })
                             }
                             label="Date de la ligne"
-                            placeholder="—"
+                            placeholder="-"
                           />
                         </td>
                         <td className="py-2.5 text-right font-medium text-foreground">
@@ -768,7 +768,7 @@ export function EditeurBrouillon({
                     ))}
                   <div className="mt-3 flex items-center justify-between text-sm font-semibold">
                     <span className="text-foreground">
-                      {reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé"}
+                      {reste > 0 ? "Reste à payer" : "Reste à payer - dossier soldé"}
                     </span>
                     <span className="num-display text-lg text-foreground">{reste} MAD</span>
                   </div>
@@ -995,7 +995,7 @@ export function CarteBrouillons({ dossierId }: { dossierId: string }) {
             Brouillons de reçu ({isLoading ? "…" : brouillons.length})
           </span>{" "}
           <span className="text-muted-foreground">
-            — versions de travail enregistrées, le reçu officiel n'est jamais modifié.
+            - versions de travail enregistrées, le reçu officiel n'est jamais modifié.
           </span>
         </div>
         <Button size="sm" variant="outline" asChild>

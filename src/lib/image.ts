@@ -1,4 +1,4 @@
-/** Réduit une image à 400 px de côté max et l'encode en JPEG base64 — pour les avatars. */
+/** Réduit une image à 400 px de côté max et l'encode en JPEG base64 - pour les avatars. */
 export function downscaleImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

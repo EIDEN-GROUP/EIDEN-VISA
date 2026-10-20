@@ -43,7 +43,7 @@ function Confidentialite() {
             gérer les rendez-vous auprès de TLScontact (France) et BLS International (Espagne),
             encaisser les paiements liés à l'accompagnement, et conserver les pièces justificatives
             fournies par le client. Il n'est pas un service public, ne se substitue à aucune
-            démarche consulaire officielle, et ne délivre aucun visa — Eiden Visa accompagne, les
+            démarche consulaire officielle, et ne délivre aucun visa - Eiden Visa accompagne, les
             autorités consulaires décident seules.
           </p>
         </Section>
@@ -73,7 +73,7 @@ function Confidentialite() {
             Le système ne partage, ne vend ni ne transfère aucune donnée client à un tiers non
             autorisé. Aucun document ou renseignement collecté par cet outil ne peut être utilisé
             pour falsifier, contourner ou détourner une procédure consulaire, ni pour toute autre
-            finalité illégale — l'équipe s'engage à ne traiter que des dossiers et documents
+            finalité illégale - l'équipe s'engage à ne traiter que des dossiers et documents
             authentiques fournis par le client.
           </p>
         </Section>

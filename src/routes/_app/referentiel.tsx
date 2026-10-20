@@ -28,7 +28,7 @@ const PACK_ICON: Record<PackKey, string> = {
   global: stampSuitcase,
 };
 
-/** Une icône par motif du périmètre — pas de correspondance forcée pour "Famille", aucune icône ne lui correspond. */
+/** Une icône par motif du périmètre - pas de correspondance forcée pour "Famille", aucune icône ne lui correspond. */
 function scopeIcon(label: string): string | null {
   if (label.includes("Tourisme")) return iconTourisme;
   if (label.includes("Travail")) return iconTravail;

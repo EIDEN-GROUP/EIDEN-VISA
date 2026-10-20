@@ -36,6 +36,8 @@ import {
   updateClient as updateClientFn,
   updateOrigine as updateOrigineFn,
   updateDetails as updateDetailsFn,
+  updateQualification as updateQualificationFn,
+  applyQualification as applyQualificationFn,
   deleteDossier as deleteDossierFn,
 } from "@/backend/functions/dossiers";
 import {
@@ -92,7 +94,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 const DOSSIERS_KEY = ["dossiers", "all"] as const;
 const dossierKey = (id: string) => ["dossiers", "detail", id] as const;
-/** Filtre de date partagé par tous les écrans — porte sur la date d'ouverture réelle du dossier. */
+/** Filtre de date partagé par tous les écrans - porte sur la date d'ouverture réelle du dossier. */
 export interface DateRange {
   from?: string | undefined;
   to?: string | undefined;
@@ -128,7 +130,7 @@ export type DocumentType = "france_tls" | "espagne_bls" | "autre";
 function useDossierMutations() {
   const queryClient = useQueryClient();
   // Une seule mutation peut affecter la page filtrée courante, les stats agrégées, le
-  // tableau de bord et les listes bornées (impayés, encaissements, rendez-vous) —
+  // tableau de bord et les listes bornées (impayés, encaissements, rendez-vous) -
   // on invalide tout ce qui vit sous le préfixe "dossiers" plutôt que de traquer chaque cas.
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["dossiers"] });
@@ -225,6 +227,11 @@ function useDossierMutations() {
       updateDetailsFn({ data: vars }),
     onSuccess: invalidateAll,
   });
+  const updateQualificationMutation = useMutation({
+    mutationFn: (vars: { id: string; qualification: Dossier["qualification"] }) =>
+      updateQualificationFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDossierFn({ data: { id } }),
     onSuccess: invalidateAll,
@@ -296,12 +303,14 @@ function useDossierMutations() {
       updateOrigineMutation.mutateAsync({ id, origine }),
     updateDetails: (id: string, details: Record<string, string>) =>
       updateDetailsMutation.mutateAsync({ id, details }),
+    updateQualification: (id: string, qualification: Dossier["qualification"]) =>
+      updateQualificationMutation.mutateAsync({ id, qualification }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
     setEtape: (id: string, etape: number) => setEtapeMutation.mutateAsync({ id, etape }),
   };
 }
 
-/** Page filtrée/paginée côté SQL — écran Dossiers. Tient à l'échelle quel que soit le volume. */
+/** Page filtrée/paginée côté SQL - écran Dossiers. Tient à l'échelle quel que soit le volume. */
 export function useDossiersPage(params: DossiersPageParams) {
   const { range, ...rest } = params;
   const query = useQuery({
@@ -329,7 +338,7 @@ export function useDashboardStats(range: DateRange = emptyRange) {
   return { stats: query.data, isLoading: query.isLoading };
 }
 
-/** Dossiers actifs, bornés — sert à calculer les alertes sans charger toute la table. */
+/** Dossiers actifs, bornés - sert à calculer les alertes sans charger toute la table. */
 export function useAlertesDossiers() {
   const query = useQuery({ queryKey: ALERTES_KEY, queryFn: () => listAlertesDossiers() });
   return { dossiers: query.data ?? [], isLoading: query.isLoading };
@@ -374,7 +383,7 @@ export function usePackCounts(range: DateRange = emptyRange) {
   return { counts: query.data ?? [], isLoading: query.isLoading };
 }
 
-/** Liste complète — conservée pour les besoins ponctuels (formulaires listant tous les dossiers). */
+/** Liste complète - conservée pour les besoins ponctuels (formulaires listant tous les dossiers). */
 export function useDossiers() {
   const query = useQuery({ queryKey: DOSSIERS_KEY, queryFn: () => listDossiers() });
   const mutations = useDossierMutations();
@@ -387,11 +396,12 @@ export function useDossiers() {
   };
 }
 
-/** Un seul dossier, pour l'écran de détail — n'attend pas que la liste soit en cache. */
-export function useDossier(id: string) {
+/** Un seul dossier, pour l'écran de détail - n'attend pas que la liste soit en cache. */
+export function useDossier(id: string, enabled = true) {
   const query = useQuery({
     queryKey: dossierKey(id),
     queryFn: () => getDossierFn({ data: { id } }),
+    enabled: enabled && Boolean(id),
   });
   const mutations = useDossierMutations();
 
@@ -438,7 +448,7 @@ export function useDocuments(dossierId: string) {
   };
 }
 
-/** Gestion des comptes — écran /ops, réservé au CEO. */
+/** Gestion des comptes - écran /ops, réservé au CEO. */
 export function useOpsUsers() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: USERS_KEY, queryFn: () => listUsersFn() });
@@ -499,7 +509,7 @@ export function useUser(id: string) {
   };
 }
 
-/** Profil analytique complet d'un agent — dossiers, pièces, encaissements, activité. */
+/** Profil analytique complet d'un agent - dossiers, pièces, encaissements, activité. */
 export function useUserProfile(id: string) {
   const query = useQuery({
     queryKey: userProfileKey(id),
@@ -545,7 +555,7 @@ export function useNotifications() {
 const RDV_WATCHES_KEY = ["rdv-watches"] as const;
 
 /**
- * Surveillance de disponibilité RDV — URLs ajoutées dynamiquement depuis l'écran dédié,
+ * Surveillance de disponibilité RDV - URLs ajoutées dynamiquement depuis l'écran dédié,
  * relues et cochées par scripts/rdv_watcher.py (jamais codées en dur ici ni côté script).
  */
 export function useRdvWatches() {
@@ -584,7 +594,7 @@ export function useRdvWatches() {
   };
 }
 
-/** La fiche de l'utilisateur connecté — accessible depuis le rail, avec self-service. */
+/** La fiche de l'utilisateur connecté - accessible depuis le rail, avec self-service. */
 export function useMyProfile() {
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -620,7 +630,7 @@ export function useMyProfile() {
   };
 }
 
-/** Journal d'activité — écran /ops. */
+/** Journal d'activité - écran /ops. */
 export function useActivity() {
   const query = useQuery({
     queryKey: ACTIVITY_KEY,
@@ -630,7 +640,7 @@ export function useActivity() {
   return { activity: query.data ?? [], isLoading: query.isLoading };
 }
 
-/** Suivi complet des encaissements — écran /ops, réservé au CEO. */
+/** Suivi complet des encaissements - écran /ops, réservé au CEO. */
 export function usePaiementsSuivi() {
   const query = useQuery({
     queryKey: PAIEMENTS_SUIVI_KEY,
@@ -640,7 +650,7 @@ export function usePaiementsSuivi() {
   return { suivi: query.data ?? null, isLoading: query.isLoading };
 }
 
-/** Tableau analytique complet — écran /ops, réservé au CEO. */
+/** Tableau analytique complet - écran /ops, réservé au CEO. */
 export function useAnalytics() {
   const query = useQuery({
     queryKey: ANALYTICS_KEY,
@@ -651,7 +661,7 @@ export function useAnalytics() {
   return { data: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
 }
 
-/** Le VRAI utilisateur connecté — remplace l'ancien sélecteur "connecté en tant que"
+/** Le VRAI utilisateur connecté - remplace l'ancien sélecteur "connecté en tant que"
  * maintenant que le login réel est actif. Plus aucune façon de se faire passer pour
  * quelqu'un d'autre sans son mot de passe. */
 export function useCurrentUser() {
@@ -659,8 +669,31 @@ export function useCurrentUser() {
   return { user: query.data ?? null, isLoading: query.isLoading };
 }
 
-const brouillonsKey = (dossierId: string) => ["brouillons", dossierId] as const;
+/**
+ * Applique la qualification d'un dossier déjà ouvert (cas, checklist, fil de
+ * questions). Utilisé par l'assistant de qualification quand le dossier a été
+ * créé AVANT la Boussole.
+ */
+export function useApplyQualification() {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (vars: {
+      id: string;
+      caseKey: string;
+      titre: string;
+      categorie: string;
+      niveau: "standard" | "attention" | "complexe";
+      profile: Dossier["profile"];
+      pieces: Dossier["pieces"];
+      notes: string[];
+      qualification: Dossier["qualification"];
+    }) => applyQualificationFn({ data: vars }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["dossiers"] }),
+  });
+  return { appliquer: mutation.mutateAsync, isPending: mutation.isPending };
+}
 
+const brouillonsKey = (dossierId: string) => ["brouillons", dossierId] as const;
 /** Brouillons de reçu enregistrés d'un dossier, plus récents en tête. */
 export function useBrouillons(dossierId: string) {
   const queryClient = useQueryClient();

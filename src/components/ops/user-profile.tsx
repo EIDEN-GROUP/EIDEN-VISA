@@ -65,7 +65,7 @@ const ROLES = (Object.keys(ROLE_LABEL) as Role[]).map((value) => ({
   label: ROLE_LABEL[value],
 }));
 
-/** Réduit une image à 400 px de côté max et l'encode en JPEG base64 — l'avatar reste léger. */
+/** Réduit une image à 400 px de côté max et l'encode en JPEG base64 - l'avatar reste léger. */
 function downscaleImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -190,7 +190,7 @@ export function UserProfile({ id, onBack }: { id: string; onBack: () => void }) 
         { label: "Actifs", value: `${profil.kpis.actifs}` },
         {
           label: "Taux d'approbation",
-          value: profil.kpis.tauxApprobation === null ? "—" : `${profil.kpis.tauxApprobation} %`,
+          value: profil.kpis.tauxApprobation === null ? "-" : `${profil.kpis.tauxApprobation} %`,
         },
         { label: "Encaissé", value: `${profil.kpis.encaisse.toLocaleString("fr-FR")} MAD` },
         { label: "Pièces rassemblées", value: `${profil.kpis.documents}` },
@@ -241,7 +241,7 @@ export function UserProfile({ id, onBack }: { id: string; onBack: () => void }) 
           rows: profil.encaissements.map((enc) => [
             new Date(enc.createdAt).toLocaleString("fr-FR"),
             enc.detail,
-            enc.dossierId ?? "—",
+            enc.dossierId ?? "-",
           ]),
         },
       ],
@@ -332,26 +332,26 @@ export function UserProfile({ id, onBack }: { id: string; onBack: () => void }) 
       <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-5">
         <Kpi
           label="Dossiers"
-          value={k ? `${k.dossiers}` : "—"}
+          value={k ? `${k.dossiers}` : "-"}
           hint={k ? `${k.actifs} actifs` : undefined}
         />
         <Kpi
           label="Taux d'approbation"
-          value={k?.tauxApprobation == null ? "—" : `${k.tauxApprobation} %`}
+          value={k?.tauxApprobation == null ? "-" : `${k.tauxApprobation} %`}
           hint={k ? `${k.approuve} ✓ · ${k.refuse} ✗` : undefined}
         />
         <Kpi
           label="Encaissé"
-          value={k ? `${k.encaisse.toLocaleString("fr-FR")} MAD` : "—"}
+          value={k ? `${k.encaisse.toLocaleString("fr-FR")} MAD` : "-"}
           hint={k ? `${k.nEncaissements} opération(s)` : undefined}
         />
-        <Kpi label="Pièces rassemblées" value={k ? `${k.documents}` : "—"} />
+        <Kpi label="Pièces rassemblées" value={k ? `${k.documents}` : "-"} />
         <Kpi
           label="Niveau dominant"
           value={
             profil?.parNiveau?.length
-              ? (LEVEL_LABEL[[...profil.parNiveau].sort((a, b) => b.n - a.n)[0]!.k as Level] ?? "—")
-              : "—"
+              ? (LEVEL_LABEL[[...profil.parNiveau].sort((a, b) => b.n - a.n)[0]!.k as Level] ?? "-")
+              : "-"
           }
         />
       </div>

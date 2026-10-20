@@ -8,7 +8,7 @@ import { logActivity } from "@/backend/functions/ops";
 
 /**
  * CRUD pour la surveillance de disponibilité RDV (TLScontact/BLS...). Une URL ajoutée ici
- * est reprise dynamiquement par le script externe scripts/rdv_watcher.py — rien n'est codé
+ * est reprise dynamiquement par le script externe scripts/rdv_watcher.py - rien n'est codé
  * en dur côté script, tout part de cette table. Le script ne fait que LIRE la page publique
  * et écrire son propre résultat (hash, statut) ; il ne réserve jamais rien à la place du client.
  */
@@ -19,7 +19,7 @@ export const listWatches = createServerFn({ method: "GET" }).handler(async () =>
 });
 
 /** L'URL est relue côté serveur par scripts/rdv_watcher.py : on refuse tout ce qui
- * ressemble à de l'intranet (SSRF) — le démon revérifie après résolution DNS
+ * ressemble à de l'intranet (SSRF) - le démon revérifie après résolution DNS
  * (rebinding), mais la première barrière est ici. */
 function urlSurveillance(val: string): boolean {
   let h: string;

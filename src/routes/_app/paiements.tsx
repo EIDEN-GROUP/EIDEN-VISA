@@ -164,7 +164,7 @@ function Paiements() {
             Historique des encaissements récents ({encaisses.length})
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Les {encaisses.length} encaissements les plus récents — {stats?.nEncaisse ?? 0} au
+            Les {encaisses.length} encaissements les plus récents - {stats?.nEncaisse ?? 0} au
             total.
           </p>
         </CardHeader>

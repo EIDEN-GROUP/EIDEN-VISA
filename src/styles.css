@@ -3,11 +3,11 @@
 @import "tw-animate-css";
 
 /*
- * Eiden Visa — système visuel back-office, thème "registre de dossier".
+   * Eiden Visa - système visuel back-office, thème "registre de dossier".
  * Minimaliste : la structure vient de l'espace et des filets fins, pas des
  * boîtes ni des aplats de couleur. Le vert forêt reste au rail. Le terracotta
  * n'apparaît que sur une action primaire, un point de statut ou un blocage
- * réel — jamais en fond décoratif. Toute couleur passe par un token.
+ * réel - jamais en fond décoratif. Toute couleur passe par un token.
  */
 
 @theme inline {
@@ -61,7 +61,7 @@
 :root {
   --radius: 1.25rem;
 
-  /* Blanc — plan de travail, cartes distinguées par un filet fin + ombre douce */
+  /* Blanc - plan de travail, cartes distinguées par un filet fin + ombre douce */
   --background: oklch(0.985 0.002 285);
   --foreground: oklch(0.24 0.03 280);
   --card: oklch(1 0 0);
@@ -69,7 +69,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.24 0.03 280);
 
-  /* Encre marine — action primaire, reprise du panneau illustré du login */
+  /* Encre marine - action primaire, reprise du panneau illustré du login */
   --primary: oklch(0.24 0.03 280);
   --primary-foreground: oklch(0.98 0.005 90);
   --secondary: oklch(0.89 0.016 288);
@@ -85,7 +85,7 @@
   --input: oklch(0.87 0.014 285);
   --ring: oklch(0.24 0.03 280);
 
-  /* Marine profond — couverture de classeur : bandeau et rail de navigation */
+  /* Marine profond - couverture de classeur : bandeau et rail de navigation */
   --rail: oklch(0.2 0.045 275);
   --rail-foreground: oklch(0.96 0.012 280);
   --rail-muted: oklch(0.62 0.03 270);
@@ -156,7 +156,7 @@
   text-transform: uppercase;
 }
 
-/* Un panneau : carte blanche arrondie, légère ombre — écho de la carte de connexion. */
+/* Un panneau : carte blanche arrondie, légère ombre - écho de la carte de connexion. */
 @utility panel {
   background: var(--color-card);
   border: 1px solid var(--color-border);
@@ -184,7 +184,7 @@
   color: var(--color-foreground);
 }
 
-/* Chiffre-clé : la donnée qui compte, posée en serif — pas un chiffre
+/* Chiffre-clé : la donnée qui compte, posée en serif - pas un chiffre
    d'interface, un chiffre de bilan. */
 @utility num-display {
   font-family: var(--font-display);
@@ -194,7 +194,7 @@
 }
 
 /* Écran de connexion : seul écran de l'app à déroger au système visuel
-   "registre de dossier", sur demande explicite — coins arrondis, palette
+   "registre de dossier", sur demande explicite - coins arrondis, palette
    lavande/encre et typo ronde façon carte de bienvenue. La spécificité de
    `.login-rounded *` l'emporte sur la règle `* { !important }` ci-dessus
    malgré l'!important, car le sélecteur est plus précis. */

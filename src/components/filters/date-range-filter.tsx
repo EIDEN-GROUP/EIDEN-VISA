@@ -19,7 +19,7 @@ function isoDaysAgo(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
-/** Filtre de date partagé — s'applique sur la date d'ouverture réelle du dossier
+/** Filtre de date partagé - s'applique sur la date d'ouverture réelle du dossier
  * (created_at), pas sur un texte affiché. Réutilisé sur chaque écran qui liste des dossiers. */
 export function DateRangeFilter({
   value,

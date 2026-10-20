@@ -14,7 +14,7 @@ const MAX_PHOTO_BYTES = 1_500_000;
  * (`<script>`, `<foreignObject>`) et n'a rien à faire en photo de profil. */
 const PHOTO_MIME = /^data:image\/(jpeg|png|webp);base64,/;
 
-/** Le profil de l'utilisateur connecté — sa propre fiche, accessible depuis le rail. */
+/** Le profil de l'utilisateur connecté - sa propre fiche, accessible depuis le rail. */
 export const getMyProfile = createServerFn({ method: "GET" }).handler(async () => {
   const userId = await requireUserId();
   const u = await db.query.users.findFirst({ where: eq(users.id, userId) });

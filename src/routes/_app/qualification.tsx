@@ -19,12 +19,21 @@ import {
   MODALITE_LABEL,
   modaliteDetail,
   CENTRES,
+  CASE_PROVISOIRE,
+  TITRE_PROVISOIRE,
+  CATEGORIE_PROVISOIRE,
   type Dossier,
   type Centre,
   type Modalite,
 } from "@/lib/dossier-model";
 import { ChoixFormule, type Formule } from "@/components/dossier/choix-formule";
-import { useDossiers, useCurrentUser, ROLE_LABEL } from "@/lib/store";
+import {
+  useDossiers,
+  useCurrentUser,
+  useDossier,
+  useApplyQualification,
+  ROLE_LABEL,
+} from "@/lib/store";
 import {
   joursEntre,
   moisEntre,
@@ -50,9 +59,25 @@ import stampName from "@/assets/decorations/stamp-name.png";
 import stampFamily from "@/assets/decorations/stamp-family.png";
 import stampChild from "@/assets/decorations/stamp-child.png";
 
+/** Dossier provisoire (créé avant la qualification) : cas et libellés « à qualifier ». */
 export const Route = createFileRoute("/_app/qualification")({
   component: Qualification,
+  validateSearch: (s: Record<string, unknown>) => ({
+    dossier: typeof s["dossier"] === "string" ? s["dossier"] : undefined,
+  }),
 });
+
+/**
+ * Reprise d'un dossier existant (fiche → « Reprendre la qualification ») : le
+ * dossier est chargé ici, puis l'éditeur est monté avec ses valeurs déjà
+ * pré-remplies (la clé force le remontage quand le dossier arrive).
+ */
+function Qualification() {
+  const recherche = Route.useSearch();
+  const repriseId = recherche["dossier"] ?? "";
+  const { dossier } = useDossier(repriseId, Boolean(repriseId));
+  return <QualificationForm key={dossier?.id ?? "nouveau"} dossierRepris={dossier ?? undefined} />;
+}
 
 /** Une réponse donnée. `avant` = profil avant cette réponse (pour le restaurer au retour),
  *  `idx` = options choisies du nœud, `champs` = saisies d'un nœud à champs : de quoi
@@ -112,7 +137,7 @@ function Calcul59Mois({
     <div className="mt-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs sm:col-span-2">
       {jours < 0 ? (
         <div className="font-medium text-[var(--stop)]">
-          La date d'obtention est postérieure à la date du jour — à corriger.
+          La date d'obtention est postérieure à la date du jour - à corriger.
         </div>
       ) : (
         <div className="font-medium text-foreground">
@@ -126,10 +151,21 @@ function Calcul59Mois({
   );
 }
 
-function Qualification() {
+function QualificationForm({ dossierRepris }: { dossierRepris?: Dossier | undefined }) {
   const navigate = useNavigate();
   const { ajouter } = useDossiers();
   const { user: currentUser } = useCurrentUser();
+  const { appliquer } = useApplyQualification();
+  /**
+   * Trois phases : on crée d'abord le dossier (le client est en face), puis on
+   * qualifie, puis on applique la qualification au dossier. Avant, les questions
+   * venaient d'abord et le dossier n'existait qu'ensuite.
+   */
+  const [phase, setPhase] = useState<"identite" | "questions" | "resultat">(
+    dossierRepris ? "questions" : "identite",
+  );
+  const [dossierId, setDossierId] = useState<string | null>(dossierRepris?.id ?? null);
+  const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
 
   const [nodeKey, setNodeKey] = useState("start");
   const [profile, setProfile] = useState<Profile>({});
@@ -140,23 +176,32 @@ function Qualification() {
    *  `false` = cas déjà résolu, la clé est gardée pour que « Revenir sur la dernière
    *  question » redonne le même résultat. */
   const [cas, setCas] = useState<{ key: string; enCours: boolean } | null>(null);
-  const [origine, setOrigine] = useState<"site" | "direct" | null>(null);
-  const [nom, setNom] = useState("");
-  const [telephone, setTelephone] = useState("");
-  const [ville, setVille] = useState("");
-  const [naissance, setNaissance] = useState("");
-  const [voyageDebut, setVoyageDebut] = useState("");
-  const [voyageFin, setVoyageFin] = useState("");
-  const [passNumero, setPassNumero] = useState("");
-  const [passDelivrance, setPassDelivrance] = useState("");
-  const [passExpiration, setPassExpiration] = useState("");
-  const [passLieu, setPassLieu] = useState("");
-  const [centre, setCentre] = useState<Centre>(CENTRES[0]);
-  const [modalite, setModalite] = useState<Modalite>("comptant");
+  const [origine, setOrigine] = useState<"site" | "direct" | null>(
+    dossierRepris?.profile.origine ?? null,
+  );
+  const [nom, setNom] = useState(dossierRepris?.client.nom ?? "");
+  const [telephone, setTelephone] = useState(dossierRepris?.client.telephone ?? "");
+  const [ville, setVille] = useState(dossierRepris?.client.ville ?? "");
+  const [naissance, setNaissance] = useState(dossierRepris?.client.naissance ?? "");
+  const [voyageDebut, setVoyageDebut] = useState(dossierRepris?.client.voyageDebut ?? "");
+  const [voyageFin, setVoyageFin] = useState(dossierRepris?.client.voyageFin ?? "");
+  const [passNumero, setPassNumero] = useState(dossierRepris?.client.passeportNumero ?? "");
+  const [passDelivrance, setPassDelivrance] = useState(
+    dossierRepris?.client.passeportDelivrance ?? "",
+  );
+  const [passExpiration, setPassExpiration] = useState(
+    dossierRepris?.client.passeportExpiration ?? "",
+  );
+  const [passLieu, setPassLieu] = useState(dossierRepris?.client.passeportLieu ?? "");
+  const [centre, setCentre] = useState<Centre>(dossierRepris?.centre ?? CENTRES[0]);
+  const [modalite, setModalite] = useState<Modalite>(dossierRepris?.modalitePaiement ?? "comptant");
   // Pack (Essentiel par défaut) ou services à l'unité.
-  const [formule, setFormule] = useState<Formule>({ pack: "base", services: [] });
+  const [formule, setFormule] = useState<Formule>({
+    pack: dossierRepris?.pack ?? "base",
+    services: dossierRepris?.services ?? [],
+  });
 
-  // Nombre de jours du séjour envisagé — jour de fin exclu (méthode calculconversion.com
+  // Nombre de jours du séjour envisagé - jour de fin exclu (méthode calculconversion.com
   // validée par l'équipe : 21→25 mars = 4 jours, pas 5). `null` tant que les deux dates ne
   // sont pas renseignées.
   const dureeSejour = voyageDebut && voyageFin ? joursEntre(voyageDebut, voyageFin) : null;
@@ -165,7 +210,7 @@ function Qualification() {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
 
   // Carrousel : une question par diapo. On peut revenir en arrière pour relire ses
-  // réponses, mais jamais dépasser la question en cours — elle est toujours la dernière.
+  // réponses, mais jamais dépasser la question en cours - elle est toujours la dernière.
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", duration: 18 });
   const [diapo, setDiapo] = useState(0);
   const [peutReculer, setPeutReculer] = useState(false);
@@ -176,6 +221,9 @@ function Qualification() {
     nodeKey: "",
     sel: [],
   });
+
+  // Reprise d'un dossier existant : les valeurs sont déjà reprises à l'initialisation
+  // (le composant est remonté quand le dossier arrive), rien à synchroniser ici.
   // La sélection appartient à un nœud : changer de question la remet à zéro sans effet.
   const multiSel = multiPick.nodeKey === nodeKey ? multiPick.sel : [];
 
@@ -234,6 +282,8 @@ function Qualification() {
     // puis revalider doit redonner le MÊME cas, pas un repli sur le court séjour.
     setCas({ key: finalKey, enCours: false });
     setResult({ caseKey: finalKey, c });
+    // Phase 3 : on montre le cas retenu et sa checklist, puis on l'applique au dossier.
+    setPhase("resultat");
   }
 
   function choose(opt: NonNullable<(typeof node)["opts"]>[number], idx?: number[]) {
@@ -316,6 +366,10 @@ function Qualification() {
     setModalite("comptant");
     setFormule({ pack: "base", services: [] });
     setHistoOuverte(true);
+    // Recommencer : on revient à la création du dossier (le dossier déjà créé
+    // n'est pas supprimé - il reste en attente de qualification).
+    setDossierId(null);
+    setPhase("identite");
   }
 
   function retour() {
@@ -329,19 +383,25 @@ function Qualification() {
     setMultiPick({ nodeKey: prev.nodeKey, sel: prev.idx ?? [] });
     setFieldValues(prev.champs ?? {});
     setResult(null);
+    // Retour à la Boussole : on rouvre la dernière question.
+    setPhase("questions");
   }
 
   const formuleIncomplete = formule.pack === "carte" && erreurServices(formule.services) !== null;
 
+  /**
+   * Phase 1 - le dossier est créé TOUT DE SUITE, sans la qualification : le client
+   * est en face, on l'enregistre. Le dossier est provisoire (`PENDING`) : le type
+   * de visa, la checklist et le fil des questions arrivent à la phase 3.
+   */
   async function creerDossier() {
-    if (!result || !nom) return;
-    const pieces = piecesFromCase(result.c);
+    if (!nom) return;
     const year = new Date().getFullYear();
     // Suffixe aléatoire large (base36, 6 caractères) : le risque de collision avec un ID
     // à 4 chiffres devenait réel dès quelques milliers de dossiers.
     const id = `EV-${year}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     // Attribué à la personne réellement connectée ("Connecté en tant que"), pas un texte
-    // figé — sinon le journal d'activité et le champ "agent" du dossier se contredisent.
+    // figé - sinon le journal d'activité et le champ "agent" du dossier se contredisent.
     const agent = currentUser ? `${ROLE_LABEL[currentUser.role]} · ${currentUser.nom}` : "Accueil";
     const dossier: Dossier = {
       id,
@@ -358,35 +418,31 @@ function Qualification() {
         passeportLieu: passLieu.trim() || null,
       },
       agent,
-      // Le serveur dérive le VRAI agentUserId de la session (voir createDossier) — cette
+      // Le serveur dérive le VRAI agentUserId de la session (voir createDossier) - cette
       // valeur client n'est là que pour satisfaire le type, elle est ignorée par le backend.
       agentUserId: currentUser?.id ?? null,
       assigneeUserId: null,
       ouvertLe: new Date().toLocaleDateString("fr-FR"),
-      caseKey: result.caseKey,
+      // Dossier provisoire : la qualification n'est pas encore faite.
+      caseKey: CASE_PROVISOIRE,
       profile: origine ? { ...profile, origine } : profile,
-      // Le fil des questions réellement posées à CE client, figé ici : l'arbre évoluera,
-      // la trace du dossier ne doit pas bouger avec lui.
-      qualification: history.map((h) => ({
-        question: TREE[h.nodeKey]?.q ?? h.nodeKey,
-        reponse: h.label,
-      })),
-      titre: result.c.title,
-      categorie: result.c.cat,
-      niveau: result.c.level,
+      qualification: [],
+      titre: TITRE_PROVISOIRE,
+      categorie: CATEGORIE_PROVISOIRE,
+      niveau: "attention",
       pack: formule.pack,
       services: formule.services,
       modalitePaiement: modalite,
       etape: 1,
       centre,
       uploadAutorise: false,
-      pieces,
+      pieces: [],
       // Échéancier dérivé du pack et de la modalité choisis à l'accueil :
       // comptant = une ligne de solde, acompte = 50 % (ou 15 %) + solde.
       paiements: planPaiement(formule.pack, modalite, formule.services),
       // Les réponses libres ne sont plus aplaties ici : elles vivent dans `profile.details`,
       // et la fiche dossier les affiche groupées par sujet.
-      notes: result.c.notes,
+      notes: [],
       decision: "en_attente",
       decisionDate: null,
       decisionMotif: null,
@@ -401,7 +457,41 @@ function Qualification() {
       rdvLe: null,
     };
     await ajouter(dossier);
-    navigate({ to: "/dossiers/$id", params: { id } });
+    setDossierId(id);
+    setPhase("questions");
+  }
+
+  /**
+   * Phase 3 - la qualification (cas, checklist, points de vigilance, fil des
+   * questions) est appliquée au dossier, puis on ouvre la fiche.
+   */
+  async function enregistrerQualification() {
+    if (!result || !dossierId) return;
+    setEnregistrementEnCours(true);
+    try {
+      await appliquer({
+        id: dossierId,
+        caseKey: result.caseKey,
+        titre: result.c.title,
+        categorie: result.c.cat,
+        niveau: result.c.level,
+        profile: origine ? { ...profile, origine } : profile,
+        pieces: piecesFromCase(result.c),
+        notes: result.c.notes,
+        // Le fil des questions réellement posées à CE client, figé ici : l'arbre
+        // évoluera, la trace du dossier ne doit pas bouger avec lui. Le `nodeKey`
+        // permet de reproposer les réponses possibles si l'agent doit corriger
+        // une réponse.
+        qualification: history.map((h) => ({
+          question: TREE[h.nodeKey]?.q ?? h.nodeKey,
+          reponse: h.label,
+          nodeKey: h.nodeKey,
+        })),
+      });
+      navigate({ to: "/dossiers/$id", params: { id: dossierId } });
+    } finally {
+      setEnregistrementEnCours(false);
+    }
   }
 
   return (
@@ -421,7 +511,7 @@ function Qualification() {
       </div>
 
       {/* Réponses données : toujours en haut, ouvertes par défaut, pour que l'agent voie
-          d'un coup d'œil ce qui a été répondu — pendant les questions comme sur le résultat. */}
+          d'un coup d'œil ce qui a été répondu - pendant les questions comme sur le résultat. */}
       {history.length > 0 && (
         <div className="rounded-xl border border-border bg-muted/30">
           <button
@@ -456,9 +546,276 @@ function Qualification() {
         </div>
       )}
 
-      {!result && (
+      {/* Phase 1 - créer le dossier (identité, formule, centre) AVANT la qualification.
+          Même un cas sans checklist officielle (orientation, référé à un tiers) doit
+          pouvoir devenir un dossier - ne serait-ce que pour tracer une consultation
+          d'orientation facturée. */}
+      {phase === "identite" && (
+        <div className="space-y-6">
+          <Card className="panel">
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+              <img src={stampName} alt="" className="h-9 w-9" />
+              <CardTitle className="text-base">Créer le dossier</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Type de visa</label>
+                <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                  Déterminé par la qualification (Boussole) juste après la création du dossier.
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Origine du client
+                </label>
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Origine">
+                  {(
+                    [
+                      { v: "site", l: "Vient du site", d: "Formulaire de la landing" },
+                      {
+                        v: "direct",
+                        l: "Directement chez nous",
+                        d: "Agence, téléphone, bouche à oreille",
+                      },
+                    ] as const
+                  ).map((o) => (
+                    <button
+                      key={o.v}
+                      type="button"
+                      role="radio"
+                      aria-checked={origine === o.v}
+                      onClick={() => setOrigine(o.v)}
+                      className={cn(
+                        "flex items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors hover:border-primary hover:bg-accent",
+                        origine === o.v ? "border-primary bg-accent" : "border-border",
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+                          origine === o.v
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-muted-foreground/40",
+                        )}
+                      >
+                        {origine === o.v && <Check className="h-3 w-3" />}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-medium text-foreground">{o.l}</span>
+                        <span className="block text-xs text-muted-foreground">{o.d}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
+                <Input
+                  value={nom}
+                  onChange={(e) => setNom(e.target.value)}
+                  placeholder="Nom complet"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Téléphone</label>
+                <Input
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value)}
+                  placeholder="06 00 00 00 00"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Ville</label>
+                <Input
+                  value={ville}
+                  onChange={(e) => setVille(e.target.value)}
+                  placeholder="Agadir"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Date de naissance
+                </label>
+                <Input
+                  value={naissance}
+                  onChange={(e) => setNaissance(e.target.value)}
+                  placeholder="JJ/MM/AAAA"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Départ souhaité</label>
+                <Input
+                  type="date"
+                  value={voyageDebut}
+                  onChange={(e) => setVoyageDebut(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Retour souhaité</label>
+                <Input
+                  type="date"
+                  value={voyageFin}
+                  min={voyageDebut || undefined}
+                  onChange={(e) => setVoyageFin(e.target.value)}
+                />
+              </div>
+              {voyageDebut && voyageFin && (
+                <div className="col-span-2 -mt-1">
+                  {dureeSejour !== null && dureeSejour > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Séjour envisagé :{" "}
+                      <span className="font-medium text-foreground">
+                        {moisEntre(voyageDebut, voyageFin)} mois
+                      </span>{" "}
+                      ({dureeSejour} jour{dureeSejour > 1 ? "s" : ""}).
+                    </p>
+                  ) : (
+                    <p className="text-xs text-[var(--stop)]">
+                      La date de retour doit être postérieure à la date de départ.
+                    </p>
+                  )}
+                </div>
+              )}
+              <div className="col-span-2 mt-2 border-t border-border pt-3">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Passeport
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Facultatif à l'ouverture - à compléter dès que la pièce est entre vos mains.
+                </p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Numéro de passeport
+                </label>
+                <Input
+                  value={passNumero}
+                  onChange={(e) => setPassNumero(e.target.value)}
+                  placeholder="AB1234567"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Lieu de délivrance
+                </label>
+                <Input
+                  value={passLieu}
+                  onChange={(e) => setPassLieu(e.target.value)}
+                  placeholder="Agadir"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Date de délivrance
+                </label>
+                <Input
+                  type="date"
+                  value={passDelivrance}
+                  onChange={(e) => {
+                    setPassDelivrance(e.target.value);
+                    // Passeport marocain : 5 ans. Proposé seulement si l'agent n'a
+                    // pas déjà saisi une expiration à la main.
+                    if (!passExpiration) {
+                      const suggestion = expirationParDefaut(e.target.value);
+                      if (suggestion) setPassExpiration(suggestion);
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Date d'expiration
+                </label>
+                <Input
+                  type="date"
+                  value={passExpiration}
+                  onChange={(e) => setPassExpiration(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Pré-remplie à 5 ans après la délivrance (passeport marocain) - modifiable.
+                </p>
+              </div>
+              {passExpiration && voyageFin && (
+                <div className="col-span-2 -mt-1">
+                  {(() => {
+                    const min = new Date(voyageFin);
+                    min.setMonth(min.getMonth() + 3);
+                    const ok = new Date(passExpiration).getTime() >= min.getTime();
+                    return ok ? (
+                      <p className="text-xs text-muted-foreground">
+                        Validité du passeport conforme (≥ 3 mois après le retour).
+                      </p>
+                    ) : (
+                      <p className="text-xs text-[var(--stop)]">
+                        Passeport insuffisamment valide : il doit rester valable au moins 3 mois
+                        après la date de retour.
+                      </p>
+                    );
+                  })()}
+                </div>
+              )}
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Centre de dépôt</label>
+                <Select value={centre} onValueChange={(v) => setCentre(v as Centre)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CENTRES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <div className="text-xs font-medium text-muted-foreground">Pack ou services</div>
+                <div className="mt-1 rounded-xl border border-border p-3">
+                  <ChoixFormule value={formule} onChange={setFormule} />
+                </div>
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Modalité de paiement
+                </label>
+                <Select value={modalite} onValueChange={(v) => setModalite(v as Modalite)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(MODALITE_LABEL) as Modalite[]).map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {MODALITE_LABEL[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">{modaliteDetail(modalite)}</p>
+              </div>
+              <div className="col-span-2 pt-2">
+                <Button
+                  className="w-full"
+                  disabled={
+                    !origine ||
+                    !nom ||
+                    (dureeSejour !== null && dureeSejour <= 0) ||
+                    formuleIncomplete
+                  }
+                  onClick={creerDossier}
+                >
+                  Créer le dossier
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {phase === "questions" && !result && (
         <>
-          {/* Progression — la page ne s'allonge plus, on avance de diapo en diapo. */}
+          {/* Progression - la page ne s'allonge plus, on avance de diapo en diapo. */}
           <div className="flex items-center justify-between gap-4">
             <div className="text-sm font-medium text-foreground">
               Question {history.length + 1}
@@ -502,7 +859,7 @@ function Qualification() {
 
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex items-start">
-              {/* Réponses déjà données — consultables en glissant, non modifiables ici. */}
+              {/* Réponses déjà données - consultables en glissant, non modifiables ici. */}
               {history.map((h, i) => (
                 <div key={i} className="min-w-0 flex-[0_0_100%] pr-4">
                   <Card className="panel border-dashed">
@@ -523,7 +880,7 @@ function Qualification() {
                 </div>
               ))}
 
-              {/* Question en cours — toujours la dernière diapo. */}
+              {/* Question en cours - toujours la dernière diapo. */}
               <div className="min-w-0 flex-[0_0_100%] pr-4">
                 <Card className="panel">
                   <CardHeader>
@@ -620,7 +977,7 @@ function Qualification() {
         </>
       )}
 
-      {result && (
+      {phase === "resultat" && result && (
         <div className="space-y-6">
           <Card className="panel">
             <CardHeader>
@@ -694,295 +1051,28 @@ function Qualification() {
               )}
               {result.c.docs.length === 0 && result.c.extra.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Ce cas ne fait pas l'objet d'une checklist Eiden Visa — voir les points de
+                  Ce cas ne fait pas l'objet d'une checklist Eiden Visa - voir les points de
                   vigilance ci-dessus pour l'orientation à donner au client.
                 </p>
               )}
             </CardContent>
           </Card>
 
-          {
-            // Même un cas sans checklist officielle (orientation, référé à un tiers) doit
-            // pouvoir devenir un dossier — ne serait-ce que pour tracer une consultation
-            // d'orientation facturée. Bloquer la création ici laissait ces cas sans issue.
-            <Card className="panel">
-              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-                <img src={stampName} alt="" className="h-9 w-9" />
-                <CardTitle className="text-base">Créer le dossier</CardTitle>
-                {result.c.docs.length === 0 && (
-                  <span className="ref ml-auto text-muted-foreground">
-                    Sans checklist officielle
-                  </span>
-                )}
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">Type de visa</label>
-                  <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
-                    <span className="text-sm font-medium text-foreground">{result.c.title}</span>
-                    <NiveauBadge level={result.c.level} />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Déterminé par la Boussole de qualification ci-dessus. Pour changer de type,
-                    revenez sur la dernière question.
-                  </p>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Origine du client
-                  </label>
-                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Origine">
-                    {(
-                      [
-                        { v: "site", l: "Vient du site", d: "Formulaire de la landing" },
-                        {
-                          v: "direct",
-                          l: "Directement chez nous",
-                          d: "Agence, téléphone, bouche à oreille",
-                        },
-                      ] as const
-                    ).map((o) => (
-                      <button
-                        key={o.v}
-                        type="button"
-                        role="radio"
-                        aria-checked={origine === o.v}
-                        onClick={() => setOrigine(o.v)}
-                        className={cn(
-                          "flex items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors hover:border-primary hover:bg-accent",
-                          origine === o.v ? "border-primary bg-accent" : "border-border",
-                        )}
-                      >
-                        <span
-                          aria-hidden
-                          className={cn(
-                            "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-                            origine === o.v
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground/40",
-                          )}
-                        >
-                          {origine === o.v && <Check className="h-3 w-3" />}
-                        </span>
-                        <span>
-                          <span className="block text-sm font-medium text-foreground">{o.l}</span>
-                          <span className="block text-xs text-muted-foreground">{o.d}</span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">Nom du client</label>
-                  <Input
-                    value={nom}
-                    onChange={(e) => setNom(e.target.value)}
-                    placeholder="Nom complet"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Téléphone</label>
-                  <Input
-                    value={telephone}
-                    onChange={(e) => setTelephone(e.target.value)}
-                    placeholder="06 00 00 00 00"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Ville</label>
-                  <Input
-                    value={ville}
-                    onChange={(e) => setVille(e.target.value)}
-                    placeholder="Agadir"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Date de naissance
-                  </label>
-                  <Input
-                    value={naissance}
-                    onChange={(e) => setNaissance(e.target.value)}
-                    placeholder="JJ/MM/AAAA"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Départ souhaité
-                  </label>
-                  <Input
-                    type="date"
-                    value={voyageDebut}
-                    onChange={(e) => setVoyageDebut(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Retour souhaité
-                  </label>
-                  <Input
-                    type="date"
-                    value={voyageFin}
-                    min={voyageDebut || undefined}
-                    onChange={(e) => setVoyageFin(e.target.value)}
-                  />
-                </div>
-                {voyageDebut && voyageFin && (
-                  <div className="col-span-2 -mt-1">
-                    {dureeSejour !== null && dureeSejour > 0 ? (
-                      <p className="text-xs text-muted-foreground">
-                        Séjour envisagé :{" "}
-                        <span className="font-medium text-foreground">
-                          {moisEntre(voyageDebut, voyageFin)} mois
-                        </span>{" "}
-                        ({dureeSejour} jour{dureeSejour > 1 ? "s" : ""}).
-                      </p>
-                    ) : (
-                      <p className="text-xs text-[var(--stop)]">
-                        La date de retour doit être postérieure à la date de départ.
-                      </p>
-                    )}
-                  </div>
-                )}
-                <div className="col-span-2 mt-2 border-t border-border pt-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Passeport
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Facultatif à l'ouverture — à compléter dès que la pièce est entre vos mains.
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Numéro de passeport
-                  </label>
-                  <Input
-                    value={passNumero}
-                    onChange={(e) => setPassNumero(e.target.value)}
-                    placeholder="AB1234567"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Lieu de délivrance
-                  </label>
-                  <Input
-                    value={passLieu}
-                    onChange={(e) => setPassLieu(e.target.value)}
-                    placeholder="Agadir"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Date de délivrance
-                  </label>
-                  <Input
-                    type="date"
-                    value={passDelivrance}
-                    onChange={(e) => {
-                      setPassDelivrance(e.target.value);
-                      // Passeport marocain : 5 ans. Proposé seulement si l'agent n'a
-                      // pas déjà saisi une expiration à la main.
-                      if (!passExpiration) {
-                        const suggestion = expirationParDefaut(e.target.value);
-                        if (suggestion) setPassExpiration(suggestion);
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Date d'expiration
-                  </label>
-                  <Input
-                    type="date"
-                    value={passExpiration}
-                    onChange={(e) => setPassExpiration(e.target.value)}
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Pré-remplie à 5 ans après la délivrance (passeport marocain) — modifiable.
-                  </p>
-                </div>
-                {passExpiration && voyageFin && (
-                  <div className="col-span-2 -mt-1">
-                    {(() => {
-                      const min = new Date(voyageFin);
-                      min.setMonth(min.getMonth() + 3);
-                      const ok = new Date(passExpiration).getTime() >= min.getTime();
-                      return ok ? (
-                        <p className="text-xs text-muted-foreground">
-                          Validité du passeport conforme (≥ 3 mois après le retour).
-                        </p>
-                      ) : (
-                        <p className="text-xs text-[var(--stop)]">
-                          Passeport insuffisamment valide : il doit rester valable au moins 3 mois
-                          après la date de retour.
-                        </p>
-                      );
-                    })()}
-                  </div>
-                )}
-                <div className="col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Centre de dépôt
-                  </label>
-                  <Select value={centre} onValueChange={(v) => setCentre(v as Centre)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CENTRES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs font-medium text-muted-foreground">Pack ou services</div>
-                  <div className="mt-1 rounded-xl border border-border p-3">
-                    <ChoixFormule value={formule} onChange={setFormule} />
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Modalité de paiement
-                  </label>
-                  <Select value={modalite} onValueChange={(v) => setModalite(v as Modalite)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(MODALITE_LABEL) as Modalite[]).map((m) => (
-                        <SelectItem key={m} value={m}>
-                          {MODALITE_LABEL[m]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="mt-1 text-xs text-muted-foreground">{modaliteDetail(modalite)}</p>
-                </div>
-                <div className="col-span-2 pt-2">
-                  <Button
-                    className="w-full"
-                    disabled={
-                      !origine ||
-                      !nom ||
-                      (dureeSejour !== null && dureeSejour <= 0) ||
-                      formuleIncomplete
-                    }
-                    onClick={creerDossier}
-                  >
-                    Créer le dossier
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          }
-
           <Button variant="ghost" size="sm" onClick={retour}>
             <ArrowLeft className="h-3.5 w-3.5" /> Revenir sur la dernière question
+          </Button>
+
+          <Button
+            variant="default"
+            className="w-full"
+            disabled={enregistrementEnCours}
+            onClick={() => void enregistrerQualification()}
+          >
+            {enregistrementEnCours
+              ? "Enregistrement…"
+              : dossierId
+                ? "Enregistrer la qualification"
+                : "Créer le dossier"}
           </Button>
         </div>
       )}

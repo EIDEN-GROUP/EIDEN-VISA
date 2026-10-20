@@ -50,7 +50,7 @@ function DossiersList() {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
 
-  // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête —
+  // Recherche débattue côté serveur : chaque frappe ne doit pas lancer une requête -
   // à l'échelle réelle (potentiellement des millions de lignes) une requête par lettre serait intenable.
   // La page retombe à 1 quand la requête effective change (dans le délai, pas dans un effet).
   useEffect(() => {
@@ -107,6 +107,7 @@ function DossiersList() {
         </div>
         <Link
           to="/qualification"
+          search={{ dossier: undefined }}
           className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Nouveau dossier
@@ -210,7 +211,7 @@ function DossiersList() {
 
       {vue === "kanban" && (
         <p className="text-xs text-muted-foreground">
-          Le kanban affiche la page courante ({dossiers.length} dossier(s)) — affinez la recherche
+          Le kanban affiche la page courante ({dossiers.length} dossier(s)) - affinez la recherche
           pour retrouver un dossier précis dans un grand volume.
         </p>
       )}
@@ -281,7 +282,7 @@ function DossiersList() {
                       {(() => {
                         const points = checklistEtape(d);
                         const restants = points.filter((pt) => !pt.fait);
-                        if (points.length === 0) return <span className="ref">—</span>;
+                        if (points.length === 0) return <span className="ref">-</span>;
                         if (restants.length === 0)
                           return <span className="ref text-[var(--ok)]">Étape complète</span>;
                         return (
@@ -381,7 +382,7 @@ function DossiersList() {
                     placeholder="Ex. justificatifs de ressources insuffisants"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Le motif conditionne toute nouvelle tentative — sans lui, impossible de savoir
+                    Le motif conditionne toute nouvelle tentative - sans lui, impossible de savoir
                     quoi corriger.
                   </p>
                 </div>

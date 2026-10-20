@@ -28,7 +28,7 @@ export interface Formule {
 
 /**
  * Ce que le client achète : un pack (case cochée) OU des services à l'unité. Les deux
- * s'excluent — cocher « pack » désactive les services, et inversement — et le total
+ * s'excluent - cocher « pack » désactive les services, et inversement - et le total
  * affiché est celui qui part dans l'échéancier.
  */
 export function ChoixFormule({
@@ -102,7 +102,7 @@ export function ChoixFormule({
       <div className="flex items-center justify-between border-t border-border pt-3 text-sm">
         <span className="font-medium text-foreground">Total</span>
         <span className="ref text-base text-foreground">
-          {!enPack && value.services.length === 0 ? "— choisir un service" : mad(total)}
+          {!enPack && value.services.length === 0 ? "- choisir un service" : mad(total)}
         </span>
       </div>
     </div>

@@ -65,7 +65,7 @@ function LoginPage() {
                 Bon retour
               </h1>
               <p className="mt-1 text-sm" style={{ color: "var(--login-muted)" }}>
-                Back-office — connexion.
+                Back-office - connexion.
               </p>
             </div>
 

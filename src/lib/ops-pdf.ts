@@ -3,7 +3,7 @@
  * comptes, rapport analytique). Même identité visuelle que le reçu client :
  * en-tête « Eiden Visa », filet terracotta, tables sobres.
  *
- * jsPDF est chargé dynamiquement — il ne pèse dans le bundle que si un export est déclenché.
+ * jsPDF est chargé dynamiquement - il ne pèse dans le bundle que si un export est déclenché.
  */
 
 export interface PdfColumn {
@@ -296,14 +296,14 @@ function toRgb(input: string, ctx: CanvasRenderingContext2D): string | null {
 }
 
 /**
- * Rend un élément du DOM tel quel dans un PDF A4 (capture pixel — le PDF est la copie
+ * Rend un élément du DOM tel quel dans un PDF A4 (capture pixel - le PDF est la copie
  * conforme de ce qui est à l'écran). Utilisé pour le rapport analytique : graphiques inclus.
  *
  * html2canvas 1.4.1 plante sur `oklch()` (tout le thème est en tokens oklch). On corrige
  * en trois temps sur le clone que html2canvas dessine :
  *   1. on réécrit les tokens `:root` en hex ;
  *   2. on repasse chaque élément pour neutraliser toute couleur oklch résiduelle ;
- *   3. on fige les couleurs des SVG (recharts) en attributs inline — sinon le `var()`
+ *   3. on fige les couleurs des SVG (recharts) en attributs inline - sinon le `var()`
  *      ne se résout pas quand html2canvas rastérise le SVG isolément.
  */
 export async function exportElementPdf(

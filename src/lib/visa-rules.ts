@@ -52,11 +52,11 @@ export interface Profile {
     | "etudiant"
     | "entrepreneur"
     | "sans";
-  /** Durée du séjour — Branche A (Tourisme), Q7. ≤ 90 jours = court, > 90 = long. */
+  /** Durée du séjour - Branche A (Tourisme), Q7. ≤ 90 jours = court, > 90 = long. */
   duree?: "court" | "long";
-  /** Q22 — où le demandeur séjourne pendant le voyage. */
+  /** Q22 - où le demandeur séjourne pendant le voyage. */
   hebergement?: "hotel" | "personne" | "autre";
-  /** Moyen de transport — pose la pièce « billet aller-retour » sur le bon support.
+  /** Moyen de transport - pose la pièce « billet aller-retour » sur le bon support.
    *  « avion » / « bateau » sont proposés ; « autobus » n'est plus proposé mais reste
    *  dans le type pour les dossiers enregistrés avant le retrait. */
   transport?: "avion" | "autobus" | "bateau";
@@ -64,31 +64,31 @@ export interface Profile {
   bansCertificat?: boolean;
   /** En vue de mariage : le/la futur(e) conjoint(e) est de nationalité française. */
   futurConjointFrancais?: boolean;
-  /** Q35 — qui finance le voyage. */
+  /** Q35 - qui finance le voyage. */
   financePar?: "soi_meme" | "garant";
-  /** Q-F3 (questions finales communes) — déclenche les pièces d'état civil. */
+  /** Q-F3 (questions finales communes) - déclenche les pièces d'état civil. */
   situationFamiliale?: "celibataire" | "marie" | "divorce" | "veuf" | "autre";
-  /** Étape 1 — Q1 : a déjà obtenu un visa pour la France. */
+  /** Étape 1 - Q1 : a déjà obtenu un visa pour la France. */
   visaAnterieur?: boolean;
-  /** Étape 1 — Q4 : a déjà essuyé un refus de visa Schengen. */
+  /** Étape 1 - Q4 : a déjà essuyé un refus de visa Schengen. */
   refusVisa?: boolean;
-  /** Branche A, Q15 : accompagne/rejoint un membre de famille UE/EEE — ajoute des pièces,
+  /** Branche A, Q15 : accompagne/rejoint un membre de famille UE/EEE - ajoute des pièces,
    * sans remplacer le dossier tourisme (contrairement à la branche « famille UE » historique). */
   ueEeeFamily?: boolean;
 
-  /* ---- Long séjour (Visa D) — arbre « EIDEN Visa — Long séjour ». Champs à plat et non
+  /* ---- Long séjour (Visa D) - arbre « EIDEN Visa - Long séjour ». Champs à plat et non
      imbriqués : la fusion des réponses de l'arbre est superficielle, un objet imbriqué
      écraserait les réponses précédentes. Les questions oui/non sont des booléens nommés
      `ls…` (voir l'index ci-dessous) ; seuls les aiguillages à plusieurs issues sont typés. ---- */
   /** Type de demande de visa long séjour. */
   lsType?: "retour" | "famille" | "visiteur" | "travail";
-  /** Visa de retour — motif de la demande. */
+  /** Visa de retour - motif de la demande. */
   lsRetour?: "perte_titre" | "perte_passeport" | "recepisse" | "mineur";
-  /** Installation familiale ou privée — situation familiale en France. */
+  /** Installation familiale ou privée - situation familiale en France. */
   lsFamille?: "asc_charge" | "asc_non_charge" | "conjoint" | "parent_mineur";
-  /** Visiteur — majeur (≥ 18 ans) ou mineur. */
+  /** Visiteur - majeur (≥ 18 ans) ou mineur. */
   lsVisiteur?: "majeur" | "mineur";
-  /** Travail — situation professionnelle en France. */
+  /** Travail - situation professionnelle en France. */
   lsTravail?: "embauche" | "ict" | "entrepreneur" | "liberale";
   /* Réponses de l'arbre long séjour : booléens oui/non, ou code court quand il y a plus de deux issues. */
   lsActeMariage?: boolean;
@@ -156,7 +156,7 @@ export interface Profile {
   /** Comment le client est arrivé : via le formulaire du site (landing) ou directement chez nous. */
   origine?: "site" | "direct";
 
-  /** Réponses en texte libre (noms, dates, adresses...) — sans incidence sur la checklist,
+  /** Réponses en texte libre (noms, dates, adresses...) - sans incidence sur la checklist,
    * mais nécessaires pour compléter le dossier. Clé = TreeField.key, valeur = saisie brute. */
   details?: Record<string, string>;
 }
@@ -321,7 +321,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     docs: [],
     extra: [],
     notes: [
-      "⚠ La checklist documentaire de référence (Eiden, à partir des listes visa transmises) ne couvre que le court séjour tourisme (≤ 90 jours). Aucun document n'est ajouté ici tant qu'une source dédiée au long séjour n'est pas fournie — dossier à traiter au cas par cas.",
+      "⚠ La checklist documentaire de référence (Eiden, à partir des listes visa transmises) ne couvre que le court séjour tourisme (≤ 90 jours). Aucun document n'est ajouté ici tant qu'une source dédiée au long séjour n'est pas fournie - dossier à traiter au cas par cas.",
     ],
   },
   b_long: {
@@ -331,7 +331,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     docs: [],
     extra: [],
     notes: [
-      "⚠ La checklist documentaire de référence ne détaille pas le long séjour familial. Aucun document n'est ajouté ici — dossier à traiter au cas par cas.",
+      "⚠ La checklist documentaire de référence ne détaille pas le long séjour familial. Aucun document n'est ajouté ici - dossier à traiter au cas par cas.",
     ],
   },
   b_ue_famille: {
@@ -348,7 +348,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
     extra: [],
     notes: [
-      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet ». Cette liste ne dépend pas de la profession du demandeur — n'ajoutez pas de pièce professionnelle par réflexe.",
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet ». Cette liste ne dépend pas de la profession du demandeur - n'ajoutez pas de pièce professionnelle par réflexe.",
     ],
   },
   conjoint_court: {
@@ -366,7 +366,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
     extra: [],
     notes: [
-      "Liste courte, sans variante par profession — reprise telle quelle de « eiden_visa_assistant_arbre_complet ». Si le couple souhaite s'installer durablement plutôt que simplement visiter, orienter vers le long séjour conjoint de Français (VLS-TS).",
+      "Liste courte, sans variante par profession - reprise telle quelle de « eiden_visa_assistant_arbre_complet ». Si le couple souhaite s'installer durablement plutôt que simplement visiter, orienter vers le long séjour conjoint de Français (VLS-TS).",
     ],
   },
   d_refugie: {
@@ -376,17 +376,17 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     docs: [],
     extra: [],
     notes: [
-      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche. Aucun document n'est ajouté ici — dossier à traiter au cas par cas, la même logique de questions s'appliquant à la protection subsidiaire et au statut d'apatride.",
+      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche. Aucun document n'est ajouté ici - dossier à traiter au cas par cas, la même logique de questions s'appliquant à la protection subsidiaire et au statut d'apatride.",
     ],
   },
   d_subsidiaire: {
-    title: "Rejoindre un conjoint / membre de famille — protection subsidiaire",
+    title: "Rejoindre un conjoint / membre de famille - protection subsidiaire",
     cat: "Long séjour (Visa D) · regroupement familial (protection subsidiaire)",
     level: "complexe",
     docs: [],
     extra: [],
     notes: [
-      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche — même logique que le cas « réfugié ». Aucun document n'est ajouté ici.",
+      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche - même logique que le cas « réfugié ». Aucun document n'est ajouté ici.",
     ],
   },
   d_apatride: {
@@ -396,7 +396,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     docs: [],
     extra: [],
     notes: [
-      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche — même logique que le cas « réfugié ». Aucun document n'est ajouté ici.",
+      "⚠ La checklist documentaire de référence ne détaille pas cette sous-branche - même logique que le cas « réfugié ». Aucun document n'est ajouté ici.",
     ],
   },
   c3: {
@@ -421,7 +421,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     level: "attention",
     docs: [
       "Justificatifs liés à l'événement (invitation, programme, contrat)",
-      "Justificatifs du statut professionnel — pour un artiste : carte d'artiste ou attestations",
+      "Justificatifs du statut professionnel - pour un artiste : carte d'artiste ou attestations",
       "Relevés bancaires",
       "Documents d'état civil selon situation",
       "Hébergement",
@@ -429,7 +429,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
     extra: [],
     notes: [
-      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — seule sous-branche travail avec un début de détail documentaire hors voyage professionnel.",
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » - seule sous-branche travail avec un début de détail documentaire hors voyage professionnel.",
     ],
   },
   c6: {
@@ -469,7 +469,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     ],
     extra: [],
     notes: [
-      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — billet aller-retour attendu, donc dossier traité en court séjour.",
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » - billet aller-retour attendu, donc dossier traité en court séjour.",
     ],
   },
   c_autre: {
@@ -478,7 +478,7 @@ const FIXED: Record<string, Omit<CaseResult, "key">> = {
     level: "complexe",
     docs: [],
     extra: [],
-    notes: ["Motif non couvert par les catégories connues — qualification manuelle nécessaire."],
+    notes: ["Motif non couvert par les catégories connues - qualification manuelle nécessaire."],
   },
 };
 
@@ -488,7 +488,7 @@ function profDoc(prof?: Profile["prof"]): string {
   if (prof === "commercant")
     return "Situation socio-professionnelle : preuve du statut (contrat de travail, certificat de travail, extrait du registre du commerce et des sociétés) et tout document démontrant les liens personnels avec le pays de résidence (copie du certificat de mariage, livret de famille)";
   if (prof === "entrepreneur")
-    return "Situation socio-professionnelle : entrepreneur — extrait du registre du commerce (RC), statuts de la société, identifiants ICE et IF, patente et IRG de l'année en cours, et justificatifs d'activité et de revenus";
+    return "Situation socio-professionnelle : entrepreneur - extrait du registre du commerce (RC), statuts de la société, identifiants ICE et IF, patente et IRG de l'année en cours, et justificatifs d'activité et de revenus";
   if (prof === "retraite")
     return "Situation socio-professionnelle : preuve du statut, et pour un retraité, attestation de pension (justificatif de pension / relevé de virement)";
   if (prof === "agriculteur")
@@ -501,7 +501,7 @@ function profDoc(prof?: Profile["prof"]): string {
 }
 
 /**
- * Branche A — Tourisme / visite privée, reconstruite pièce par pièce à partir de
+ * Branche A - Tourisme / visite privée, reconstruite pièce par pièce à partir de
  * « eiden_visa_assistant_arbre_complet ». Chaque bloc ci-dessous correspond
  * littéralement à un « Si <profession> » de la source ; rien n'est ajouté qui n'y
  * figure pas.
@@ -513,7 +513,7 @@ const PASSEPORT_FORMULAIRE = [
 ];
 const ASSURANCE_VOYAGE = "Assurance voyage";
 
-/** Pièce transport — précise le support choisi quand le demandeur l'a indiqué.
+/** Pièce transport - précise le support choisi quand le demandeur l'a indiqué.
  *  « avion » et « bateau » sont les seuls supports proposés au questionnaire ; « autobus »
  *  n'est plus posé mais reste lu pour les dossiers créés avant le retrait. */
 function transportDoc(t?: Profile["transport"]): string {
@@ -537,7 +537,7 @@ function etatCivilDocs(s?: Profile["situationFamiliale"]): string[] {
   return [];
 }
 
-/** Bloc « Si <profession> » — Branche A, financement = soi-même. */
+/** Bloc « Si <profession> » - Branche A, financement = soi-même. */
 function professionDocsTourisme(prof: Profile["prof"]): string[] {
   switch (prof) {
     case "fonctionnaire":
@@ -643,7 +643,7 @@ function buildTourisme(p: Profile): CaseResult {
   }
 
   const notes: string[] = [
-    "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — source unique pour cette branche.",
+    "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » - source unique pour cette branche.",
   ];
   if (p.visaHist)
     notes.push("Visa Schengen dans les 59 derniers mois : joindre la copie de l'ancien visa.");
@@ -663,7 +663,7 @@ function buildTourisme(p: Profile): CaseResult {
 }
 
 /**
- * Branche B — Visite familiale (hors conjoint de Français et hors UE/EEE, qui ont
+ * Branche B - Visite familiale (hors conjoint de Français et hors UE/EEE, qui ont
  * chacun leur propre résultat fixe). Couvre B-FAMILLE et B-ENFANT/PARENT DE
  * FRANÇAIS : mêmes pièces professionnelles que le tourisme (le docx source répète
  * un bloc identique), avec en plus la preuve du lien familial.
@@ -713,13 +713,13 @@ function buildVisiteFamiliale(p: Profile): CaseResult {
     docs,
     extra: [],
     notes: [
-      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » — source unique pour cette branche.",
+      "Pièces reconstituées à partir de « eiden_visa_assistant_arbre_complet » - source unique pour cette branche.",
     ],
   };
 }
 
 /**
- * « En vue de mariage » — court séjour. Deux questions seulement (certificat de
+ * « En vue de mariage » - court séjour. Deux questions seulement (certificat de
  * publication des bans, nationalité française du futur conjoint) : chacune ne déclenche
  * sa pièce que si la réponse est « oui ». Le socle commun (passeport, transport,
  * hébergement, financement) vient des questions posées avant le motif.
@@ -749,7 +749,7 @@ function buildEnVueMariage(p: Profile): CaseResult {
   const notes: string[] = [];
   if (!p.bansCertificat)
     notes.push(
-      "Certificat de publication des bans non disponible : pièce centrale du dossier « en vue de mariage » — à obtenir auprès de la mairie du lieu de célébration avant le dépôt.",
+      "Certificat de publication des bans non disponible : pièce centrale du dossier « en vue de mariage » - à obtenir auprès de la mairie du lieu de célébration avant le dépôt.",
     );
   if (!p.futurConjointFrancais)
     notes.push(
@@ -767,9 +767,9 @@ function buildEnVueMariage(p: Profile): CaseResult {
   };
 }
 
-/* ============ LONG SÉJOUR (Visa D) — assemblage dynamique ============ */
+/* ============ LONG SÉJOUR (Visa D) - assemblage dynamique ============ */
 
-/* Source : « EIDEN Visa — Système de qualification des visas Long séjour » (PDF, 27 p.).
+/* Source : « EIDEN Visa - Système de qualification des visas Long séjour » (PDF, 27 p.).
    Règle EIDEN : un document n'est affiché que si une réponse précédente le rend nécessaire ;
    les documents communs ouvrent le dossier, les pièces conditionnelles s'ajoutent ensuite. */
 
@@ -946,7 +946,7 @@ function buildLsAscendantCharge(p: Profile): CaseResult {
   ];
   if (non(p.lsPriseEnCharge))
     notes.push(
-      "Pas de prise en charge financière par le descendant dans le pays de résidence : le dossier ne relève pas de l'ascendant à charge — reprendre avec « Ascendant non à charge ».",
+      "Pas de prise en charge financière par le descendant dans le pays de résidence : le dossier ne relève pas de l'ascendant à charge - reprendre avec « Ascendant non à charge ».",
     );
   else if (non(p.lsPriseRegulier))
     notes.push(
@@ -985,7 +985,7 @@ function buildLsAscendantNonCharge(p: Profile): CaseResult {
     );
   if (non(p.lsRessourcesPerso))
     notes.push(
-      "Ressources personnelles insuffisantes : sans elles, l'ascendant non à charge ne peut pas subvenir à ses besoins en France — point bloquant à lever avant le dépôt.",
+      "Ressources personnelles insuffisantes : sans elles, l'ascendant non à charge ne peut pas subvenir à ses besoins en France - point bloquant à lever avant le dépôt.",
     );
   return lsResult(
     "ls_asc_non_charge",
@@ -1131,7 +1131,7 @@ function buildLsVisiteurMajeur(p: Profile): CaseResult {
   ];
   if (non(p.lsFonds))
     notes.push(
-      "Fonds déclarés insuffisants : c'est le motif de refus le plus direct sur un visiteur long séjour — construire une prise en charge documentée avant de déposer.",
+      "Fonds déclarés insuffisants : c'est le motif de refus le plus direct sur un visiteur long séjour - construire une prise en charge documentée avant de déposer.",
     );
   return lsResult(
     "ls_visiteur_majeur",
@@ -1211,7 +1211,7 @@ function buildLsEmbauche(p: Profile): CaseResult {
     );
   if (p.lsAutorisation === "non")
     notes.push(
-      "Autorisation de travail non obtenue alors qu'elle est requise : à obtenir par l'employeur AVANT le dépôt — point de blocage à lever en premier.",
+      "Autorisation de travail non obtenue alors qu'elle est requise : à obtenir par l'employeur AVANT le dépôt - point de blocage à lever en premier.",
     );
   if (p.lsAutorisation === "encours")
     notes.push(
@@ -1269,7 +1269,7 @@ function buildLsIct(p: Profile): CaseResult {
     notes.push(`Points bloquants à lever avant le dépôt : ${bloquants.join(" ; ")}.`);
   return lsResult(
     "ls_ict",
-    `Travail · ICT — mobilité intragroupe (${p.lsStatutIct === "stagiaire" ? "stagiaire" : "salarié"})`,
+    `Travail · ICT - mobilité intragroupe (${p.lsStatutIct === "stagiaire" ? "stagiaire" : "salarié"})`,
     "Long séjour (Visa D) · travail ICT",
     bloquants.length ? "complexe" : "attention",
     docs,
@@ -1297,7 +1297,7 @@ function buildLsEntrepreneur(p: Profile): CaseResult {
     );
     return lsResult(
       "ls_entrep_existante",
-      `Travail · entrepreneur — insertion dans une activité existante (${p.lsStatutExistant === "salarie" ? "salarié" : "non-salarié"})`,
+      `Travail · entrepreneur - insertion dans une activité existante (${p.lsStatutExistant === "salarie" ? "salarié" : "non-salarié"})`,
       "Long séjour (Visa D) · entrepreneur",
       "complexe",
       docs,
@@ -1359,7 +1359,7 @@ function buildLsEntrepreneur(p: Profile): CaseResult {
   docs.push(...(PAR_TYPE[t] ?? []));
   return lsResult(
     "ls_entrep_creation",
-    `Travail · entrepreneur — création d'activité (${TITRES[t] ?? "à préciser"})`,
+    `Travail · entrepreneur - création d'activité (${TITRES[t] ?? "à préciser"})`,
     "Long séjour (Visa D) · entrepreneur",
     "complexe",
     docs,
@@ -1604,7 +1604,7 @@ export interface TreeOption {
   /** Option exclusive d'un nœud `multi` : la cocher décoche les autres (« Tous les frais »). */
   excl?: boolean;
 }
-/** Un champ de saisie libre (nom, date, adresse...) — sans incidence sur la checklist. */
+/** Un champ de saisie libre (nom, date, adresse...) - sans incidence sur la checklist. */
 export interface TreeField {
   key: string;
   label: string;
@@ -1612,18 +1612,18 @@ export interface TreeField {
   type?: "text" | "date";
   /** Rôle du champ dans le calcul affiché sous le groupe (règle des 59 mois) :
    * `visa_59_mois` = date d'obtention, `visa_59_mois_reference` = date du jour saisie
-   * par l'agent — c'est lui qui la renseigne, le système ne la déduit pas de son horloge. */
+   * par l'agent - c'est lui qui la renseigne, le système ne la déduit pas de son horloge. */
   calcul?: "visa_59_mois" | "visa_59_mois_reference";
 }
 export interface TreeNode {
   q: string;
   help?: string;
-  /** Nœud à choix (boutons) — mutuellement exclusif avec `fields`. */
+  /** Nœud à choix (boutons) - mutuellement exclusif avec `fields`. */
   opts?: TreeOption[];
   /** Choix multiples : plusieurs options cochables, validées d'un « Continuer ». Toutes les
    * options d'un nœud `multi` doivent mener au même nœud suivant. */
   multi?: boolean;
-  /** Nœud de saisie libre — un ou plusieurs champs texte, validés en un seul « Continuer ». */
+  /** Nœud de saisie libre - un ou plusieurs champs texte, validés en un seul « Continuer ». */
   fields?: TreeField[];
   /** Nœud suivant après validation des `fields`. "DYNAMIC" ou une clé de cas figé sont acceptés
    * si `fieldsResult` est vrai. */
@@ -1671,10 +1671,10 @@ function lsOuiNon(q: string, key: LsBoolKey, nOui: string, nNon: string, help?: 
   };
 }
 export const TREE: Record<string, TreeNode> = {
-  /* ============ ÉTAPE 1 — ANTÉCÉDENTS DE VISA ============ */
+  /* ============ ÉTAPE 1 - ANTÉCÉDENTS DE VISA ============ */
   start: {
     q: "Avez-vous déjà obtenu un visa Schengen au cours des 59 derniers mois ?",
-    help: "Étape 1 — Antécédents de visa.",
+    help: "Étape 1 - Antécédents de visa.",
     opts: [
       { l: "Oui", n: "q2", set: { visaAnterieur: true } },
       { l: "Non", n: "q4" },
@@ -1724,7 +1724,7 @@ export const TREE: Record<string, TreeNode> = {
     next: "hebergement",
   },
 
-  /* ============ HÉBERGEMENT — commun, avant le motif ============ */
+  /* ============ HÉBERGEMENT - commun, avant le motif ============ */
   hebergement: {
     q: "Où allez-vous séjourner pendant votre voyage ?",
     help: "Question commune posée avant le motif du voyage : elle s'applique à toutes les branches court séjour.",
@@ -1753,7 +1753,7 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Non", n: "transport" },
     ],
   },
-  /* ============ PERSONNE HÉBERGEANTE — bloc différé, posé EN DERNIER ============
+  /* ============ PERSONNE HÉBERGEANTE - bloc différé, posé EN DERNIER ============
      Ces quatre nœuds ne sont PAS dans le tronc commun : `hebergement` saute par-dessus,
      et `goToResult` (qualification.tsx) y revient au terme de la branche. Ils restent
      déclarés ici, entre `hebergement` et `transport`, pour rester lisibles. */
@@ -1791,13 +1791,13 @@ export const TREE: Record<string, TreeNode> = {
     fieldsResult: true,
   },
 
-  /* ============ TRANSPORT / FINANCEMENT / DURÉE — communes, avant le motif ============ */
+  /* ============ TRANSPORT / FINANCEMENT / DURÉE - communes, avant le motif ============ */
   transport: {
     q: "Quel est votre moyen de transport pour vous rendre en France ?",
     help: "Déclenche la pièce « pré-réservation ou réservation du billet aller-retour ».",
     opts: [
       { l: "Avion", n: "financement", set: { transport: "avion" } },
-      // « Autobus » retiré du questionnaire (décision Eiden) — la valeur reste lisible
+      // « Autobus » retiré du questionnaire (décision Eiden) - la valeur reste lisible
       // dans le type pour les dossiers créés avant le retrait.
       { l: "Bateau", n: "financement", set: { transport: "bateau" } },
     ],
@@ -1839,7 +1839,7 @@ export const TREE: Record<string, TreeNode> = {
     ],
   },
 
-  /* ============ ÉTAPE 2 — MOTIF DU VOYAGE (court séjour) ============ */
+  /* ============ ÉTAPE 2 - MOTIF DU VOYAGE (court séjour) ============ */
   motif: {
     q: "Quel est le motif principal du séjour ?",
     help: "Le motif déclaré conditionne toute la suite du dossier.",
@@ -1852,10 +1852,10 @@ export const TREE: Record<string, TreeNode> = {
       { l: "Études", n: "eout", r: true },
     ],
   },
-  /* ============ LONG SÉJOUR (Visa D) — arbre « EIDEN Visa — Long séjour » ============ */
+  /* ============ LONG SÉJOUR (Visa D) - arbre « EIDEN Visa - Long séjour » ============ */
   ls_type: {
     q: "Quel est le type de votre demande de visa long séjour ?",
-    help: "Séjour de plus de 90 jours — chaque type a ses propres questions et justificatifs.",
+    help: "Séjour de plus de 90 jours - chaque type a ses propres questions et justificatifs.",
     opts: [
       { l: "Visa de retour", n: "ls_retour_motif", set: { lsType: "retour" } },
       {
@@ -2031,7 +2031,7 @@ export const TREE: Record<string, TreeNode> = {
     help: "Si oui, orientation vers Long séjour → Visiteur, conformément à l'orientation actuelle de France-Visas.",
     opts: [
       {
-        l: "Oui — orienter vers Visiteur",
+        l: "Oui - orienter vers Visiteur",
         n: "ls_visiteur_age",
         set: { lsRessourcesPerso: true, lsType: "visiteur" },
       },
@@ -2143,9 +2143,9 @@ export const TREE: Record<string, TreeNode> = {
   ls_visiteur_age: {
     q: "Quel est l'âge du demandeur ?",
     opts: [
-      { l: "18 ans ou plus — visiteur majeur", n: "ls_vm_activite", set: { lsVisiteur: "majeur" } },
+      { l: "18 ans ou plus - visiteur majeur", n: "ls_vm_activite", set: { lsVisiteur: "majeur" } },
       {
-        l: "Moins de 18 ans — visiteur mineur",
+        l: "Moins de 18 ans - visiteur mineur",
         n: "ls_vmin_scolarise",
         set: { lsVisiteur: "mineur" },
       },
@@ -2156,7 +2156,7 @@ export const TREE: Record<string, TreeNode> = {
     q: "Avez-vous l'intention d'exercer une activité professionnelle en France ?",
     help: "Le visa visiteur suppose l'engagement de ne pas travailler : si oui, redirection vers Travail.",
     opts: [
-      { l: "Oui — rediriger vers Travail", n: "ls_travail_situation", set: { lsType: "travail" } },
+      { l: "Oui - rediriger vers Travail", n: "ls_travail_situation", set: { lsType: "travail" } },
       { l: "Non", n: "ls_vm_situation" },
     ],
   },
@@ -2272,7 +2272,7 @@ export const TREE: Record<string, TreeNode> = {
     q: "Quelle est votre situation professionnelle en France ?",
     opts: [
       { l: "Embauche / détachement", n: "ls_emb_employeur", set: { lsTravail: "embauche" } },
-      { l: "ICT — mobilité intragroupe", n: "ls_ict_groupe", set: { lsTravail: "ict" } },
+      { l: "ICT - mobilité intragroupe", n: "ls_ict_groupe", set: { lsTravail: "ict" } },
       { l: "Entrepreneur", n: "ls_ent_projet", set: { lsTravail: "entrepreneur" } },
       {
         l: "Profession libérale / indépendante",
@@ -2323,14 +2323,14 @@ export const TREE: Record<string, TreeNode> = {
     "DYNAMIC_LS",
     "DYNAMIC_LS",
   ),
-  /* 4.2 ICT — mobilité intragroupe */
+  /* 4.2 ICT - mobilité intragroupe */
   ls_ict_groupe: {
     q: "Votre employeur actuel et l'entreprise française d'accueil appartiennent-ils au même groupe d'entreprises ?",
     help: "Si non, redirection vers une autre catégorie de travail.",
     opts: [
       { l: "Oui", n: "ls_ict_anciennete", set: { lsMemeGroupe: true } },
       {
-        l: "Non — rediriger vers une autre catégorie de travail",
+        l: "Non - rediriger vers une autre catégorie de travail",
         n: "ls_travail_situation",
         set: { lsMemeGroupe: false },
       },
@@ -2473,7 +2473,7 @@ export const TREE: Record<string, TreeNode> = {
     "DYNAMIC_LS",
   ),
 
-  /* ============ BRANCHE A — TOURISME / VISITE PRIVÉE ============ */
+  /* ============ BRANCHE A - TOURISME / VISITE PRIVÉE ============ */
   a_residence: {
     q: "Résidez-vous actuellement dans un pays autre que votre nationalité ?",
     opts: [
@@ -2491,7 +2491,7 @@ export const TREE: Record<string, TreeNode> = {
   },
   a_ue: {
     q: "Rejoignez-vous un membre de votre famille ressortissant français, de l'UE ou de l'EEE ?",
-    help: "Si oui, des pièces supplémentaires (lien familial, nationalité, preuve d'accompagnement) s'ajoutent à la checklist tourisme — elles ne la remplacent pas.",
+    help: "Si oui, des pièces supplémentaires (lien familial, nationalité, preuve d'accompagnement) s'ajoutent à la checklist tourisme - elles ne la remplacent pas.",
     opts: [
       { l: "Oui", n: "a_ue_fields", set: { ueEeeFamily: true } },
       { l: "Non", n: "a_profession" },
@@ -2526,7 +2526,7 @@ export const TREE: Record<string, TreeNode> = {
   /* ============ Questions finales communes (partagées entre branches) ============ */
   situation: {
     q: "Quelle est votre situation familiale ?",
-    help: "Questions finales communes (Q-F3) — déclenche les pièces d'état civil si applicable.",
+    help: "Questions finales communes (Q-F3) - déclenche les pièces d'état civil si applicable.",
     opts: [
       { l: "Célibataire", n: "q_visa_hist", set: { situationFamiliale: "celibataire" } },
       { l: "Marié(e)", n: "q_visa_hist", set: { situationFamiliale: "marie" } },
@@ -2544,7 +2544,7 @@ export const TREE: Record<string, TreeNode> = {
     ],
   },
 
-  /* ============ BRANCHE B — VISITE FAMILIALE ============ */
+  /* ============ BRANCHE B - VISITE FAMILIALE ============ */
   b_motif: {
     q: "Quel est le motif familial précis ?",
     opts: [
@@ -2619,7 +2619,7 @@ export const TREE: Record<string, TreeNode> = {
     q: "Cette personne est-elle de nationalité française ?",
     opts: [
       { l: "Oui", n: "b_profession" },
-      { l: "Non — vérifier la catégorie familiale concernée", n: "b_profession" },
+      { l: "Non - vérifier la catégorie familiale concernée", n: "b_profession" },
     ],
   },
 
@@ -2627,7 +2627,7 @@ export const TREE: Record<string, TreeNode> = {
     q: "Êtes-vous marié(e) à un ressortissant français ?",
     opts: [
       { l: "Oui", n: "b_conjoint_fields1" },
-      { l: "Non — retour vers les autres motifs familiaux", n: "b_motif" },
+      { l: "Non - retour vers les autres motifs familiaux", n: "b_motif" },
     ],
   },
   b_conjoint_fields1: {
@@ -2722,7 +2722,7 @@ export const TREE: Record<string, TreeNode> = {
     ],
   },
 
-  /* ============ BRANCHE C — TRAVAIL (court séjour) ============ */
+  /* ============ BRANCHE C - TRAVAIL (court séjour) ============ */
   c1: {
     q: "Quel est votre projet professionnel en France ?",
     opts: [
@@ -2806,7 +2806,7 @@ export const TREE: Record<string, TreeNode> = {
     fieldsResult: true,
   },
 
-  /* ============ BRANCHE D — MARIAGE / CONJOINT ============ */
+  /* ============ BRANCHE D - MARIAGE / CONJOINT ============ */
   d_install_fields: {
     q: "Personne rejointe.",
     fields: [
@@ -2883,7 +2883,7 @@ export const TREE: Record<string, TreeNode> = {
   d_conjoint_enfants: {
     q: "Avez-vous des enfants ensemble ?",
     opts: [
-      { l: "Oui — informations enfants", n: "t3", r: true },
+      { l: "Oui - informations enfants", n: "t3", r: true },
       { l: "Non", n: "t3", r: true },
     ],
   },
@@ -2921,11 +2921,11 @@ export const TREE: Record<string, TreeNode> = {
     next: "d_apatride",
     fieldsResult: true,
   },
-  /* En vue de mariage — mariage français (court séjour). Deux questions, chacune liée
+  /* En vue de mariage - mariage français (court séjour). Deux questions, chacune liée
      à une pièce : certificat de publication des bans, nationalité française du conjoint. */
   d_court: {
     q: "Avez-vous le certificat de la mairie confirmant que la publication des bans a été effectuée sans opposition ?",
-    help: "En vue de mariage — mariage français.",
+    help: "En vue de mariage - mariage français.",
     opts: [
       { l: "Oui", n: "d_court_nationalite", set: { bansCertificat: true } },
       { l: "Non", n: "d_court_nationalite" },

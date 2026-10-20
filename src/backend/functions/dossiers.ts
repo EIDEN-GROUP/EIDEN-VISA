@@ -16,15 +16,18 @@ import {
   formuleLabel,
   prixFormule,
   MODALITE_LABEL,
+  piecesFromCase,
+  resolveCase,
   type Dossier,
   type FormuleKey,
   type ServiceKey,
   type Modalite,
 } from "@/lib/dossier-model";
+import { rejouerQualification } from "@/lib/qualification-replay";
 import { TREE_FIELDS, type Profile } from "@/lib/visa-rules";
 
 /** Filtre de date partagé : "dossiers ouverts entre le X et le Y", sur la vraie colonne
- * `created_at` (timestamp) — pas sur `ouvert_le`, un texte français non fiable à trier/filtrer.
+ * `created_at` (timestamp) - pas sur `ouvert_le`, un texte français non fiable à trier/filtrer.
  * Refuse les dates non analysables (400) au lieu de laisser `Invalid Date` exploser en SQL. */
 const dateInput = z
   .string()
@@ -107,7 +110,7 @@ export const listDossiers = createServerFn({ method: "GET" }).handler(async () =
 });
 
 /**
- * Liste paginée, filtrée côté SQL — pense échelle réelle (potentiellement des millions
+ * Liste paginée, filtrée côté SQL - pense échelle réelle (potentiellement des millions
  * de dossiers) : jamais de SELECT * suivi d'un filtrage en JS.
  */
 export const listDossiersPage = createServerFn({ method: "GET" })
@@ -187,7 +190,7 @@ export const listDossiersRecents = createServerFn({ method: "GET" }).handler(asy
   return rows.map(rowToDossier);
 });
 
-/** Dossiers ayant au moins un paiement en attente — pour l'écran Paiements, sans charger la table entière. */
+/** Dossiers ayant au moins un paiement en attente - pour l'écran Paiements, sans charger la table entière. */
 export const listDossiersAvecImpaye = createServerFn({ method: "GET" })
   .validator(dateRangeInput)
   .handler(async ({ data }) => {
@@ -205,7 +208,7 @@ export const listDossiersAvecImpaye = createServerFn({ method: "GET" })
     return rows.map(rowToDossier);
   });
 
-/** Historique des encaissements — borné aux dossiers les plus récents ayant un encaissement. */
+/** Historique des encaissements - borné aux dossiers les plus récents ayant un encaissement. */
 export const listDossiersAvecEncaissement = createServerFn({ method: "GET" })
   .validator(dateRangeInput)
   .handler(async ({ data }) => {
@@ -223,7 +226,7 @@ export const listDossiersAvecEncaissement = createServerFn({ method: "GET" })
     return rows.map(rowToDossier);
   });
 
-/** Statistiques agrégées côté SQL — jamais un reduce() en JS sur la table entière. */
+/** Statistiques agrégées côté SQL - jamais un reduce() en JS sur la table entière. */
 export const getDashboardStats = createServerFn({ method: "GET" })
   .validator(dateRangeInput)
   .handler(async ({ data }) => {
@@ -354,7 +357,7 @@ const serviceKey = z.enum([
 
 /**
  * Services retenus pour une formule : obligatoires et cohérents pour `carte`, ignorés
- * (vidés) pour un pack — un pack inclut déjà ses services.
+ * (vidés) pour un pack - un pack inclut déjà ses services.
  */
 function servicesValides(formule: FormuleKey, services: ServiceKey[]): ServiceKey[] {
   if (formule !== "carte") return [];
@@ -363,6 +366,123 @@ function servicesValides(formule: FormuleKey, services: ServiceKey[]): ServiceKe
   return services;
 }
 
+/**
+ * Schéma du profil de qualification (réponses de la Boussole).
+ * Partagé entre la création et l'application différée d'une qualification : le
+ * même schéma des deux côtés, sinon zod retirerait en silence les champs
+ * longséjour (`ls…`) - piège déjà arrivé trois fois.
+ */
+const profileInput = z.object({
+  base: z
+    .enum([
+      "tourisme",
+      "visite_generale",
+      "visite_enfant_parent",
+      "famille_ue",
+      "visite_familiale_membre",
+      "enfant_parent_francais",
+      "en_vue_mariage",
+    ])
+    .optional(),
+  dependent: z.boolean().optional(),
+  minor: z.boolean().optional(),
+  married: z.boolean().optional(),
+  spouseNoJob: z.boolean().optional(),
+  visaHist: z.boolean().optional(),
+  grandchildNote: z.boolean().optional(),
+  prof: z
+    .enum([
+      "salarie",
+      "fonctionnaire",
+      "commercant",
+      "avocat_medical",
+      "agriculteur",
+      "retraite",
+      "etudiant",
+      "entrepreneur",
+      "sans",
+    ])
+    .optional(),
+  duree: z.enum(["court", "long"]).optional(),
+  hebergement: z.enum(["hotel", "personne", "autre"]).optional(),
+  transport: z.enum(["avion", "autobus", "bateau"]).optional(),
+  financePar: z.enum(["soi_meme", "garant"]).optional(),
+  situationFamiliale: z.enum(["celibataire", "marie", "divorce", "veuf", "autre"]).optional(),
+  visaAnterieur: z.boolean().optional(),
+  refusVisa: z.boolean().optional(),
+  ueEeeFamily: z.boolean().optional(),
+  bansCertificat: z.boolean().optional(),
+  futurConjointFrancais: z.boolean().optional(),
+  // Long séjour (Visa D) - sinon zod retire ces réponses en silence à l'enregistrement.
+  lsType: z.enum(["retour", "famille", "visiteur", "travail"]).optional(),
+  lsRetour: z.enum(["perte_titre", "perte_passeport", "recepisse", "mineur"]).optional(),
+  lsFamille: z.enum(["asc_charge", "asc_non_charge", "conjoint", "parent_mineur"]).optional(),
+  lsVisiteur: z.enum(["majeur", "mineur"]).optional(),
+  lsTravail: z.enum(["embauche", "ict", "entrepreneur", "liberale"]).optional(),
+  lsActeMariage: z.boolean().optional(),
+  lsAnciennete: z.boolean().optional(),
+  lsAttestations: z.boolean().optional(),
+  lsAutorisation: z.enum(["oui", "non", "encours"]).optional(),
+  lsAutreParent: z.boolean().optional(),
+  lsAutreParentAutorise: z.boolean().optional(),
+  lsCadre: z.boolean().optional(),
+  lsCommunaute: z.boolean().optional(),
+  lsConjointFrancais: z.boolean().optional(),
+  lsContratTravail: z.boolean().optional(),
+  lsContribue: z.boolean().optional(),
+  lsContribue2ans: z.boolean().optional(),
+  lsCopieTitre: z.boolean().optional(),
+  lsDcemTir: z.boolean().optional(),
+  lsDecisionGarde: z.boolean().optional(),
+  lsDeclarationPerte: z.boolean().optional(),
+  lsDescFrancais: z.boolean().optional(),
+  lsDescMarie: z.enum(["oui", "non", "na"]).optional(),
+  lsDiplomes: z.boolean().optional(),
+  lsEmployeur: z.enum(["france", "detachement"]).optional(),
+  lsEnfantFrancais: z.boolean().optional(),
+  lsEnfantMineur: z.boolean().optional(),
+  lsEnfantReside: z.boolean().optional(),
+  lsFiliation: z.boolean().optional(),
+  lsFinanceMineur: z.enum(["pere", "mere", "parents", "organisme", "proche", "autre"]).optional(),
+  lsFinanceSejour: z.enum(["soi", "famille", "autre"]).optional(),
+  lsFonds: z.boolean().optional(),
+  lsGarde: z.enum(["pere", "mere", "autre"]).optional(),
+  lsGardeAutorise: z.boolean().optional(),
+  lsHebergMineur: z.enum(["parents", "proche", "residence", "autre"]).optional(),
+  lsLettreMission: z.boolean().optional(),
+  lsLien: z.enum(["parent", "grand_parent", "autre"]).optional(),
+  lsLogement: z.enum(["propriete", "location", "personne", "autre"]).optional(),
+  lsMaintien: z.boolean().optional(),
+  lsMarie: z.boolean().optional(),
+  lsMemeGroupe: z.boolean().optional(),
+  lsMineur: z.boolean().optional(),
+  lsParentFrancais: z.boolean().optional(),
+  lsParentsSepares: z.boolean().optional(),
+  lsPolygamie: z.boolean().optional(),
+  lsPriseEnCharge: z.boolean().optional(),
+  lsPriseRegulier: z.boolean().optional(),
+  lsProfReglementee: z.boolean().optional(),
+  lsProjet: z.enum(["creation", "existante"]).optional(),
+  lsRecepisse: z.boolean().optional(),
+  lsRecepisseValide: z.boolean().optional(),
+  lsReferencesTitre: z.boolean().optional(),
+  lsRessortissant: z.boolean().optional(),
+  lsRessourcesPerso: z.boolean().optional(),
+  lsRessourcesPropres: z.boolean().optional(),
+  lsRessourcesSmic: z.boolean().optional(),
+  lsScolarise: z.boolean().optional(),
+  lsStatutExistant: z.enum(["salarie", "non_salarie"]).optional(),
+  lsStatutIct: z.enum(["salarie", "stagiaire"]).optional(),
+  lsStructure: z.boolean().optional(),
+  lsTranscrit: z.enum(["oui", "non", "na"]).optional(),
+  lsViabilite: z.boolean().optional(),
+  origine: z.enum(["site", "direct"]).optional(),
+  details: z
+    .record(z.string(), z.string().max(500))
+    .refine((v) => Object.keys(v).length <= 100, "Trop de détails.")
+    .optional(),
+});
+
 const dossierInput = z.object({
   id: z.string().min(1).max(32),
   client: clientInput,
@@ -370,116 +490,7 @@ const dossierInput = z.object({
   assigneeUserId: z.string().max(64).nullable().default(null),
   ouvertLe: z.string().min(1).max(32),
   caseKey: z.string().min(1).max(32),
-  profile: z.object({
-    base: z
-      .enum([
-        "tourisme",
-        "visite_generale",
-        "visite_enfant_parent",
-        "famille_ue",
-        "visite_familiale_membre",
-        "enfant_parent_francais",
-        "en_vue_mariage",
-      ])
-      .optional(),
-    dependent: z.boolean().optional(),
-    minor: z.boolean().optional(),
-    married: z.boolean().optional(),
-    spouseNoJob: z.boolean().optional(),
-    visaHist: z.boolean().optional(),
-    grandchildNote: z.boolean().optional(),
-    prof: z
-      .enum([
-        "salarie",
-        "fonctionnaire",
-        "commercant",
-        "avocat_medical",
-        "agriculteur",
-        "retraite",
-        "etudiant",
-        "entrepreneur",
-        "sans",
-      ])
-      .optional(),
-    duree: z.enum(["court", "long"]).optional(),
-    hebergement: z.enum(["hotel", "personne", "autre"]).optional(),
-    transport: z.enum(["avion", "autobus", "bateau"]).optional(),
-    financePar: z.enum(["soi_meme", "garant"]).optional(),
-    situationFamiliale: z.enum(["celibataire", "marie", "divorce", "veuf", "autre"]).optional(),
-    visaAnterieur: z.boolean().optional(),
-    refusVisa: z.boolean().optional(),
-    ueEeeFamily: z.boolean().optional(),
-    bansCertificat: z.boolean().optional(),
-    futurConjointFrancais: z.boolean().optional(),
-    // Long séjour (Visa D) — sinon zod retire ces réponses en silence à l'enregistrement.
-    lsType: z.enum(["retour", "famille", "visiteur", "travail"]).optional(),
-    lsRetour: z.enum(["perte_titre", "perte_passeport", "recepisse", "mineur"]).optional(),
-    lsFamille: z.enum(["asc_charge", "asc_non_charge", "conjoint", "parent_mineur"]).optional(),
-    lsVisiteur: z.enum(["majeur", "mineur"]).optional(),
-    lsTravail: z.enum(["embauche", "ict", "entrepreneur", "liberale"]).optional(),
-    lsActeMariage: z.boolean().optional(),
-    lsAnciennete: z.boolean().optional(),
-    lsAttestations: z.boolean().optional(),
-    lsAutorisation: z.enum(["oui", "non", "encours"]).optional(),
-    lsAutreParent: z.boolean().optional(),
-    lsAutreParentAutorise: z.boolean().optional(),
-    lsCadre: z.boolean().optional(),
-    lsCommunaute: z.boolean().optional(),
-    lsConjointFrancais: z.boolean().optional(),
-    lsContratTravail: z.boolean().optional(),
-    lsContribue: z.boolean().optional(),
-    lsContribue2ans: z.boolean().optional(),
-    lsCopieTitre: z.boolean().optional(),
-    lsDcemTir: z.boolean().optional(),
-    lsDecisionGarde: z.boolean().optional(),
-    lsDeclarationPerte: z.boolean().optional(),
-    lsDescFrancais: z.boolean().optional(),
-    lsDescMarie: z.enum(["oui", "non", "na"]).optional(),
-    lsDiplomes: z.boolean().optional(),
-    lsEmployeur: z.enum(["france", "detachement"]).optional(),
-    lsEnfantFrancais: z.boolean().optional(),
-    lsEnfantMineur: z.boolean().optional(),
-    lsEnfantReside: z.boolean().optional(),
-    lsFiliation: z.boolean().optional(),
-    lsFinanceMineur: z.enum(["pere", "mere", "parents", "organisme", "proche", "autre"]).optional(),
-    lsFinanceSejour: z.enum(["soi", "famille", "autre"]).optional(),
-    lsFonds: z.boolean().optional(),
-    lsGarde: z.enum(["pere", "mere", "autre"]).optional(),
-    lsGardeAutorise: z.boolean().optional(),
-    lsHebergMineur: z.enum(["parents", "proche", "residence", "autre"]).optional(),
-    lsLettreMission: z.boolean().optional(),
-    lsLien: z.enum(["parent", "grand_parent", "autre"]).optional(),
-    lsLogement: z.enum(["propriete", "location", "personne", "autre"]).optional(),
-    lsMaintien: z.boolean().optional(),
-    lsMarie: z.boolean().optional(),
-    lsMemeGroupe: z.boolean().optional(),
-    lsMineur: z.boolean().optional(),
-    lsParentFrancais: z.boolean().optional(),
-    lsParentsSepares: z.boolean().optional(),
-    lsPolygamie: z.boolean().optional(),
-    lsPriseEnCharge: z.boolean().optional(),
-    lsPriseRegulier: z.boolean().optional(),
-    lsProfReglementee: z.boolean().optional(),
-    lsProjet: z.enum(["creation", "existante"]).optional(),
-    lsRecepisse: z.boolean().optional(),
-    lsRecepisseValide: z.boolean().optional(),
-    lsReferencesTitre: z.boolean().optional(),
-    lsRessortissant: z.boolean().optional(),
-    lsRessourcesPerso: z.boolean().optional(),
-    lsRessourcesPropres: z.boolean().optional(),
-    lsRessourcesSmic: z.boolean().optional(),
-    lsScolarise: z.boolean().optional(),
-    lsStatutExistant: z.enum(["salarie", "non_salarie"]).optional(),
-    lsStatutIct: z.enum(["salarie", "stagiaire"]).optional(),
-    lsStructure: z.boolean().optional(),
-    lsTranscrit: z.enum(["oui", "non", "na"]).optional(),
-    lsViabilite: z.boolean().optional(),
-    origine: z.enum(["site", "direct"]).optional(),
-    details: z
-      .record(z.string(), z.string().max(500))
-      .refine((v) => Object.keys(v).length <= 100, "Trop de détails.")
-      .optional(),
-  }),
+  profile: profileInput,
   titre: z.string().min(1).max(160),
   categorie: z.string().min(1).max(160),
   niveau: z.enum(["standard", "attention", "complexe"]),
@@ -510,7 +521,13 @@ const dossierInput = z.object({
     .max(50),
   notes: z.array(z.string().max(2000)).max(200),
   qualification: z
-    .array(z.object({ question: z.string().max(2000), reponse: z.string().max(2000) }))
+    .array(
+      z.object({
+        question: z.string().max(2000),
+        reponse: z.string().max(2000),
+        nodeKey: z.string().max(64).optional(),
+      }),
+    )
     .max(200)
     .default([]),
 });
@@ -518,7 +535,7 @@ const dossierInput = z.object({
 export const createDossier = createServerFn({ method: "POST" })
   .validator(dossierInput)
   .handler(async ({ data }) => {
-    // Le compte réel qui crée le dossier vient de la session, jamais du client — sinon
+    // Le compte réel qui crée le dossier vient de la session, jamais du client - sinon
     // n'importe qui pourrait attribuer un dossier à quelqu'un d'autre en modifiant la requête.
     const agentUserId = await requireUserId();
     const services = servicesValides(data.pack, data.services);
@@ -589,6 +606,152 @@ export const avancerEtape = createServerFn({ method: "POST" })
       await logActivity("dossier.cloture", `Dossier ${data.id} clôturé (dépôt).`, data.id);
   });
 
+/**
+ * Applique (ou met à jour) la qualification d'un dossier déjà ouvert : le cas
+ * retenu, la checklist documentaire, les points de vigilance, le profil de
+ * réponses et le fil des questions posées.
+ *
+ * Le dossier peut avoir été créé SANS qualification (étape 1 « Créer le
+ * dossier » avant la Boussole) : on complète alors un dossier provisoire.
+ */
+export const applyQualification = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.string().min(1).max(32),
+      caseKey: z.string().min(1).max(32),
+      titre: z.string().min(1).max(160),
+      categorie: z.string().min(1).max(160),
+      niveau: z.enum(["standard", "attention", "complexe"]),
+      profile: profileInput,
+      pieces: z
+        .array(
+          z.object({
+            label: z.string().min(1).max(200),
+            source: z.enum(["officiel", "eiden"]),
+            fourni: z.boolean(),
+          }),
+        )
+        .max(200),
+      notes: z.array(z.string().max(2000)).max(200),
+      qualification: z
+        .array(
+          z.object({
+            question: z.string().max(2000),
+            reponse: z.string().max(2000),
+            nodeKey: z.string().max(64).optional(),
+          }),
+        )
+        .max(200)
+        .default([]),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({
+      where: eq(dossiersTable.id, data.id),
+    });
+    if (!row) throw new Error("Dossier introuvable.");
+    await db
+      .update(dossiersTable)
+      .set({
+        caseKey: data.caseKey,
+        titre: data.titre,
+        categorie: data.categorie,
+        niveau: data.niveau,
+        profile: data.profile as Profile,
+        pieces: data.pieces,
+        notes: data.notes,
+        qualification: data.qualification,
+      })
+      .where(eq(dossiersTable.id, data.id));
+    await logActivity(
+      "dossier.qualification",
+      `Qualification appliquée : ${data.titre} (${data.caseKey}, ${data.pieces.length} pièces).`,
+      data.id,
+    );
+  });
+
+/**
+ * Corrige le fil des questions posées au client (texte libre de l'agent).
+ * Le fil est figé côté qualification, mais l'agent doit pouvoir rectifier une
+ * formulation mal saisie : chaque modification est journalisée.
+ */
+export const updateQualification = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.string().min(1).max(32),
+      qualification: z
+        .array(
+          z.object({
+            question: z.string().min(1).max(2000),
+            reponse: z.string().max(2000),
+            nodeKey: z.string().max(64).optional(),
+          }),
+        )
+        .max(200),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireUserId();
+    const row = await db.query.dossiers.findFirst({
+      where: eq(dossiersTable.id, data.id),
+    });
+    if (!row) throw new Error("Dossier introuvable.");
+    // Comparaison du fil entier (et non entrée par entrée) : le fil peut avoir été
+    // reconstruit (ordre et nombre de questions changent après une correction).
+    const avant = JSON.stringify(row.qualification ?? []);
+    const apres = JSON.stringify(data.qualification);
+    if (avant === apres) return;
+
+    /**
+     * Une réponse corrigée doit entraîner toute la qualification : on rejoue
+     * l'arbre avec les réponses corrigées pour recalculer le cas, la checklist et
+     * le fil (les questions devenues hors sujet tombent, les nouvelles sont
+     * signalées). Dossiers anciens (sans `nodeKey`) : on ne touche qu'au fil.
+     */
+    const dossier = rowToDossier(row);
+    const rejouable = data.qualification.some((q) => q.nodeKey);
+    const rejoue = rejouable ? rejouerQualification(data.qualification, dossier.profile) : null;
+    const nouveauFil = rejoue?.complet ? rejoue.entrees : data.qualification;
+    const modifiees = data.qualification.filter(
+      (q) => !row.qualification.some((r) => r.nodeKey === q.nodeKey && r.reponse === q.reponse),
+    ).length;
+    const aRepondre = rejoue?.aRepondre.length ?? 0;
+
+    if (rejoue?.complet && rejoue.caseKey) {
+      const cas = resolveCase(rejoue.caseKey, rejoue.profile);
+      await db
+        .update(dossiersTable)
+        .set({
+          qualification: nouveauFil,
+          caseKey: rejoue.caseKey,
+          titre: cas.title,
+          categorie: cas.cat,
+          niveau: cas.level,
+          profile: rejoue.profile,
+          pieces: piecesFromCase(cas),
+          notes: cas.notes,
+        })
+        .where(eq(dossiersTable.id, data.id));
+    } else {
+      await db
+        .update(dossiersTable)
+        .set({ qualification: nouveauFil })
+        .where(eq(dossiersTable.id, data.id));
+    }
+
+    const detail = rejoue?.complet
+      ? `Fil de questions corrigé (${modifiees} réponse${modifiees > 1 ? "s" : ""} modifiée${
+          modifiees > 1 ? "s" : ""
+        }), qualification recalculée : ${rejoue.caseKey}${
+          aRepondre ? `, ${aRepondre} question${aRepondre > 1 ? "s" : ""} à confirmer` : ""
+        }.`
+      : `Fil de questions corrigé (${modifiees} entrée${modifiees > 1 ? "s" : ""} modifiée${
+          modifiees > 1 ? "s" : ""
+        }) — qualification non recalculée (réponse hors arbre).`;
+    await logActivity("dossier.qualification_correction", detail, data.id);
+  });
+
 export const setEtape = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().min(1).max(32), etape: z.number().min(1).max(5) }))
   .handler(async ({ data }) => {
@@ -614,7 +777,7 @@ export const changerCentre = createServerFn({ method: "POST" })
       .where(eq(dossiersTable.id, data.id));
   });
 
-/** Autorise (ou bloque) le téléversement de documents sur un dossier — CEO ou Réception. */
+/** Autorise (ou bloque) le téléversement de documents sur un dossier - CEO ou Réception. */
 export const setUploadAutorisation = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().min(1).max(32), autorise: z.boolean() }))
   .handler(async ({ data }) => {
@@ -682,7 +845,7 @@ export const changerPack = createServerFn({ method: "POST" })
     );
   });
 
-/** Le client choisit de régler comptant ou par acompte (50 % ou 15 %) — régénère l'échéancier dû. */
+/** Le client choisit de régler comptant ou par acompte (50 % ou 15 %) - régénère l'échéancier dû. */
 export const setModalitePaiement = createServerFn({ method: "POST" })
   .validator(
     z.object({
@@ -710,7 +873,7 @@ export const setModalitePaiement = createServerFn({ method: "POST" })
 
 /**
  * Suivi complet des encaissements pour l'écran /ops (CEO uniquement).
- * Tout est agrégé côté SQL — jamais un reduce() en JS sur la table entière.
+ * Tout est agrégé côté SQL - jamais un reduce() en JS sur la table entière.
  */
 export const getPaiementsSuivi = createServerFn({ method: "GET" }).handler(async () => {
   await requireCeo();
@@ -972,7 +1135,7 @@ export const updateClient = createServerFn({ method: "POST" })
       .where(eq(dossiersTable.id, data.id));
   });
 
-/** Corrige l'origine du client (site / direct) — p.ex. une case cochée par erreur à la création. */
+/** Corrige l'origine du client (site / direct) - p.ex. une case cochée par erreur à la création. */
 export const updateOrigine = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().min(1).max(32), origine: z.enum(["site", "direct"]) }))
   .handler(async ({ data }) => {

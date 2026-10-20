@@ -99,7 +99,7 @@ function OpsLogin() {
       const account = await login({ data: { email, password } });
       if (account.role !== "ceo") {
         // Identifiants valides mais compte non-CEO : refusé ici, mais on ne le laisse
-        // pas connecté via la porte superadmin — il devra passer par /login normalement.
+        // pas connecté via la porte superadmin - il devra passer par /login normalement.
         await logout();
         setError("Ce compte n'a pas les droits superadmin.");
         return;
@@ -173,7 +173,7 @@ function OpsLogin() {
             {pending ? "Connexion…" : "Entrer"}
           </Button>
           <p className="pt-1 text-center text-xs" style={{ color: "var(--rail-muted)" }}>
-            Réservé aux comptes CEO — les autres comptes doivent utiliser{" "}
+            Réservé aux comptes CEO - les autres comptes doivent utiliser{" "}
             <Link to="/login" className="underline hover:text-white">
               la connexion standard
             </Link>
@@ -208,7 +208,7 @@ function OpsDenied() {
 
 /* -------------------------------------------------------------------------- */
 
-/** Corps de navigation de l'espace Ops — défini au niveau module (jamais pendant
+/** Corps de navigation de l'espace Ops - défini au niveau module (jamais pendant
  * le rendu) pour ne pas recréer un composant à chaque passe. */
 function NavContenu({
   nav,
@@ -506,23 +506,23 @@ function Synthese({
     <div>
       <SectionTitle
         title="Vue d'ensemble"
-        hint="L'essentiel en un écran — ce qui va, et ce qui demande une décision."
+        hint="L'essentiel en un écran - ce qui va, et ce qui demande une décision."
       />
 
       <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-4">
         <Kpi
           label="Dossiers actifs"
-          value={k ? `${k.actifs}` : "—"}
+          value={k ? `${k.actifs}` : "-"}
           hint={k ? `${k.total} au total` : undefined}
         />
         <Kpi
           label="Taux d'approbation"
-          value={k?.tauxApprobation == null ? "—" : `${k.tauxApprobation} %`}
+          value={k?.tauxApprobation == null ? "-" : `${k.tauxApprobation} %`}
           hint={k ? `${k.approuve} ✓ · ${k.refuse} ✗` : undefined}
         />
         <Kpi
           label="Encaissé"
-          value={k ? `${k.totalEncaisse.toLocaleString("fr-FR")} MAD` : "—"}
+          value={k ? `${k.totalEncaisse.toLocaleString("fr-FR")} MAD` : "-"}
           hint={suivi ? `${suivi.totaux.attente.toLocaleString("fr-FR")} en attente` : undefined}
         />
         <Kpi
@@ -542,7 +542,7 @@ function Synthese({
             {pipeline.map(({ e, n }) => (
               <div
                 key={e.n}
-                title={`${e.label} — ${n}`}
+                title={`${e.label} - ${n}`}
                 style={{ width: `${(n / pipelineTotal) * 100}%` }}
                 className={cn(e.n % 2 ? "bg-primary" : "bg-rail")}
               />
@@ -672,7 +672,7 @@ function PaiementsSection({ suivi }: { suivi: Suivi }) {
     <div>
       <SectionTitle
         title="Paiements"
-        hint="Tous dossiers confondus — la source de vérité des encaissements Eiden Visa."
+        hint="Tous dossiers confondus - la source de vérité des encaissements Eiden Visa."
         action={
           suivi && (
             <Button
@@ -736,7 +736,7 @@ function PaiementsSection({ suivi }: { suivi: Suivi }) {
                         new Date(j.createdAt).toLocaleString("fr-FR"),
                         j.userNom ?? "Inconnu",
                         j.detail,
-                        j.dossierId ?? "—",
+                        j.dossierId ?? "-",
                       ]),
                     },
                   ],
@@ -1119,10 +1119,10 @@ function SuiviListe({
 }
 
 function money(v?: number) {
-  return v === undefined ? "—" : `${v.toLocaleString("fr-FR")} MAD`;
+  return v === undefined ? "-" : `${v.toLocaleString("fr-FR")} MAD`;
 }
 
-/** Ouvre le reçu de paiement du dossier dans un nouvel onglet — vérification côté ops. */
+/** Ouvre le reçu de paiement du dossier dans un nouvel onglet - vérification côté ops. */
 function RecuLink({ id }: { id: string }) {
   return (
     <Link

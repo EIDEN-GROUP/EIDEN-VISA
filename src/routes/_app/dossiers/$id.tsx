@@ -9,6 +9,7 @@ import {
   encaisse,
   passeportStatut,
   passeportExpirationMinimale,
+  CASE_PROVISOIRE,
   ETAPES,
   formuleLabel,
   erreurServices,
@@ -18,6 +19,7 @@ import {
   type Centre,
   type Modalite,
   type Echeance,
+  type Dossier,
 } from "@/lib/dossier-model";
 import {
   NiveauBadge,
@@ -67,7 +69,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TREE_FIELDS } from "@/lib/visa-rules";
+import { TREE_FIELDS, TREE } from "@/lib/visa-rules";
 import stampPassport from "@/assets/decorations/stamp-passport.png";
 
 const ECHEANCE_LABEL: Record<Echeance, string> = {
@@ -163,6 +165,24 @@ const TOUS_PANNEAUX: Panneau[] = [
   "notes",
 ];
 
+/** Valeur « pas encore répondu » dans le menu de correction (Radix Select refuse ""). */
+const REPONSE_VIDE = "__a_repondre__";
+
+/**
+ * Réponses possibles d'une question de qualification : on relit l'arbre (clé du
+ * nœud mémorisée avec la question) et on propose les options du nœud. `null` si
+ * la question est à saisie libre, si elle a été posée à choix multiples (la
+ * réponse enregistrée en regroupe plusieurs) ou si le dossier est antérieur à
+ * la mémorisation du nœud : l'agent saisit alors la réponse au clavier.
+ */
+function reponsesPossibles(qr: Dossier["qualification"][number]): string[] | null {
+  if (!qr.nodeKey) return null;
+  const node = TREE[qr.nodeKey];
+  if (!node?.opts || node.multi || node.fields) return null;
+  const options = node.opts.map((o) => o.l);
+  return options.length > 1 ? options : null;
+}
+
 /** Une ligne libellé / valeur, format partagé par les panneaux de lecture. */
 function Ligne({ label, valeur }: { label: string; valeur: string | null | undefined }) {
   return (
@@ -171,7 +191,7 @@ function Ligne({ label, valeur }: { label: string; valeur: string | null | undef
       <dd
         className={cn("text-sm font-medium", valeur ? "text-foreground" : "text-muted-foreground")}
       >
-        {valeur || "—"}
+        {valeur || "-"}
       </dd>
     </div>
   );
@@ -202,6 +222,7 @@ function DossierDetail() {
     updateClient,
     updateOrigine,
     updateDetails,
+    updateQualification,
     supprimer,
   } = useDossier(id);
   const { user: me } = useCurrentUser();
@@ -209,6 +230,11 @@ function DossierDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editOrigine, setEditOrigine] = useState<"site" | "direct" | null>(null);
+  // Édition du fil des questions posées au client (correction d'une saisie).
+  const [filOuvert, setFilOuvert] = useState(false);
+  const [filEnEdition, setFilEnEdition] = useState<Dossier["qualification"]>([]);
+  const [filEnCours, setFilEnCours] = useState(false);
+  const [filErreur, setFilErreur] = useState<string | null>(null);
   const [editDetails, setEditDetails] = useState<Record<string, string>>({});
   const [editCentre, setEditCentre] = useState<Centre>(CENTRES[0]);
   const [editModalite, setEditModalite] = useState<Modalite>("comptant");
@@ -280,7 +306,7 @@ function DossierDetail() {
 
   // Chaque étape met en avant ce dont l'agent a besoin À CE MOMENT : celui qui rassemble
   // les pièces (étape 2) ne cherche pas la même chose que celui qui recopie le dossier sur
-  // France-Visas (étape 3). Rien n'est masqué — seul l'ordre change.
+  // France-Visas (étape 3). Rien n'est masqué - seul l'ordre change.
   const panneauxEtape = PANNEAUX_ETAPE[d.etape] ?? PANNEAUX_ETAPE[1]!;
   const panneaux = toutAfficher ? TOUS_PANNEAUX : panneauxEtape;
   const voir = (k: Panneau) => panneaux.includes(k);
@@ -328,7 +354,7 @@ function DossierDetail() {
     if (editOrigine && editOrigine !== d!.profile.origine) await updateOrigine(d!.id, editOrigine);
     await updateDetails(d!.id, editDetails);
     if (editCentre !== d!.centre) await changerCentre(d!.id, editCentre);
-    // Dernier : la modalité est réservée à certains rôles et recalcule l'échéancier — si elle
+    // Dernier : la modalité est réservée à certains rôles et recalcule l'échéancier - si elle
     // est refusée, tout le reste est déjà enregistré et on le dit au lieu de tout perdre.
     if (editModalite !== d!.modalitePaiement) {
       try {
@@ -406,6 +432,24 @@ function DossierDetail() {
         </div>
       </div>
 
+      {/* Dossier créé mais pas encore qualifié : on propose de reprendre la Boussole. */}
+      {d.caseKey === CASE_PROVISOIRE && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--warn)] bg-[var(--warn-soft)] px-4 py-3">
+          <div className="text-sm">
+            <span className="font-semibold text-foreground">Qualification à compléter.</span>{" "}
+            <span className="text-muted-foreground">
+              Le dossier est ouvert, mais le type de visa et la liste des pièces restent à
+              déterminer.
+            </span>
+          </div>
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/qualification" search={{ dossier: d.id }}>
+              Reprendre la qualification
+            </Link>
+          </Button>
+        </div>
+      )}
+
       {a.length > 0 && (
         <div className="space-y-2 border-l-2 border-[var(--stop)] pl-4">
           {a.map((msg, i) => (
@@ -480,7 +524,7 @@ function DossierDetail() {
             </Button>
             {d.etape >= ETAPES.length && (
               <span className="ref text-muted-foreground">
-                Dernière étape — enregistrez la décision du consulat ci-dessous.
+                Dernière étape - enregistrez la décision du consulat ci-dessous.
               </span>
             )}
             {masques > 0 && (
@@ -509,7 +553,7 @@ function DossierDetail() {
               <div>
                 <CardTitle className="text-lg">Décision du consulat</CardTitle>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Ce qui se passe après le dépôt — hors du contrôle d'Eiden, mais à suivre.
+                  Ce qui se passe après le dépôt - hors du contrôle d'Eiden, mais à suivre.
                 </p>
               </div>
               <DecisionBadge decision={d.decision} />
@@ -559,7 +603,7 @@ function DossierDetail() {
                   </div>
                   <p className="mt-1 text-sm text-foreground">
                     {d.decisionMotif ||
-                      "Non renseigné — à saisir, il conditionne toute nouvelle tentative."}
+                      "Non renseigné - à saisir, il conditionne toute nouvelle tentative."}
                   </p>
                 </div>
               )}
@@ -567,13 +611,13 @@ function DossierDetail() {
           </Card>
         )}
 
-        {/* Démarches faites hors de l'app — l'agent les déclare, la référence fait preuve. */}
+        {/* Démarches faites hors de l'app - l'agent les déclare, la référence fait preuve. */}
         <Card className="panel" style={{ order: rang("jalons") }}>
           <CardHeader>
             <CardTitle className="text-lg">Jalons du dossier</CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
               Ce qui se passe hors de l'application : remise au client, portails, centre. À cocher
-              une fois réellement fait — tant que la case est vide, rien n'est acté.
+              une fois réellement fait - tant que la case est vide, rien n'est acté.
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -675,7 +719,7 @@ function DossierDetail() {
                       </div>
                       <div className="text-xs text-muted-foreground">
                         Étape 4 · Back office
-                        {!d.franceVisasFait && " — créez d'abord le dossier sur France-Visas"}
+                        {!d.franceVisasFait && " - créez d'abord le dossier sur France-Visas"}
                       </div>
                     </div>
                   </div>
@@ -891,13 +935,13 @@ function DossierDetail() {
                     >
                       {d.client.passeportExpiration
                         ? new Date(d.client.passeportExpiration).toLocaleDateString("fr-FR")
-                        : "—"}
+                        : "-"}
                     </dd>
                   </div>
                 </dl>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Passeport non renseigné — cliquez sur « Modifier » pour saisir le numéro et les
+                  Passeport non renseigné - cliquez sur « Modifier » pour saisir le numéro et les
                   dates.
                 </p>
               )}
@@ -928,14 +972,29 @@ function DossierDetail() {
         {/* Réponses de la qualification pour CE client */}
         {voir("qualif") && d.qualification.length > 0 && (
           <Card className="panel" style={{ order: rang("qualif") }}>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Questions posées au client ({d.qualification.length})
-              </CardTitle>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Le fil exact de la Boussole au moment de l'ouverture du dossier — figé, même si
-                l'arbre de qualification évolue ensuite.
-              </p>
+            <CardHeader className="flex flex-row items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-lg">
+                  Questions posées au client ({d.qualification.length})
+                </CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Le fil exact de la Boussole au moment de l'ouverture du dossier - figé, même si
+                  l'arbre de qualification évolue ensuite. Si une réponse a été mal saisie,
+                  corrigez-la : chaque correction est journalisée.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                onClick={() => {
+                  setFilEnEdition(d.qualification.map((q) => ({ ...q })));
+                  setFilErreur(null);
+                  setFilOuvert(true);
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5" /> Corriger les réponses
+              </Button>
             </CardHeader>
             <CardContent className="space-y-2">
               {d.qualification.map((qr, i) => (
@@ -999,7 +1058,7 @@ function DossierDetail() {
                         ))}
                       {d.pieces.filter((p) => p.source === "officiel").length === 0 && (
                         <li className="text-sm text-muted-foreground">
-                          Aucune pièce officielle listée pour ce cas — voir les notes du dossier.
+                          Aucune pièce officielle listée pour ce cas - voir les notes du dossier.
                         </li>
                       )}
                     </ul>
@@ -1216,7 +1275,7 @@ function DossierDetail() {
                     </Select>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Le client dépose lui-même son dossier au centre — Eiden ne prend pas le
+                    Le client dépose lui-même son dossier au centre - Eiden ne prend pas le
                     rendez-vous.
                   </p>
                 </CardContent>
@@ -1383,7 +1442,7 @@ function DossierDetail() {
                 onChange={(e) => setEditPassExpiration(e.target.value)}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                5 ans après la délivrance par défaut — modifiable.
+                5 ans après la délivrance par défaut - modifiable.
               </p>
             </div>
             <div className="col-span-2 mt-1 border-t border-border pt-3">
@@ -1398,7 +1457,11 @@ function DossierDetail() {
               <p className="mt-1.5 text-xs text-muted-foreground">
                 Déterminés par la qualification : ils pilotent la liste de pièces, donc pas
                 modifiables à la main.{" "}
-                <Link to="/qualification" className="font-medium text-primary underline">
+                <Link
+                  to="/qualification"
+                  search={{ dossier: d.id }}
+                  className="font-medium text-primary underline"
+                >
                   Refaire la qualification
                 </Link>{" "}
                 pour changer de type.
@@ -1482,7 +1545,118 @@ function DossierDetail() {
         </DialogContent>
       </Dialog>
 
+      {/* Correction des réponses données aux questions de la qualification. */}
+      <Dialog open={filOuvert} onOpenChange={(v) => setFilOuvert(v)}>
+        <DialogContent className="max-h-[85svh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Corriger les réponses de la qualification</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Pour chaque question posée au client, choisissez la réponse réellement donnée. Les
+            questions à saisie libre (nom d'hôtel, dates) restent modifiables au clavier. Chaque
+            correction est journalisée.
+          </p>
+          <div className="space-y-4">
+            {filEnEdition.map((qr, i) => {
+              const options = reponsesPossibles(qr);
+              return (
+                <div key={i} className="space-y-2 rounded-xl border border-border p-3">
+                  <div className="text-sm font-medium text-foreground">{qr.question}</div>
+                  {options ? (
+                    <div className="space-y-1">
+                      <label
+                        htmlFor={`fil-reponse-${i}`}
+                        className="text-xs font-medium text-muted-foreground"
+                      >
+                        Réponse donnée
+                      </label>
+                      <Select
+                        value={qr.reponse || REPONSE_VIDE}
+                        onValueChange={(v) =>
+                          setFilEnEdition((f) =>
+                            f.map((x, j) =>
+                              j === i ? { ...x, reponse: v === REPONSE_VIDE ? "" : v } : x,
+                            ),
+                          )
+                        }
+                      >
+                        <SelectTrigger id={`fil-reponse-${i}`}>
+                          <SelectValue placeholder="Choisir la réponse" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={REPONSE_VIDE}>À répondre</SelectItem>
+                          {options.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!qr.reponse && (
+                        <p className="text-xs text-muted-foreground">
+                          Question ajoutée par la correction : à confirmer avec le client.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <label
+                        htmlFor={`fil-reponse-${i}`}
+                        className="text-xs font-medium text-muted-foreground"
+                      >
+                        Réponse
+                      </label>
+                      <Input
+                        id={`fil-reponse-${i}`}
+                        value={qr.reponse}
+                        maxLength={2000}
+                        onChange={(e) =>
+                          setFilEnEdition((f) =>
+                            f.map((x, j) => (j === i ? { ...x, reponse: e.target.value } : x)),
+                          )
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {filEnEdition.length === 0 && (
+              <p className="text-sm text-muted-foreground">Aucune question à corriger.</p>
+            )}
+            {filErreur && <p className="text-sm text-destructive">{filErreur}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setFilOuvert(false)}>
+              Annuler
+            </Button>
+            <Button
+              disabled={filEnCours}
+              onClick={async () => {
+                if (filEnEdition.some((q) => !q.question.trim())) {
+                  setFilErreur("Chaque question doit rester renseignée.");
+                  return;
+                }
+                setFilErreur(null);
+                setFilEnCours(true);
+                try {
+                  await updateQualification(d.id, filEnEdition);
+                  setFilOuvert(false);
+                } catch (err) {
+                  setFilErreur(err instanceof Error ? err.message : String(err));
+                } finally {
+                  setFilEnCours(false);
+                }
+              }}
+            >
+              {filEnCours ? "Enregistrement…" : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={refusOpen} onOpenChange={setRefusOpen}>
+        {" "}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Enregistrer un refus de visa</DialogTitle>

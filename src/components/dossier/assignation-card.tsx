@@ -83,7 +83,7 @@ export function AssignationCard({ dossier }: { dossier: Dossier }) {
           <Input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Note (facultatif) — visible dans la notification"
+            placeholder="Note (facultatif) - visible dans la notification"
             maxLength={280}
           />
           <Button size="sm" className="w-full" disabled={!choice || busy} onClick={onAssign}>

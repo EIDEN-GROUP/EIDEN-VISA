@@ -133,7 +133,7 @@ export function AnalyticsPanel() {
 
   const pipeline = data.pipeline.map((row) => {
     const e = ETAPES.find((x) => String(x.n) === row.k);
-    return { label: e ? `${e.n}. ${e.label}` : row.k, role: e?.role ?? "—", n: row.n };
+    return { label: e ? `${e.n}. ${e.label}` : row.k, role: e?.role ?? "-", n: row.n };
   });
   const niveau = data.parNiveau.map((r) => ({
     name: LEVEL_LABEL[r.k as Level] ?? r.k,
@@ -182,7 +182,7 @@ export function AnalyticsPanel() {
           <Kpi label="Actifs" value={k.actifs} />
           <Kpi
             label="Taux d'approbation"
-            value={k.tauxApprobation === null ? "—" : `${k.tauxApprobation} %`}
+            value={k.tauxApprobation === null ? "-" : `${k.tauxApprobation} %`}
             hint={`${k.approuve} approuvés · ${k.refuse} refusés`}
           />
           <Kpi label="Encaissé" value={`${k.totalEncaisse.toLocaleString("fr-FR")} MAD`} />
@@ -210,7 +210,7 @@ export function AnalyticsPanel() {
 
           <Panel
             title="Tendance (10 semaines)"
-            hint="Ouvertures de dossiers · encaissements — deux échelles, deux graphes"
+            hint="Ouvertures de dossiers · encaissements - deux échelles, deux graphes"
           >
             <ResponsiveContainer width="100%" height={120}>
               <LineChart data={tendance} margin={{ left: 4, right: 12, top: 4 }} syncId="tendance">
@@ -443,7 +443,7 @@ function fmtWeek(iso: string) {
 
 type AnalyticsData = NonNullable<ReturnType<typeof useAnalytics>["data"]>;
 
-/** Repli tabulé quand la capture pixel échoue — mêmes chiffres, format « rapport ». */
+/** Repli tabulé quand la capture pixel échoue - mêmes chiffres, format « rapport ». */
 async function exportRapportTable(data: AnalyticsData) {
   const k = data.kpis;
   const total = data.kpis.total || 1;
@@ -461,7 +461,7 @@ async function exportRapportTable(data: AnalyticsData) {
       { label: "Actifs", value: `${k.actifs}` },
       {
         label: "Taux d'approbation",
-        value: k.tauxApprobation === null ? "—" : `${k.tauxApprobation} %`,
+        value: k.tauxApprobation === null ? "-" : `${k.tauxApprobation} %`,
       },
       { label: "Encaissé", value: `${k.totalEncaisse.toLocaleString("fr-FR")} MAD` },
       { label: "Ticket moyen", value: `${k.ticketMoyen.toLocaleString("fr-FR")} MAD` },
@@ -469,7 +469,7 @@ async function exportRapportTable(data: AnalyticsData) {
     ],
     sections: [
       {
-        heading: "Pipeline — dossiers par étape",
+        heading: "Pipeline - dossiers par étape",
         columns: [
           { header: "Étape", w: 5 },
           { header: "Rôle", w: 3 },
@@ -478,7 +478,7 @@ async function exportRapportTable(data: AnalyticsData) {
         ],
         rows: data.pipeline.map((r) => {
           const e = ETAPES.find((x) => String(x.n) === r.k);
-          return [e ? `${e.n}. ${e.label}` : r.k, e?.role ?? "—", `${r.n}`, pct(r.n)];
+          return [e ? `${e.n}. ${e.label}` : r.k, e?.role ?? "-", `${r.n}`, pct(r.n)];
         }),
       },
       {

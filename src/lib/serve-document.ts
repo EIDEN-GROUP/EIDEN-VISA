@@ -1,5 +1,5 @@
 // Sert les PDF (TLScontact/BLS) directement en binaire, en dehors du protocole RPC
-// des server functions — celui-ci sérialise en JSON et ne convient pas à des fichiers.
+// des server functions - celui-ci sérialise en JSON et ne convient pas à des fichiers.
 // Interceptée dans src/server.ts, avant le routeur TanStack Start.
 //
 // SECURITÉ : ces documents contiennent des données personnelles sensibles. Le téléchargement
@@ -18,7 +18,7 @@ const DOCUMENT_PATH = /^\/documents\/([a-f0-9-]{36})$/;
 const serveDocumentAuthenticated = requestHandler(async (request: Request): Promise<Response> => {
   const session = await getAuthSession();
   if (!session.data.userId) {
-    return new Response("Non autorisé — veuillez vous connecter.", {
+    return new Response("Non autorisé - veuillez vous connecter.", {
       status: 401,
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
@@ -36,7 +36,7 @@ const serveDocumentAuthenticated = requestHandler(async (request: Request): Prom
   if (!row) return new Response("Document introuvable.", { status: 404 });
 
   const bytes = Buffer.from(row.dataBase64, "base64");
-  // Contenu non-PDF ("autre") : téléchargement forcé en type opaque — jamais `inline`
+  // Contenu non-PDF ("autre") : téléchargement forcé en type opaque - jamais `inline`
   // avec le mimeType stocké, sinon un HTML/SVG téléversé s'exécuterait sur l'origine
   // de l'app (XSS stocké). Les emplacements consulaires restent en aperçu `inline`.
   const isPdfSlot = row.type !== "autre";

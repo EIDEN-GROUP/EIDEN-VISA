@@ -7,12 +7,12 @@ import { requireUserId, requireRoles } from "@/backend/functions/auth";
 
 const documentType = z.enum(["france_tls", "espagne_bls", "autre"]);
 
-/** Borne serveur alignée sur le panneau d'upload (10 Mo) — ne jamais faire confiance au file.type du client. */
+/** Borne serveur alignée sur le panneau d'upload (10 Mo) - ne jamais faire confiance au file.type du client. */
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 /** Base64 ≈ +33 % : borne d'entrée pour refuser les corps absurdes avant décodage. */
 const MAX_BASE64_CHARS = 15_000_000;
 
-/** Types actifs (HTML/SVG/JS/XML) : jamais stockés — ils s'exécuteraient à l'ouverture. */
+/** Types actifs (HTML/SVG/JS/XML) : jamais stockés - ils s'exécuteraient à l'ouverture. */
 const ACTIVE_MIME =
   /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|.*javascript.*|.*ecmascript.*|text\/xml|application\/xsl\+xml)$/i;
 
@@ -35,7 +35,7 @@ function validatePdfUpload(dataBase64: string): void {
     throw new Error("Le fichier n'est pas un PDF valide.");
 }
 
-/** "Autres documents" : n'importe quel type de fichier (photo, scan, tableur...) — seule la
+/** "Autres documents" : n'importe quel type de fichier (photo, scan, tableur...) - seule la
  * taille est contrôlée, pas le contenu, puisqu'il n'y a pas de format attendu unique. */
 function validateAnyUpload(dataBase64: string): void {
   const bytes = decodeBase64(dataBase64);
@@ -87,7 +87,7 @@ export const uploadDocument = createServerFn({ method: "POST" })
     if (!dossier) throw new Error("Dossier introuvable.");
     if (!dossier.uploadAutorise)
       throw new Error(
-        "Ce dossier n'est pas autorisé au téléversement de documents — un responsable doit d'abord l'autoriser.",
+        "Ce dossier n'est pas autorisé au téléversement de documents - un responsable doit d'abord l'autoriser.",
       );
 
     // Garde de contenu : les deux emplacements consulaires (France/TLS, Espagne/BLS) exigent

@@ -9,14 +9,14 @@ import { requireCeo } from "@/backend/functions/auth";
 
 const roleEnum = z.enum(["ceo", "reception", "preparation", "back_office"]);
 
-/** Photos acceptées : JPEG/PNG/WebP (pas de SVG — contenu actif). */
+/** Photos acceptées : JPEG/PNG/WebP (pas de SVG - contenu actif). */
 const PHOTO_MIME = /^data:image\/(jpeg|png|webp);base64,/;
 
 /**
- * Écrit une ligne d'activité — appelé depuis les mutations métier (dossiers, paiements...).
+ * Écrit une ligne d'activité - appelé depuis les mutations métier (dossiers, paiements...).
  * `createServerOnlyFn` est indispensable ici : cette fonction n'est PAS un createServerFn
  * (pas d'appel RPC direct depuis le client), donc sans ce garde le compilateur ne sait pas
- * qu'il faut l'exclure du bundle client — elle entraînerait bcrypt/postgres avec elle
+ * qu'il faut l'exclure du bundle client - elle entraînerait bcrypt/postgres avec elle
  * (cf. l'incident dotenv/config : même catégorie de fuite serveur -> client).
  */
 export const logActivity = createServerOnlyFn(
@@ -123,7 +123,7 @@ export const listActivity = createServerFn({ method: "GET" }).handler(async () =
 
 /**
  * Tableau analytique complet pour /ops (CEO uniquement) : tout l'état de l'agence
- * en une lecture — répartitions, tendances, et production par rôle et par agent.
+ * en une lecture - répartitions, tendances, et production par rôle et par agent.
  *
  * TOUT tient en UNE seule requête (CTEs + json_agg) : la base passe par le pooler
  * Supabase en mode transaction, et éclater ce panneau en 13 requêtes parallèles saturait
@@ -235,7 +235,7 @@ export const getAnalytics = createServerFn({ method: "GET" }).handler(async () =
 
 /* ============ Fiche agent (profil d'un utilisateur) ============ */
 
-const MAX_PHOTO_BYTES = 1_500_000; // ~1,5 Mo de data URL — largement assez pour un avatar.
+const MAX_PHOTO_BYTES = 1_500_000; // ~1,5 Mo de data URL - largement assez pour un avatar.
 
 export const getUser = createServerFn({ method: "GET" })
   .validator(z.object({ id: z.string().min(1).max(64) }))
@@ -310,7 +310,7 @@ export const resetUserPassword = createServerFn({ method: "POST" })
 
 /**
  * Profil complet d'un agent : ses dossiers, les pièces rassemblées, ses encaissements,
- * son activité, et l'analytique le concernant — le tout en une requête (leçon du pooler).
+ * son activité, et l'analytique le concernant - le tout en une requête (leçon du pooler).
  *
  * `createServerOnlyFn` (pas un RPC) : réutilisé côté serveur par `getUserProfile` (CEO) et
  * par `getMyProfile` (l'agent lui-même, dans profile.ts). Le contrôle d'accès est à l'appelant.

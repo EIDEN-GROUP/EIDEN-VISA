@@ -27,7 +27,7 @@ function RdvWatch() {
       setLabel("");
       setUrl("");
     } catch {
-      setError("URL invalide ou erreur d'enregistrement — vérifiez le lien collé.");
+      setError("URL invalide ou erreur d'enregistrement - vérifiez le lien collé.");
     } finally {
       setSubmitting(false);
     }
@@ -40,7 +40,7 @@ function RdvWatch() {
         <p className="mt-1 text-sm text-muted-foreground">
           Collez ici l'URL de la page de disponibilité que vous consultez à la main (TLScontact,
           BLS, tout site public). Le script de surveillance relit cette liste toutes seules minutes
-          et prévient l'équipe (notification dans l'app) dès qu'un changement est détecté — il ne
+          et prévient l'équipe (notification dans l'app) dès qu'un changement est détecté - il ne
           réserve jamais de créneau à votre place, il vous fait juste gagner le temps de rafraîchir
           la page vous-même.
         </p>
@@ -54,7 +54,7 @@ function RdvWatch() {
           <form onSubmit={onSubmit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-muted-foreground">
-                Libellé (ex. « TLScontact Agadir — France »)
+                Libellé (ex. « TLScontact Agadir - France »)
               </label>
               <Input
                 value={label}
@@ -119,7 +119,7 @@ function RdvWatch() {
                     ? `Dernière vérification : ${new Date(w.lastCheckedAt).toLocaleString("fr-FR")}${
                         w.lastStatus ? ` · ${w.lastStatus}` : ""
                       }`
-                    : "Pas encore vérifiée — le script externe doit tourner."}
+                    : "Pas encore vérifiée - le script externe doit tourner."}
                 </div>
               </div>
               <div className="flex items-center gap-1.5">

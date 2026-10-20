@@ -131,7 +131,7 @@ export function buildReceiptPdf(id: string, r: RecuDonnees, ecart: boolean) {
 
       const visibles = r.pieces.filter((p) => !p.masque);
       if (r.afficherPieces) {
-        // Checklist des pièces — même contenu que l'onglet Documents du dossier, pour que le
+        // Checklist des pièces - même contenu que l'onglet Documents du dossier, pour que le
         // client reparte avec la liste exacte de ce qui a déjà été fourni ou reste à apporter.
         y += 8;
         doc.setFont("helvetica", "bold");
@@ -222,7 +222,7 @@ export function buildReceiptPdf(id: string, r: RecuDonnees, ecart: boolean) {
             doc.setTextColor(...forest);
             doc.text(p.libelle, marginX, y, { maxWidth: contentW * 0.5 });
             doc.setTextColor(...gray);
-            doc.text(p.date ?? "—", marginX + contentW * 0.55, y);
+            doc.text(p.date ?? "-", marginX + contentW * 0.55, y);
             doc.setTextColor(...forest);
             doc.text(`${p.montant} MAD`, pageW - marginX, y, { align: "right" });
             y += 7;
@@ -261,7 +261,7 @@ export function buildReceiptPdf(id: string, r: RecuDonnees, ecart: boolean) {
           doc.setFont("helvetica", "bold");
           doc.setFontSize(11);
           doc.setTextColor(...forest);
-          doc.text(reste > 0 ? "Reste à payer" : "Reste à payer — dossier soldé", marginX, y);
+          doc.text(reste > 0 ? "Reste à payer" : "Reste à payer - dossier soldé", marginX, y);
           doc.setFontSize(13);
           doc.text(`${reste} MAD`, pageW - marginX, y, { align: "right" });
         }
@@ -365,12 +365,12 @@ function Recu() {
             {edition ? (
               <>
                 Brouillon temporaire{" "}
-                <span className="font-normal text-muted-foreground">— non enregistré</span>
+                <span className="font-normal text-muted-foreground">- non enregistré</span>
               </>
             ) : (
               <>
                 Reçu officiel{" "}
-                <span className="font-normal text-muted-foreground">— celui du dossier</span>
+                <span className="font-normal text-muted-foreground">- celui du dossier</span>
               </>
             )}
           </h2>
@@ -406,7 +406,7 @@ function Recu() {
       <div className="mx-auto mb-10 max-w-2xl space-y-2">
         <h2 className="text-sm font-semibold text-foreground">
           Brouillons enregistrés{" "}
-          <span className="font-normal text-muted-foreground">— versions de travail</span>
+          <span className="font-normal text-muted-foreground">- versions de travail</span>
         </h2>
         <ListeBrouillons
           dossier={d}

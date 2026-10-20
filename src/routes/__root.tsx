@@ -78,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Eiden Visa — Back-office" },
+      { title: "Eiden Visa - Back-office" },
       {
         name: "description",
         content: "Back-office de gestion des dossiers visa, Eiden Group Agadir.",

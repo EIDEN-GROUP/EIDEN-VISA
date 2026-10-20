@@ -56,7 +56,7 @@ export function DocumentsPanel({
     }
   }
 
-  // "Autres documents" : n'importe quel type et plusieurs fichiers à la fois — pensé pour
+  // "Autres documents" : n'importe quel type et plusieurs fichiers à la fois - pensé pour
   // ne jamais perdre une pièce (photo prise au comptoir, scan, tableur...) faute d'emplacement dédié.
   async function handleAnyFiles(files: FileList | null) {
     setError(null);
@@ -66,7 +66,7 @@ export function DocumentsPanel({
     try {
       for (const file of Array.from(files)) {
         if (file.size > MAX_SIZE_BYTES) {
-          setError(`"${file.name}" dépasse 10 Mo — non envoyé.`);
+          setError(`"${file.name}" dépasse 10 Mo - non envoyé.`);
           continue;
         }
         const dataBase64 = await readAsBase64(file);
@@ -166,7 +166,7 @@ export function DocumentsPanel({
               Autres documents
             </span>
             <p className="text-xs text-muted-foreground">
-              Tout type de fichier — pour ne jamais perdre une pièce.
+              Tout type de fichier - pour ne jamais perdre une pièce.
             </p>
           </div>
           <Button

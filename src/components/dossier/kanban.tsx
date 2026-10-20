@@ -6,7 +6,7 @@ import { CheckCircle2, ChevronLeft, ChevronRight, Circle } from "lucide-react";
 
 /**
  * Sur une carte, ce qui compte n'est pas une étiquette figée à l'ouverture du dossier
- * mais ce qu'il reste à faire ICI, à cette étape — et le prochain geste concret.
+ * mais ce qu'il reste à faire ICI, à cette étape - et le prochain geste concret.
  */
 function AvancementEtape({ dossier }: { dossier: Dossier }) {
   const points = checklistEtape(dossier);
