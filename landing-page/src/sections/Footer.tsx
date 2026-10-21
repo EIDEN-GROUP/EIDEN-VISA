@@ -78,6 +78,15 @@ export function Footer() {
           <a href="/securite.html" className="transition-colors hover:text-white">
             {t.footer.securite}
           </a>
+          <a
+            href="https://www.instagram.com/eiden_visa/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-white"
+            aria-label="EIDEN Visa sur Instagram"
+          >
+            Instagram
+          </a>
           <button
             type="button"
             onClick={ouvrirPreferences}

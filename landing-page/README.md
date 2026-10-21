@@ -154,7 +154,9 @@ bottom of `schema.sql` (service_role only). Key rotation: change on both sides
   (+ `OfferCatalog` sans prix affiché), `BreadcrumbList`, `HowTo` (3 étapes de la
   demande rapide), `FAQPage`, `WebPage`, `Brand`, `SocialMediaProfile` - pas
   d'`AggregateRating`, pas de prix en clair. **Signaux d'entité (requêtes de marque
-  « eiden visa »)** : `sameAs` (groupe EIDEN GROUP, WhatsApp, fiche Google Maps),
+  « eiden visa »)** : `sameAs` (groupe EIDEN GROUP, Instagram, WhatsApp, fiche Google
+  Maps) + lien visible vers l'Instagram au pied de page (le profil Instagram alimente le
+  knowledge panel Google) ;
   `identifier` (ICE / RC / forme juridique), `hasMap`, `brand`, `slogan`,
   `parentOrganization` (EIDEN GROUP), `alternateName` élargi (Eiden Visa, EIDEN Visa Agadir,
   visa eiden agadir...) et `knowsAbout` (13 sujets). **Le site vitrine est rattaché à
