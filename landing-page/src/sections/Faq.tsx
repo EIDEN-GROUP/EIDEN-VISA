@@ -78,7 +78,7 @@ export function Faq() {
       return next;
     });
   };
-  // Deux colonnes équilibrées (2 + 2 pour 4 questions).
+  // Deux colonnes équilibrées (le nombre de questions suit `t.faq.questions`).
   const parColonne = Math.ceil(questions.length / 2);
   const colonnes = [questions.slice(0, parColonne), questions.slice(parColonne)];
 

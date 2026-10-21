@@ -138,9 +138,13 @@ bottom of `schema.sql` (service_role only). Key rotation: change on both sides
 - **Référencement :** titre + description optimisés « visa Schengen Maroc / Agadir »
   (`t.meta` FR/AR), canonical absolu, OG/Twitter avec image, géo-tags, JSON-LD
   (valider après chaque retouche : https://search.google.com/test/rich-results et
-  https://validator.schema.org). **La FAQ du JSON-LD doit rester mot pour mot identique
-  aux textes visibles** (`src/i18n/fr.ts`) vérifier avec `faq.json` + la procédure
-  `M:\temp\opencode\checkjson.py`, sinon perte des résultats enrichis.
+  https://validator.schema.org). **La FAQ du JSON-LD est générée au build** : `faq.json` est l'unique source, le plugin
+  `eiden-faq-jsonld` (`vite.config.ts`) réécrit le bloc `#faq-jsonld` à chaque build ET
+  **fait échouer le build** si `faq.json` et les questions visibles (`src/i18n/fr.ts`) divergent
+  (sinon Google ignore le résultat enrichi). Le même bloc alimente le **texte servi** dans
+  `index.html` (`<!--FAQ-CONTENU-->`) : les crawlers sans JavaScript et les assistants IA
+  trouvent donc les 8 questions/réponses retenues. `faq.json` se régénère depuis
+  `src/i18n/fr.ts`.
   **Mots-clés servis** (title, description, `keywords`, `llms.txt`, `llms-full.txt`,
   JSON-LD `knowsAbout`/`Service`) : visa Schengen Maroc, visa Schengen Agadir, visa
   France Maroc, visa Espagne Maroc, agence visa Agadir, TLScontact Agadir, BLS Espagne
@@ -166,6 +170,14 @@ bottom of `schema.sql` (service_role only). Key rotation: change on both sides
   porte la marque. **`WebSite.publisher` reste l'agence** : le lien avec EIDEN GROUP passe par
   `Organization.parentOrganization`, sinon Google nomme le site d'après la maison mère.
   Corrigé le 2026-10-19 (Google affichait « eiden group »).
+  **FAQ :** 8 questions retenues (les plus rentables) en FR et en AR, servies dans le HTML
+  et en JSON-LD.
+  **Mots-clés :** la liste complète des formulations servies (marque, visa France,
+  TLScontact / BLS, rendez-vous, Agadir, motifs, documents, refus, arabe) vit dans
+  `public/mots-cles.txt` (source unique) et alimente la balise `keywords`, `llms.txt` et
+  `llms-full.txt`. **Contenu servi :** `index.html` porte un bloc `#eiden-seo` (H1 de marque,
+  méthode, packs, FAQ, contact, liens) : la SPA est rendue côté client, mais le HTML brut doit
+  contenir la page (197 caractères visibles avant, ~9 500 maintenant).
   Tête : `keywords`, `robots` étendu, `application-name`, `format-detection`,
   `alternate` RSS (`/feed.xml`), `preconnect` fonts/wa.me, `dns-prefetch` Supabase.
   `hreflang` : une seule `alternate` en `x-default` (une seule URL sert les deux langues, la

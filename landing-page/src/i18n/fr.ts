@@ -187,44 +187,45 @@ export const fr = {
     surtitre: "Questions fréquentes sur le visa Schengen à Agadir",
     titre: "FAQ",
     questions: [
-      // {
-      //   question: "Pouvez-vous préparer les pré-réservations hôtel et avion ?",
-      //   reponse: "Oui, en service séparé ou combiné selon votre besoin.",
-      // },
       {
-        question:
-          "Est-ce que vous fournissez les réservations d’hôtel, de billet d’avion et l’assurance voyage ?",
+        question: "Comment obtenir un visa France depuis le Maroc ?",
         reponse:
-          "Oui. Nous proposons des services de pré-réservation d’hôtel, de billet d’avion et d’assurance voyage, selon les besoins de votre dossier et les exigences liées à votre demande de visa.",
+          "La procédure passe par France-Visas puis par le centre : remplir votre demande en ligne sur france-visas.gouv.fr, choisir un pack EIDEN Visa, prendre le rendez-vous au centre TLScontact d'Agadir (frais de rendez-vous inclus dans le pack), déposer le dossier et les pièces en main propre, puis suivre le traitement. Que ce soit une première demande ou un renouvellement de visa expiré, la demande se refait sur France-Visas avec prise d'empreintes au centre. Le visa court séjour est valable 90 jours sur une période de 180 jours, et sa date de validité court trois mois à compter de la délivrance. EIDEN Visa prépare et vérifie chaque démarche avec vous, de la demande jusqu'au suivi du dossier.",
       },
       {
-        question: "Quels sont les tarifs de vos services ?",
+        question: "Quels documents pour un visa France (tourisme) ?",
         reponse:
-          "Nos tarifs varient en fonction du pack que vous choisissez et des services inclus. Consultez nos différents packs pour choisir celui qui correspond le mieux à vos besoins.",
+          "Pour un court séjour de tourisme, on compte généralement : passeport valide (3 mois après la date de retour), 2 photos d'identité, formulaire France-Visas imprimé et signé, justificatif de ressources (attestation de travail, de scolarité, ou relevés bancaires), attestation d'hébergement (hôtel ou attestation d'accueil), assurance voyage, et selon le motif un extrait d'acte de naissance ou un casier judiciaire. La liste définitive dépend du motif : nous la vérifions avec vous avant le dépôt.",
       },
       {
-        question: "Les frais de rendez-vous sont-ils inclus ?",
-        reponse: "Oui, les frais de prise de rendez-vous sont inclus dans nos packs.",
+        question: "Combien coûte un visa France au Maroc ?",
+        reponse:
+          "Nos tarifs de services dépendent du pack choisi (Standard, Essentiel, Global) et des options ajoutées : pré-réservation d'hôtel, billet d'avion, assurance voyage. Nos packs n'affichent pas de prix : la demande rapide en ligne vous fournit un devis. Les frais de visa se règlent ensuite au centre, en dirhams, et dépendent de la durée du séjour.",
       },
       {
-        question: "Est-ce que vous garantissez l'obtention du visa ?",
+        question: "Quel délai pour un visa France depuis le Maroc ?",
         reponse:
-          "Non. EIDEN Visa accompagne la préparation de votre dossier et les démarches associées. La décision finale appartient exclusivement aux autorités compétentes.",
+          "Le délai de traitement dépend du consulat, du centre et de la période : comptez plusieurs semaines après le dépôt. Il n'est jamais garanti et varie fortement selon la saison. Nous vous transmettons le statut de votre dossier dès que le centre nous le communique.",
       },
       {
-        question: "Le rendez-vous se prend-il chez TLScontact ou BLS ?",
+        question: "Comment prendre rendez-vous chez TLScontact ?",
         reponse:
-          "Oui : nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre - TLScontact pour la France, BLS pour l'Espagne, à Agadir. Le dépôt du dossier au centre se fait ensuite par vous, en personne.",
+          "La prise de rendez-vous se fait en ligne sur le portail TLScontact, après avoir rempli votre formulaire France-Visas : le centre exige la référence de la demande pour ouvrir un créneau. Vérifiez la disponibilité des rendez-vous avant de vous déplacer. EIDEN Visa vous accompagne dans cette démarche, gère la prise du RDV dans le cadre du pack choisi (frais de rendez-vous inclus) et assure le suivi de votre dossier au centre.",
+      },
+      {
+        question: "Où se trouve le centre TLScontact d'Agadir ?",
+        reponse:
+          "Le centre de visas pour la France de TLScontact à Agadir se situe aux Galeries Talborjt, boulevard Mohamed Cheikh Saadi, bloc H, local D27-D28, Agadir 80000. Il traite les dossiers d'Agadir et du sud du Maroc. Confirmez l'horaire du jour sur le portail officiel (visas-fr.tlscontact.com) avant de vous déplacer.",
+      },
+      {
+        question: "Mon visa France a été refusé : que faire ?",
+        reponse:
+          "Un refus vient le plus souvent d'un dossier incomplet, d'une discordance entre les justificatifs et le formulaire, ou d'un document manquant. Le motif du refus figure sur la décision : un recours est possible dans les délais indiqués, et un nouveau dossier peut être déposé ensuite. Nous analysons le motif du refus avec vous et préparons la suite.",
       },
       {
         question: "EIDEN Visa est-elle une agence de visa à Agadir ?",
         reponse:
-          "Oui. EIDEN Visa est une agence de visa Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre.",
-      },
-      {
-        question: "Comment préparer mon dossier de visa Schengen au Maroc ?",
-        reponse:
-          "En six étapes : analyse de votre situation, identification des documents, préparation des pièces, vérification de la complétude du dossier, remplissage du formulaire et démarches, puis rendez-vous au centre. La demande rapide en ligne (3 étapes) permet de démarrer tout de suite.",
+          "Oui. EIDEN Visa est une agence de visa à Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre. Le centre TLScontact d'Agadir couvre Agadir et le sud du Maroc ; pour Casablanca, Rabat, Tanger, Fès ou Marrakech, un autre centre TLScontact existe au Maroc, nous vous indiquons celui qui correspond à votre ville. Tous les motifs sont pris en charge : visa tourisme, visa affaires, visa étudiant, visa travail, visa famille, visa long séjour et visa pour mineur.",
       },
     ],
   },
