@@ -103,7 +103,11 @@ export function Temoignages() {
                           </Avatar>
                         </Suspense>
                         <div>
-                          <div className="flex gap-1 text-brand" aria-label={t.temoignages.note}>
+                          <div
+                            role="img"
+                            className="flex gap-1 text-brand"
+                            aria-label={t.temoignages.note}
+                          >
                             {Array.from({ length: 5 }, (_, k) => (
                               <Star key={k} className="size-3.5 fill-current" strokeWidth={0} />
                             ))}

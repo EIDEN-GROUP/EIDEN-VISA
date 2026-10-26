@@ -79,7 +79,7 @@ export function Packs() {
           ref={grille}
           className="mt-10 grid scroll-mt-28 gap-6 pt-3 md:grid-cols-3 md:gap-4 xl:gap-5"
         >
-          {PACKS.map(({ id, image, position, vedette }, i) => {
+          {PACKS.map(({ id, image, width, height, position, vedette }, i) => {
             const { nom, texte, alt, inclus } = t.packs.offres[i]!;
             return (
               <Reveal key={image} delay={i * 0.12} y={64} className="h-full">
@@ -94,6 +94,8 @@ export function Packs() {
                   <img
                     src={image}
                     alt={alt}
+                    width={width}
+                    height={height}
                     loading="lazy"
                     decoding="async"
                     style={{ objectPosition: position }}

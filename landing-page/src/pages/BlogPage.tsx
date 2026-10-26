@@ -14,7 +14,8 @@ const cards: BlogCardData[] = [
   {
     slug: "/blog/dossier-visa-schengen-maroc-releve-bancaire",
     title: "Visa Schengen depuis le Maroc : dossier, ressources et justificatifs",
-    excerpt: "Un relevé bancaire ne suffit pas à lui seul. Comprenez comment présenter vos ressources, votre situation au Maroc et le motif du voyage dans un dossier cohérent.",
+    excerpt:
+      "Un relevé bancaire ne suffit pas à lui seul. Comprenez comment présenter vos ressources, votre situation au Maroc et le motif du voyage dans un dossier cohérent.",
     category: "Dossier",
     image: "/images/optimized/blog-dossier-visa-schengen-maroc-releve-bancaire.webp",
     readingTime: "5 min",
@@ -22,7 +23,8 @@ const cards: BlogCardData[] = [
   {
     slug: "/blog/refus-visa-schengen-maroc-motifs-recours",
     title: "Refus de visa Schengen au Maroc : motifs, recours et nouvelle demande",
-    excerpt: "Lisez la décision, vérifiez le délai de recours applicable et choisissez entre contester et déposer un dossier corrigé.",
+    excerpt:
+      "Lisez la décision, vérifiez le délai de recours applicable et choisissez entre contester et déposer un dossier corrigé.",
     category: "Refus",
     image: "/images/optimized/blog-refus-visa-schengen-maroc-motifs-recours.webp",
     readingTime: "6 min",
@@ -30,7 +32,8 @@ const cards: BlogCardData[] = [
   {
     slug: "/blog/recruter-salarie-marocain-autorisation-travail",
     title: "Recruter un salarié marocain en France : autorisation de travail et étapes",
-    excerpt: "Repères pour l’employeur : vérifier le titre requis, déposer une demande si nécessaire et préparer un dossier de recrutement cohérent.",
+    excerpt:
+      "Repères pour l’employeur : vérifier le titre requis, déposer une demande si nécessaire et préparer un dossier de recrutement cohérent.",
     category: "Recrutement",
     image: "/images/optimized/blog-recruter-salarie-marocain-autorisation-travail.webp",
     readingTime: "7 min",
@@ -38,7 +41,8 @@ const cards: BlogCardData[] = [
   {
     slug: "/blog/rendez-vous-tlscontact-bls-agadir-2026",
     title: "Visa Espagne à Agadir : consignes officielles et préparation",
-    excerpt: "Où vérifier les consignes officielles, comment préparer votre demande et quoi faire si aucun créneau n’est proposé. Les disponibilités et procédures peuvent évoluer.",
+    excerpt:
+      "Où vérifier les consignes officielles, comment préparer votre demande et quoi faire si aucun créneau n’est proposé. Les disponibilités et procédures peuvent évoluer.",
     category: "Rendez-vous",
     image: "/images/blog-rendez-vous-tlscontact-bls-agadir-2026.webp",
     readingTime: "8 min",
@@ -65,6 +69,8 @@ export function BlogPage() {
           <img
             src="/images/optimized/blog-banniere-eiden-visa.webp"
             alt="Blog EIDEN Visa : guides visa Schengen depuis le Maroc"
+            width={1800}
+            height={1014}
             className="absolute inset-0 w-full h-full object-cover -z-10 opacity-60"
             loading="eager"
           />
@@ -76,7 +82,9 @@ export function BlogPage() {
                 {estArabe ? "المدونة" : "Blog "}
               </h1>
               <p className="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-white/85">
-                Des guides pratiques pour préparer votre dossier, comprendre un refus de visa et organiser un rendez-vous depuis le Maroc. Nos articles expliquent les démarches et leurs limites : seule l’autorité consulaire décide de délivrer un visa.
+                Des guides pratiques pour préparer votre dossier, comprendre un refus de visa et
+                organiser un rendez-vous depuis le Maroc. Nos articles expliquent les démarches et
+                leurs limites : seule l’autorité consulaire décide de délivrer un visa.
               </p>
             </div>
           </div>
@@ -86,11 +94,16 @@ export function BlogPage() {
           <ul className="blog-grid">
             {cards.map((card) => (
               <li key={card.slug}>
-                <a href={card.slug.endsWith("/") ? card.slug : `${card.slug}/`} className="blog-card">
+                <a
+                  href={card.slug.endsWith("/") ? card.slug : `${card.slug}/`}
+                  className="blog-card"
+                >
                   <div className="blog-card-image-wrap">
                     <img
                       src={card.image}
                       alt={card.title}
+                      width={1200}
+                      height={675}
                       className="blog-card-image"
                       loading="lazy"
                     />

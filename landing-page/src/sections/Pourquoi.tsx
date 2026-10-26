@@ -62,7 +62,7 @@ export function Pourquoi() {
       block: "nearest",
     });
 
-  const cartes = AVANTAGES.map(({ image, position }, i) => {
+  const cartes = AVANTAGES.map(({ image, width, height, position }, i) => {
     const { titre, texte, alt } = t.pourquoi.avantages[i]!;
     const ouverte = carrousel && i === actif;
     const carte = (
@@ -76,6 +76,8 @@ export function Pourquoi() {
         <img
           src={image}
           alt={alt}
+          width={width}
+          height={height}
           loading="lazy"
           decoding="async"
           style={{ objectPosition: position }}

@@ -73,6 +73,8 @@ export function Destination() {
               src="/images/tampon-schengen-rect.webp"
               alt=""
               aria-hidden="true"
+              width={1150}
+              height={750}
               className="tilt absolute end-[calc(100%-22px)] top-1/2 hidden w-[150px] -translate-y-1/2 opacity-55 xl:block"
               style={{ "--tilt": "-10deg" } as CSSProperties}
             />
@@ -80,6 +82,8 @@ export function Destination() {
               <img
                 src="/images/optimized/world-2.webp"
                 alt={t.destination.imageAlt}
+                width={1800}
+                height={817}
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover object-[50%_38%] transition-transform duration-[1.4s] ease-out hover:scale-[1.05]"

@@ -28,7 +28,9 @@ function Champ(props: ChampProps) {
         id={props.id}
         name={props.id}
         type={props.type ?? "text"}
-        dir={props.type === "email" || props.type === "tel" ? "ltr" : props.estArabe ? "rtl" : "ltr"}
+        dir={
+          props.type === "email" || props.type === "tel" ? "ltr" : props.estArabe ? "rtl" : "ltr"
+        }
         autoComplete={props.autocomplete}
         autoCapitalize={props.type === "email" ? "none" : undefined}
         spellCheck={props.type !== "email"}
@@ -61,14 +63,17 @@ export function ContactPage() {
     const url = "https://visa.eiden-group.com/images/optimized/contact-agadir-banniere.webp";
     const titre = langue === "ar" ? "تواصل معنا | EIDEN Visa" : "Contactez-nous | EIDEN Visa";
     document.title = titre;
-    const description = langue === "ar"
-      ? "تواصل مع EIDEN Visa في أكادير للاستفسار عن خدمات إعداد ومراجعة ملفات التأشيرة."
-      : "Contactez EIDEN Visa à Agadir pour découvrir nos services de préparation et de vérification de dossier de visa.";
+    const description =
+      langue === "ar"
+        ? "تواصل مع EIDEN Visa في أكادير للاستفسار عن خدمات إعداد ومراجعة ملفات التأشيرة."
+        : "Contactez EIDEN Visa à Agadir pour découvrir nos services de préparation et de vérification de dossier de visa.";
     document.querySelector('meta[name="description"]')?.setAttribute("content", description);
     document.querySelector('meta[property="og:title"]')?.setAttribute("content", titre);
     document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
     document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", titre);
-    document.querySelector('meta[name="twitter:description"]')?.setAttribute("content", description);
+    document
+      .querySelector('meta[name="twitter:description"]')
+      ?.setAttribute("content", description);
     const og = document.querySelector('meta[property="og:image"]');
     if (og) og.setAttribute("content", url);
     const tw = document.querySelector('meta[name="twitter:image"]');
@@ -76,7 +81,13 @@ export function ContactPage() {
   }, [langue]);
   const soumettre = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nom.trim() || !form.prenom.trim() || !form.email.trim() || !form.telephone.trim() || !form.message.trim())
+    if (
+      !form.nom.trim() ||
+      !form.prenom.trim() ||
+      !form.email.trim() ||
+      !form.telephone.trim() ||
+      !form.message.trim()
+    )
       return;
     setEtat("envoi");
     try {
@@ -112,6 +123,8 @@ export function ContactPage() {
           <img
             src="/images/optimized/contact-agadir-banniere.webp"
             alt={estArabe ? "تواصل مع EIDEN Visa في أكادير" : "Contacter EIDEN Visa à Agadir"}
+            width={1800}
+            height={1004}
             className="absolute inset-0 w-full h-full object-cover -z-10 opacity-60"
             loading="eager"
           />
@@ -123,7 +136,9 @@ export function ContactPage() {
                 {estArabe ? "اتصل بنا" : "Contactez-nous"}
               </h1>
               <p className="mt-3 text-[16px] leading-1.6 text-white/85">
-                {estArabe ? "أكادير باي · +212 777 777 428 · visa@eiden-group.com" : "Agadir Bay · +212 777 777 428 · visa@eiden-group.com"}
+                {estArabe
+                  ? "أكادير باي · +212 777 777 428 · visa@eiden-group.com"
+                  : "Agadir Bay · +212 777 777 428 · visa@eiden-group.com"}
               </p>
             </div>
           </div>
@@ -131,15 +146,28 @@ export function ContactPage() {
 
         <section className="contact-layout mx-auto grid max-w-6xl gap-6 px-6 py-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
           <div className="contact-cards grid gap-4 lg:col-start-1 lg:row-start-1">
-            <a href={CONTACT.telephoneLien} className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-lg">
+            <a
+              href={CONTACT.telephoneLien}
+              className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-lg"
+            >
               <p className="eyebrow text-brand">{t.infos.telephone}</p>
-              <p className="mt-3 font-serif text-xl text-ink" dir="ltr">{CONTACT.telephone}</p>
+              <p className="mt-3 font-serif text-xl text-ink" dir="ltr">
+                {CONTACT.telephone}
+              </p>
             </a>
-            <a href={`mailto:${CONTACT.email}`} className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-lg">
+            <a
+              href={`mailto:${CONTACT.email}`}
+              className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-lg"
+            >
               <p className="eyebrow text-brand">{t.infos.email}</p>
               <p className="mt-3 font-serif text-xl text-ink">{CONTACT.email}</p>
             </a>
-            <a href={CONTACT.carte} target="_blank" rel="noopener" className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-lg">
+            <a
+              href={CONTACT.carte}
+              target="_blank"
+              rel="noopener"
+              className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-lg"
+            >
               <p className="eyebrow text-brand">{t.infos.adresse}</p>
               <p className="mt-3 font-serif text-xl text-ink">{t.infos.adresseCourte}</p>
               <span className="mt-3 inline-block text-[13px] text-brand">{t.infos.carte} →</span>
@@ -159,13 +187,54 @@ export function ContactPage() {
               {estArabe ? "نموذج التواصل" : "Formulaire de contact"}
             </h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Champ estArabe={estArabe} id="contact-nom" autocomplete="family-name" placeholder={estArabe ? "مثال: العلوي" : "Ex. : El Aloui"} libelle={estArabe ? "الاسم العائلي" : "Nom"} valeur={form.nom} onChange={maj("nom")} requis />
-              <Champ estArabe={estArabe} id="contact-prenom" autocomplete="given-name" placeholder={estArabe ? "مثال: مريم" : "Ex. : Mariam"} libelle={estArabe ? "الاسم الشخصي" : "Prénom"} valeur={form.prenom} onChange={maj("prenom")} requis />
-              <Champ estArabe={estArabe} id="contact-email" autocomplete="email" placeholder="nom@exemple.com" libelle={estArabe ? "البريد الإلكتروني" : "E-mail"} valeur={form.email} onChange={maj("email")} type="email" requis />
-              <Champ estArabe={estArabe} id="contact-tel" autocomplete="tel" placeholder="+212 6 00 00 00 00" libelle={estArabe ? "رقم الهاتف" : "Téléphone"} valeur={form.telephone} onChange={maj("telephone")} type="tel" requis />
+              <Champ
+                estArabe={estArabe}
+                id="contact-nom"
+                autocomplete="family-name"
+                placeholder={estArabe ? "مثال: العلوي" : "Ex. : El Aloui"}
+                libelle={estArabe ? "الاسم العائلي" : "Nom"}
+                valeur={form.nom}
+                onChange={maj("nom")}
+                requis
+              />
+              <Champ
+                estArabe={estArabe}
+                id="contact-prenom"
+                autocomplete="given-name"
+                placeholder={estArabe ? "مثال: مريم" : "Ex. : Mariam"}
+                libelle={estArabe ? "الاسم الشخصي" : "Prénom"}
+                valeur={form.prenom}
+                onChange={maj("prenom")}
+                requis
+              />
+              <Champ
+                estArabe={estArabe}
+                id="contact-email"
+                autocomplete="email"
+                placeholder="nom@exemple.com"
+                libelle={estArabe ? "البريد الإلكتروني" : "E-mail"}
+                valeur={form.email}
+                onChange={maj("email")}
+                type="email"
+                requis
+              />
+              <Champ
+                estArabe={estArabe}
+                id="contact-tel"
+                autocomplete="tel"
+                placeholder="+212 6 00 00 00 00"
+                libelle={estArabe ? "رقم الهاتف" : "Téléphone"}
+                valeur={form.telephone}
+                onChange={maj("telephone")}
+                type="tel"
+                requis
+              />
             </div>
             <div className="mt-4">
-              <label htmlFor="contact-message" className="mb-1.5 block text-[13px] font-bold text-ink-soft">
+              <label
+                htmlFor="contact-message"
+                className="mb-1.5 block text-[13px] font-bold text-ink-soft"
+              >
                 {estArabe ? "الرسالة" : "Message"} <span className="ms-0.5 text-brand">*</span>
               </label>
               <textarea
@@ -191,22 +260,43 @@ export function ContactPage() {
               </button>
               {etat === "ok" && (
                 <span className="text-[14px] font-medium text-brand">
-                  {estArabe ? "تم إرسال رسالتك. سنتواصل معك قريباً." : "Message envoyé. Nous vous recontactons bientôt."}
+                  {estArabe
+                    ? "تم إرسال رسالتك. سنتواصل معك قريباً."
+                    : "Message envoyé. Nous vous recontactons bientôt."}
                 </span>
               )}
               {etat === "err" && (
                 <span className="text-[14px] font-medium text-brand">
-                  {estArabe ? "حدث خطأ أثناء الإرسال. يُرجى المحاولة مجدداً." : "Une erreur est survenue. Réessayez."}
+                  {estArabe
+                    ? "حدث خطأ أثناء الإرسال. يُرجى المحاولة مجدداً."
+                    : "Une erreur est survenue. Réessayez."}
                 </span>
               )}
             </div>
             <p className="mt-4 text-[12.5px] text-ink/60">
-              {estArabe ? "يمكنك أيضاً الاتصال بنا على +212 777 777 428 أو مراسلتنا عبر visa@eiden-group.com" : "Vous pouvez aussi nous appeler au +212 777 777 428 ou écrire à visa@eiden-group.com."}
+              {estArabe
+                ? "يمكنك أيضاً الاتصال بنا على +212 777 777 428 أو مراسلتنا عبر visa@eiden-group.com"
+                : "Vous pouvez aussi nous appeler au +212 777 777 428 ou écrire à visa@eiden-group.com."}
             </p>
             <p className="mt-4 text-[12.5px] leading-relaxed text-ink/60">
-              {estArabe
-                ? <>بإرسال هذا النموذج، توافقون على معالجة بياناتكم للرد على طلبكم. راجعوا <a className="underline underline-offset-2" href="/confidentialite/">سياسة الخصوصية</a>.</>
-                : <>En envoyant ce formulaire, vous acceptez le traitement de vos données pour répondre à votre demande. Consultez notre <a className="underline underline-offset-2" href="/confidentialite/">politique de confidentialité</a>.</>}
+              {estArabe ? (
+                <>
+                  بإرسال هذا النموذج، توافقون على معالجة بياناتكم للرد على طلبكم. راجعوا{" "}
+                  <a className="underline underline-offset-2" href="/confidentialite/">
+                    سياسة الخصوصية
+                  </a>
+                  .
+                </>
+              ) : (
+                <>
+                  En envoyant ce formulaire, vous acceptez le traitement de vos données pour
+                  répondre à votre demande. Consultez notre{" "}
+                  <a className="underline underline-offset-2" href="/confidentialite/">
+                    politique de confidentialité
+                  </a>
+                  .
+                </>
+              )}
             </p>
           </form>
 
@@ -219,7 +309,6 @@ export function ContactPage() {
             </ul>
             <p className="mt-4 text-[14px] text-ink/60">{t.infos.adresseComplete}</p>
           </div>
-
         </section>
       </main>
     </div>

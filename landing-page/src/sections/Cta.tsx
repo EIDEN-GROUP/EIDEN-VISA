@@ -27,8 +27,12 @@ export function Cta() {
         className="absolute inset-0 -z-20 overflow-hidden motion-safe:[animation:eiden-film-settle_2.4s_var(--ease-brand)_both]"
       >
         <motion.img
-          src={langue === "ar" ? "/images/optimized/world-1-ar.webp" : "/images/optimized/world-1.webp"}
+          src={
+            langue === "ar" ? "/images/optimized/world-1-ar.webp" : "/images/optimized/world-1.webp"
+          }
           alt=""
+          width={1800}
+          height={1013}
           loading="lazy"
           style={{ scale: photoScale, y: photoY }}
           className="h-full w-full object-cover will-change-transform"

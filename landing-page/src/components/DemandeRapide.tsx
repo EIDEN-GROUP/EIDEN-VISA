@@ -267,8 +267,7 @@ function valider(d: Donnees, champs: Champ[], e: Textes["erreurs"]): Erreurs {
   for (const c of champs) {
     if (c === "email") {
       if (!d.email.trim()) err.email = e.requis;
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim()))
-        err.email = e.email;
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) err.email = e.email;
     } else if (c === "telephone") {
       const chiffres = d.telephone.replace(/\D/g, "").length;
       if (!d.telephone.trim()) err.telephone = e.requis;
@@ -440,6 +439,8 @@ function Tuile({ option, choisie }: { option: OptionListe; choisie: boolean }) {
         <img
           src={option.drapeau}
           alt=""
+          width={28}
+          height={20}
           draggable={false}
           className="h-full w-full rounded-[5px] object-cover ring-1 ring-line"
           style={{ filter: "url(#drapeau-vague)" }}
@@ -1435,6 +1436,8 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                       src="/images/tampon-schengen-rond.webp"
                       alt=""
                       aria-hidden="true"
+                      width={880}
+                      height={880}
                       initial={{ scale: 2.2, opacity: 0, rotate: -40 }}
                       animate={{ scale: 1, opacity: 0.95, rotate: -12 }}
                       transition={{ type: "spring", stiffness: 260, damping: 17, delay: 0.15 }}
@@ -1477,7 +1480,10 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
           </div>
 
           {erreurEnvoi && (
-            <p role="alert" className="mx-5 mb-2 rounded-xl border border-brand/25 bg-white px-4 py-3 text-[13px] leading-relaxed text-brand sm:mx-8">
+            <p
+              role="alert"
+              className="mx-5 mb-2 rounded-xl border border-brand/25 bg-white px-4 py-3 text-[13px] leading-relaxed text-brand sm:mx-8"
+            >
               {langue === "ar"
                 ? "تعذر إرسال الطلب بالبريد الإلكتروني. يُرجى المحاولة مجدداً بعد قليل."
                 : "Votre demande n’a pas pu être envoyée par e-mail. Réessayez dans un instant."}
@@ -1505,7 +1511,13 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                 disabled={envoi}
                 className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-brand px-6 text-[14.5px] font-semibold text-white shadow-[0_10px_30px_-12px_rgb(174_10_26/0.6)] transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-60"
               >
-                {envoi ? (langue === "ar" ? "جارٍ الإرسال…" : "Envoi…") : etape === ETAPES.length - 1 ? D.envoyer : D.suivant}
+                {envoi
+                  ? langue === "ar"
+                    ? "جارٍ الإرسال…"
+                    : "Envoi…"
+                  : etape === ETAPES.length - 1
+                    ? D.envoyer
+                    : D.suivant}
                 <ArrowRight className="size-[18px] transition-transform duration-300 group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
               </button>
             </footer>

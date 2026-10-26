@@ -267,10 +267,9 @@ export function ScriptReveal({
       ref={ref}
       className={`tilt ${className ?? ""}`}
       style={{ "--tilt": `${tilt}deg` } as CSSProperties}
-      aria-label={lines.join(" ")}
     >
       {lines.map((line) => (
-        <span key={line} data-line aria-hidden="true" className={`block ${lineClassName}`}>
+        <span key={line} data-line className={`block ${lineClassName}`}>
           {line}
         </span>
       ))}

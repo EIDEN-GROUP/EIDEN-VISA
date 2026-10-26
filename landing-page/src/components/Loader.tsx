@@ -190,6 +190,8 @@ export function Loader({ onReady, onDone }: Props) {
           data-ciel
           src={CIEL}
           alt=""
+          width={1800}
+          height={1013}
           className="absolute inset-0 h-full w-full object-cover object-[70%_50%]"
         />
         <span className="loader-voile absolute inset-0" />
@@ -227,6 +229,8 @@ export function Loader({ onReady, onDone }: Props) {
         <img
           src={AVION}
           alt=""
+          width={1774}
+          height={887}
           className="relative block h-auto w-full [filter:drop-shadow(0_28px_36px_rgb(8_20_52/0.35))]"
         />
       </div>

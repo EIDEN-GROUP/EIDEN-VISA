@@ -123,30 +123,67 @@ export const ETAPES_ICONES: LucideIcon[] = [
 export const AVANTAGES: {
   icon: LucideIcon;
   image: string;
+  width: number;
+  height: number;
   position: string;
   tampon?: boolean;
 }[] = [
-  { icon: Users, image: "/images/04-etudiante.webp", position: "50% 55%" },
-  { icon: FileSpreadsheet, image: "/images/justificatifs.webp", position: "50% 40%" },
+  { icon: Users, image: "/images/04-etudiante.webp", width: 492, height: 285, position: "50% 55%" },
+  {
+    icon: FileSpreadsheet,
+    image: "/images/justificatifs.webp",
+    width: 1755,
+    height: 896,
+    position: "50% 40%",
+  },
   {
     icon: ShieldCheck,
     image: "/images/hero-3.webp",
+    width: 940,
+    height: 788,
     position: "50% 50%",
     tampon: true,
   },
-  { icon: Settings, image: "/images/optimized/serenite.webp", position: "50% 62%" },
+  {
+    icon: Settings,
+    image: "/images/optimized/serenite.webp",
+    width: 1800,
+    height: 1200,
+    position: "50% 62%",
+  },
 ];
 
 /** Packs Standard, Essentiel, Global (textes : `t.packs.offres`). Aucun prix affiché. */
 /** Même ordre que `t.packs.offres` (fr.ts) : la carte du milieu est la « vedette ». */
 export const PACK_IDS = ["essentiel", "confort", "global"] as const;
 export type PackId = (typeof PACK_IDS)[number];
-export const PACKS: { id: PackId; image: string; position: string; vedette?: boolean }[] = [
-  { id: "essentiel", image: "/images/pack-essentiel.webp", position: "50% 45%" },
-  { id: "confort", image: "/images/06-valise-aeroport.webp", position: "50% 50%" },
+export const PACKS: {
+  id: PackId;
+  image: string;
+  width: number;
+  height: number;
+  position: string;
+  vedette?: boolean;
+}[] = [
+  {
+    id: "essentiel",
+    image: "/images/pack-essentiel.webp",
+    width: 800,
+    height: 800,
+    position: "50% 45%",
+  },
+  {
+    id: "confort",
+    image: "/images/06-valise-aeroport.webp",
+    width: 491,
+    height: 268,
+    position: "50% 50%",
+  },
   {
     id: "global",
     image: "/images/optimized/hero-bg-2.webp",
+    width: 1800,
+    height: 1013,
     position: "50% 55%",
     vedette: true,
   },

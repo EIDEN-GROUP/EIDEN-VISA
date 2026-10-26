@@ -38,6 +38,8 @@ export function Hero() {
             <img
               src="/images/optimized/bg-hero.webp"
               alt={t.hero.imageAlt}
+              width={1800}
+              height={900}
               fetchPriority="high"
               decoding="async"
               className="hero-photo h-full w-full object-cover object-[86%_50%] lg:object-[70%_30%]"
@@ -70,6 +72,8 @@ export function Hero() {
             src="/images/tampon-schengen-rond-blanc.webp"
             alt=""
             aria-hidden="true"
+            width={480}
+            height={480}
             style={{ rotate: stampRotate }}
             className="h-auto w-full will-change-transform"
           />

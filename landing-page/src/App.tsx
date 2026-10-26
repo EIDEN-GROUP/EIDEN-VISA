@@ -14,27 +14,56 @@ import { initialiserSuivi } from "./lib/suivi";
 import { Footer } from "./sections/Footer";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
-
-const Destination = lazy(() => import("./sections/Destination").then((m) => ({ default: m.Destination })));
-const Methode = lazy(() => import("./sections/Methode").then((m) => ({ default: m.Methode })));
-const Pourquoi = lazy(() => import("./sections/Pourquoi").then((m) => ({ default: m.Pourquoi })));
-const Packs = lazy(() => import("./sections/Packs").then((m) => ({ default: m.Packs })));
-const Temoignages = lazy(() => import("./sections/Temoignages").then((m) => ({ default: m.Temoignages })));
-const Faq = lazy(() => import("./sections/Faq").then((m) => ({ default: m.Faq })));
-const Cta = lazy(() => import("./sections/Cta").then((m) => ({ default: m.Cta })));
+import { Destination } from "./sections/Destination";
+import { Methode } from "./sections/Methode";
+import { Pourquoi } from "./sections/Pourquoi";
+import { Packs } from "./sections/Packs";
+import { Temoignages } from "./sections/Temoignages";
+import { Faq } from "./sections/Faq";
+import { Cta } from "./sections/Cta";
 
 const BlogPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogPage })));
-const ContactPage = lazy(() => import("./pages/ContactPage").then((m) => ({ default: m.ContactPage })));
-const ConditionsPage = lazy(() => import("./pages/ConditionsPage").then((m) => ({ default: m.ConditionsPage })));
-const ConfidentialitePage = lazy(() => import("./pages/ConfidentialitePage").then((m) => ({ default: m.ConfidentialitePage })));
-const CookiesPage = lazy(() => import("./pages/CookiesPage").then((m) => ({ default: m.CookiesPage })));
-const SecuritePage = lazy(() => import("./pages/SecuritePage").then((m) => ({ default: m.SecuritePage })));
-const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
-const ServerErrorPage = lazy(() => import("./pages/ServerErrorPage").then((m) => ({ default: m.ServerErrorPage })));
-const ArticleDossierVisaSchengenMarocReleveBancaire = lazy(() => import("./pages/ArticleDossierVisaSchengenMarocReleveBancaire").then((m) => ({ default: m.ArticleDossierVisaSchengenMarocReleveBancaire })));
-const ArticleRefusVisaSchengenMarocMotifsRecours = lazy(() => import("./pages/ArticleRefusVisaSchengenMarocMotifsRecours").then((m) => ({ default: m.ArticleRefusVisaSchengenMarocMotifsRecours })));
-const ArticleRecruterSalarieMarocainAutorisationTravail = lazy(() => import("./pages/ArticleRecruterSalarieMarocainAutorisationTravail").then((m) => ({ default: m.ArticleRecruterSalarieMarocainAutorisationTravail })));
-const ArticleRendezVousTlscontactBlsAgadir2026 = lazy(() => import("./pages/ArticleRendezVousTlscontactBlsAgadir2026").then((m) => ({ default: m.ArticleRendezVousTlscontactBlsAgadir2026 })));
+const ContactPage = lazy(() =>
+  import("./pages/ContactPage").then((m) => ({ default: m.ContactPage })),
+);
+const ConditionsPage = lazy(() =>
+  import("./pages/ConditionsPage").then((m) => ({ default: m.ConditionsPage })),
+);
+const ConfidentialitePage = lazy(() =>
+  import("./pages/ConfidentialitePage").then((m) => ({ default: m.ConfidentialitePage })),
+);
+const CookiesPage = lazy(() =>
+  import("./pages/CookiesPage").then((m) => ({ default: m.CookiesPage })),
+);
+const SecuritePage = lazy(() =>
+  import("./pages/SecuritePage").then((m) => ({ default: m.SecuritePage })),
+);
+const NotFoundPage = lazy(() =>
+  import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })),
+);
+const ServerErrorPage = lazy(() =>
+  import("./pages/ServerErrorPage").then((m) => ({ default: m.ServerErrorPage })),
+);
+const ArticleDossierVisaSchengenMarocReleveBancaire = lazy(() =>
+  import("./pages/ArticleDossierVisaSchengenMarocReleveBancaire").then((m) => ({
+    default: m.ArticleDossierVisaSchengenMarocReleveBancaire,
+  })),
+);
+const ArticleRefusVisaSchengenMarocMotifsRecours = lazy(() =>
+  import("./pages/ArticleRefusVisaSchengenMarocMotifsRecours").then((m) => ({
+    default: m.ArticleRefusVisaSchengenMarocMotifsRecours,
+  })),
+);
+const ArticleRecruterSalarieMarocainAutorisationTravail = lazy(() =>
+  import("./pages/ArticleRecruterSalarieMarocainAutorisationTravail").then((m) => ({
+    default: m.ArticleRecruterSalarieMarocainAutorisationTravail,
+  })),
+);
+const ArticleRendezVousTlscontactBlsAgadir2026 = lazy(() =>
+  import("./pages/ArticleRendezVousTlscontactBlsAgadir2026").then((m) => ({
+    default: m.ArticleRendezVousTlscontactBlsAgadir2026,
+  })),
+);
 
 export function App() {
   const { langue, t } = useLangue();
@@ -87,28 +116,56 @@ export function App() {
               <Route
                 path="/"
                 element={
-                  <main key={langue} id="contenu" className="filigrane-rond relative overflow-x-clip">
+                  <main
+                    key={langue}
+                    id="contenu"
+                    className="filigrane-rond relative overflow-x-clip"
+                  >
                     <SuiviSections />
                     <Hero />
-                    <Suspense fallback={null}><Destination /></Suspense>
-                    <Suspense fallback={null}><Methode /></Suspense>
-                    <Suspense fallback={null}><Pourquoi /></Suspense>
-                    <Suspense fallback={null}><Packs /></Suspense>
-                    <Suspense fallback={null}><Temoignages /></Suspense>
-                    <Suspense fallback={null}><Faq /></Suspense>
-                    <Suspense fallback={null}><Cta /></Suspense>
+                    <Destination />
+                    <Methode />
+                    <Pourquoi />
+                    <Packs />
+                    <Temoignages />
+                    <Faq />
+                    <Cta />
                   </main>
                 }
               />
               <Route path="/blog" element={<BlogPage />} />
-              <Route path="/blog/dossier-visa-schengen-maroc-releve-bancaire" element={<ArticleDossierVisaSchengenMarocReleveBancaire />} />
-              <Route path="/blog/dossier-visa-schengen-maroc-releve-bancaire/" element={<ArticleDossierVisaSchengenMarocReleveBancaire />} />
-              <Route path="/blog/refus-visa-schengen-maroc-motifs-recours" element={<ArticleRefusVisaSchengenMarocMotifsRecours />} />
-              <Route path="/blog/refus-visa-schengen-maroc-motifs-recours/" element={<ArticleRefusVisaSchengenMarocMotifsRecours />} />
-              <Route path="/blog/recruter-salarie-marocain-autorisation-travail" element={<ArticleRecruterSalarieMarocainAutorisationTravail />} />
-              <Route path="/blog/recruter-salarie-marocain-autorisation-travail/" element={<ArticleRecruterSalarieMarocainAutorisationTravail />} />
-              <Route path="/blog/rendez-vous-tlscontact-bls-agadir-2026" element={<ArticleRendezVousTlscontactBlsAgadir2026 />} />
-              <Route path="/blog/rendez-vous-tlscontact-bls-agadir-2026/" element={<ArticleRendezVousTlscontactBlsAgadir2026 />} />
+              <Route
+                path="/blog/dossier-visa-schengen-maroc-releve-bancaire"
+                element={<ArticleDossierVisaSchengenMarocReleveBancaire />}
+              />
+              <Route
+                path="/blog/dossier-visa-schengen-maroc-releve-bancaire/"
+                element={<ArticleDossierVisaSchengenMarocReleveBancaire />}
+              />
+              <Route
+                path="/blog/refus-visa-schengen-maroc-motifs-recours"
+                element={<ArticleRefusVisaSchengenMarocMotifsRecours />}
+              />
+              <Route
+                path="/blog/refus-visa-schengen-maroc-motifs-recours/"
+                element={<ArticleRefusVisaSchengenMarocMotifsRecours />}
+              />
+              <Route
+                path="/blog/recruter-salarie-marocain-autorisation-travail"
+                element={<ArticleRecruterSalarieMarocainAutorisationTravail />}
+              />
+              <Route
+                path="/blog/recruter-salarie-marocain-autorisation-travail/"
+                element={<ArticleRecruterSalarieMarocainAutorisationTravail />}
+              />
+              <Route
+                path="/blog/rendez-vous-tlscontact-bls-agadir-2026"
+                element={<ArticleRendezVousTlscontactBlsAgadir2026 />}
+              />
+              <Route
+                path="/blog/rendez-vous-tlscontact-bls-agadir-2026/"
+                element={<ArticleRendezVousTlscontactBlsAgadir2026 />}
+              />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/conditions" element={<ConditionsPage />} />
               <Route path="/confidentialite" element={<ConfidentialitePage />} />
