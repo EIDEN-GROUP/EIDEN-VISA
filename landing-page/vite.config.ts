@@ -270,4 +270,18 @@ export default defineConfig({
   // Port distinct de l'app (3000) pour lancer les deux en parallèle.
   server: { port: 5180 },
   preview: { port: 5181 },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: "react-vendor", test: /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/, priority: 30 },
+            { name: "motion-vendor", test: /node_modules[\\/](?:framer-motion|motion|motion-dom|motion-utils)[\\/]/, priority: 20 },
+            { name: "animation-vendor", test: /node_modules[\\/](?:gsap|@gsap)[\\/]/, priority: 20 },
+            { name: "vendor", test: /node_modules[\\/]/, priority: 0 },
+          ],
+        },
+      },
+    },
+  },
 });

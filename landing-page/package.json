@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "pagespeed": "node scripts/pagespeed.mjs",
     "typecheck": "tsc --noEmit"
   },
   "overrides": {

@@ -38,7 +38,7 @@
       property="og:description"
       content="EIDEN Visa accompagne à Agadir la préparation des dossiers visa France et Espagne et oriente les demandeurs vers les démarches officielles. Les créneaux et décisions de visa relèvent des organismes compétents."
     />
-    <meta property="og:image" content="https://visa.eiden-group.com/images/cta-paris.webp" />
+    <meta property="og:image" content="https://visa.eiden-group.com/images/optimized/cta-paris.webp" />
     <meta property="og:image:width" content="2000" />
     <meta property="og:image:height" content="1500" />
     <meta
@@ -54,7 +54,7 @@
       name="twitter:description"
       content="EIDEN Visa accompagne à Agadir la préparation des dossiers visa France et Espagne et oriente les demandeurs vers les démarches officielles. Les créneaux et décisions de visa relèvent des organismes compétents."
     />
-    <meta name="twitter:image" content="https://visa.eiden-group.com/images/cta-paris.webp" />
+    <meta name="twitter:image" content="https://visa.eiden-group.com/images/optimized/cta-paris.webp" />
 
     <!-- Géo-référencement : centre à Agadir, Souss-Massa (MA-07). -->
     <meta name="geo.region" content="MA-07" />
@@ -193,7 +193,7 @@
             "name": "EIDEN Visa",
             "legalName": "EIDEN SARL AU",
             "url": "https://visa.eiden-group.com/",
-            "image": "https://visa.eiden-group.com/images/cta-paris.webp",
+            "image": "https://visa.eiden-group.com/images/optimized/cta-paris.webp",
             "logo": {
               "@type": "ImageObject",
               "url": "https://visa.eiden-group.com/images/logo-eiden-visa.webp"
@@ -422,7 +422,7 @@
             },
             "primaryImageOfPage": {
               "@type": "ImageObject",
-              "url": "https://visa.eiden-group.com/images/bg-hero.webp",
+              "url": "https://visa.eiden-group.com/images/optimized/bg-hero.webp",
               "width": 2000,
               "height": 1500
             },
@@ -472,29 +472,30 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=La+Belle+Aurore&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=La+Belle+Aurore&display=swap"
     />
     <!-- Feuille chargée sans bloquer le rendu (media=print + bascule au chargement). -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=La+Belle+Aurore&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=La+Belle+Aurore&display=swap"
       media="print"
       onload="this.media = 'all'"
     />
     <noscript
       ><link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=La+Belle+Aurore&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=La+Belle+Aurore&display=swap"
     /></noscript>
-    <link rel="preload" as="image" href="/images/loader-bg.webp" fetchpriority="high" />
-    <link rel="preload" as="image" href="/images/logo-eiden-visa-blanc.webp" fetchpriority="high" />
-    <link rel="preload" as="image" href="/images/loader-avion.webp" fetchpriority="high" />
-    <link rel="preload" as="image" href="/images/hero.webp" />
+    <link rel="preload" as="image" href="/images/optimized/loader-bg.webp" fetchpriority="high" media="(min-width: 768px)" />
+    <link rel="preload" as="image" href="/images/logo-eiden-visa-blanc.webp" fetchpriority="low" media="(min-width: 768px)" />
+    <link rel="preload" as="image" href="/images/loader-avion.webp" fetchpriority="low" media="(min-width: 768px)" />
     <!-- LCP : photo du hero, prioritaire dès le HTML (fetchpriority en renfort dans `Hero.tsx`). -->
-    <link rel="preload" as="image" href="/images/bg-hero.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/images/optimized/bg-hero.webp" fetchpriority="high" />
 
     <!--
       Contenu servi : la landing est une application React, mais le HTML doit porter

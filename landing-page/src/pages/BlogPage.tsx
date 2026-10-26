@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { useLangue } from "../i18n";
 
 interface BlogCardData {
@@ -16,7 +16,7 @@ const cards: BlogCardData[] = [
     title: "Visa Schengen depuis le Maroc : dossier, ressources et justificatifs",
     excerpt: "Un relevé bancaire ne suffit pas à lui seul. Comprenez comment présenter vos ressources, votre situation au Maroc et le motif du voyage dans un dossier cohérent.",
     category: "Dossier",
-    image: "/images/blog-dossier-visa-schengen-maroc-releve-bancaire.webp",
+    image: "/images/optimized/blog-dossier-visa-schengen-maroc-releve-bancaire.webp",
     readingTime: "5 min",
   },
   {
@@ -24,7 +24,7 @@ const cards: BlogCardData[] = [
     title: "Refus de visa Schengen au Maroc : motifs, recours et nouvelle demande",
     excerpt: "Lisez la décision, vérifiez le délai de recours applicable et choisissez entre contester et déposer un dossier corrigé.",
     category: "Refus",
-    image: "/images/blog-refus-visa-schengen-maroc-motifs-recours.webp",
+    image: "/images/optimized/blog-refus-visa-schengen-maroc-motifs-recours.webp",
     readingTime: "6 min",
   },
   {
@@ -32,7 +32,7 @@ const cards: BlogCardData[] = [
     title: "Recruter un salarié marocain en France : autorisation de travail et étapes",
     excerpt: "Repères pour l’employeur : vérifier le titre requis, déposer une demande si nécessaire et préparer un dossier de recrutement cohérent.",
     category: "Recrutement",
-    image: "/images/blog-recruter-salarie-marocain-autorisation-travail.webp",
+    image: "/images/optimized/blog-recruter-salarie-marocain-autorisation-travail.webp",
     readingTime: "7 min",
   },
   {
@@ -50,7 +50,7 @@ export function BlogPage() {
   const estArabe = langue === "ar";
 
   useEffect(() => {
-    const url = "https://visa.eiden-group.com/images/blog-banniere-eiden-visa.webp";
+    const url = "https://visa.eiden-group.com/images/optimized/blog-banniere-eiden-visa.webp";
     document.title = "Blog EIDEN Visa | Visa Schengen Maroc";
     const og = document.querySelector('meta[property="og:image"]');
     if (og) og.setAttribute("content", url);
@@ -63,7 +63,7 @@ export function BlogPage() {
       <main id="contenu" className="relative overflow-x-clip">
         <section className="relative isolate overflow-hidden bg-[#0d0c0e] text-white">
           <img
-            src="/images/blog-banniere-eiden-visa.webp"
+            src="/images/optimized/blog-banniere-eiden-visa.webp"
             alt="Blog EIDEN Visa : guides visa Schengen depuis le Maroc"
             className="absolute inset-0 w-full h-full object-cover -z-10 opacity-60"
             loading="eager"

@@ -1,4 +1,4 @@
-﻿import { ArticleLayout } from "./ArticleLayout";
+import { ArticleLayout } from "./ArticleLayout";
 import bodyHtml from "./articles/recruter-salarie-marocain-autorisation-travail.html?raw";
 
 export function ArticleRecruterSalarieMarocainAutorisationTravail() {
@@ -10,7 +10,7 @@ export function ArticleRecruterSalarieMarocainAutorisationTravail() {
       category="Recrutement"
       readingTime="7 min"
       updated="26 octobre 2026"
-      banner="/images/blog-recruter-salarie-marocain-autorisation-travail.webp"
+      banner="/images/optimized/blog-recruter-salarie-marocain-autorisation-travail.webp"
       bannerAlt="Blog EIDEN Visa - recrutement salarie marocain"
       bodyHtml={bodyHtml}
       related={[

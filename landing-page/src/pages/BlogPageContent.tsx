@@ -11,7 +11,7 @@ export const BLOG_CONTENT = {
       date: "2026-10-26",
       author: "EIDEN Visa",
       category: "Dossier",
-      image: "/images/blog-dossier-visa-schengen-maroc-releve-bancaire.webp",
+      image: "/images/optimized/blog-dossier-visa-schengen-maroc-releve-bancaire.webp",
       readingTime: "5 min",
       tags: ["visa schengen", "dossier maroc", "bancaire", "documents"]
     },
@@ -22,7 +22,7 @@ export const BLOG_CONTENT = {
       date: "2026-10-26",
       author: "EIDEN Visa",
       category: "Refus",
-      image: "/images/blog-refus-visa-schengen-maroc-motifs-recours.webp",
+      image: "/images/optimized/blog-refus-visa-schengen-maroc-motifs-recours.webp",
       readingTime: "6 min",
       tags: ["visa schengen", "refus", "motifs", "recours"]
     },
@@ -33,7 +33,7 @@ export const BLOG_CONTENT = {
       date: "2026-10-26",
       author: "EIDEN Visa",
       category: "Recrutement",
-      image: "/images/blog-recruter-salarie-marocain-autorisation-travail.webp",
+      image: "/images/optimized/blog-recruter-salarie-marocain-autorisation-travail.webp",
       readingTime: "7 min",
       tags: ["recrutement marocain", "salarie marocain", "autorisation travail", "salarié"]
     },

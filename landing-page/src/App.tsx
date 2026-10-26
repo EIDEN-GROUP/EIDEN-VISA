@@ -11,16 +11,17 @@ import { useLangue } from "./i18n";
 import { prefersReducedMotion, ScrollTrigger } from "./lib/gsap";
 import { lancerIntro } from "./lib/intro";
 import { initialiserSuivi } from "./lib/suivi";
-import { Cta } from "./sections/Cta";
-import { Destination } from "./sections/Destination";
-import { Faq } from "./sections/Faq";
 import { Footer } from "./sections/Footer";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
-import { Methode } from "./sections/Methode";
-import { Packs } from "./sections/Packs";
-import { Pourquoi } from "./sections/Pourquoi";
-import { Temoignages } from "./sections/Temoignages";
+
+const Destination = lazy(() => import("./sections/Destination").then((m) => ({ default: m.Destination })));
+const Methode = lazy(() => import("./sections/Methode").then((m) => ({ default: m.Methode })));
+const Pourquoi = lazy(() => import("./sections/Pourquoi").then((m) => ({ default: m.Pourquoi })));
+const Packs = lazy(() => import("./sections/Packs").then((m) => ({ default: m.Packs })));
+const Temoignages = lazy(() => import("./sections/Temoignages").then((m) => ({ default: m.Temoignages })));
+const Faq = lazy(() => import("./sections/Faq").then((m) => ({ default: m.Faq })));
+const Cta = lazy(() => import("./sections/Cta").then((m) => ({ default: m.Cta })));
 
 const BlogPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogPage })));
 const ContactPage = lazy(() => import("./pages/ContactPage").then((m) => ({ default: m.ContactPage })));
@@ -38,7 +39,8 @@ const ArticleRendezVousTlscontactBlsAgadir2026 = lazy(() => import("./pages/Arti
 export function App() {
   const { langue, t } = useLangue();
   const [intro, setIntro] = useState<"attente" | "vol" | "fini">(() => {
-    if (!prefersReducedMotion()) return "attente";
+    const mobileViewport = window.matchMedia("(max-width: 767px)").matches;
+    if (!prefersReducedMotion() && !mobileViewport) return "attente";
     lancerIntro();
     return "fini";
   });
@@ -88,13 +90,13 @@ export function App() {
                   <main key={langue} id="contenu" className="filigrane-rond relative overflow-x-clip">
                     <SuiviSections />
                     <Hero />
-                    <Destination />
-                    <Methode />
-                    <Pourquoi />
-                    <Packs />
-                    <Temoignages />
-                    <Faq />
-                    <Cta />
+                    <Suspense fallback={null}><Destination /></Suspense>
+                    <Suspense fallback={null}><Methode /></Suspense>
+                    <Suspense fallback={null}><Pourquoi /></Suspense>
+                    <Suspense fallback={null}><Packs /></Suspense>
+                    <Suspense fallback={null}><Temoignages /></Suspense>
+                    <Suspense fallback={null}><Faq /></Suspense>
+                    <Suspense fallback={null}><Cta /></Suspense>
                   </main>
                 }
               />

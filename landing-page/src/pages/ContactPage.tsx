@@ -58,7 +58,7 @@ export function ContactPage() {
   const maj = (c: keyof Champs) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [c]: e.target.value }));
   useEffect(() => {
-    const url = "https://visa.eiden-group.com/images/contact-agadir-banniere.webp";
+    const url = "https://visa.eiden-group.com/images/optimized/contact-agadir-banniere.webp";
     const titre = langue === "ar" ? "تواصل معنا | EIDEN Visa" : "Contactez-nous | EIDEN Visa";
     document.title = titre;
     const description = langue === "ar"
@@ -110,7 +110,7 @@ export function ContactPage() {
       <main id="contenu" className="relative overflow-x-clip">
         <section className="relative isolate overflow-hidden bg-[#0d0c0e] text-white">
           <img
-            src="/images/contact-agadir-banniere.webp"
+            src="/images/optimized/contact-agadir-banniere.webp"
             alt={estArabe ? "تواصل مع EIDEN Visa في أكادير" : "Contacter EIDEN Visa à Agadir"}
             className="absolute inset-0 w-full h-full object-cover -z-10 opacity-60"
             loading="eager"

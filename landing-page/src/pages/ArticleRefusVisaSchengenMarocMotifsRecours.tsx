@@ -1,4 +1,4 @@
-﻿import { ArticleLayout } from "./ArticleLayout";
+import { ArticleLayout } from "./ArticleLayout";
 import bodyHtml from "./articles/refus-visa-schengen-maroc-motifs-recours.html?raw";
 
 export function ArticleRefusVisaSchengenMarocMotifsRecours() {
@@ -10,7 +10,7 @@ export function ArticleRefusVisaSchengenMarocMotifsRecours() {
       category="Refus"
       readingTime="6 min"
       updated="26 octobre 2026"
-      banner="/images/blog-refus-visa-schengen-maroc-motifs-recours.webp"
+      banner="/images/optimized/blog-refus-visa-schengen-maroc-motifs-recours.webp"
       bannerAlt="Blog EIDEN Visa - refus visa Schengen Maroc"
       bodyHtml={bodyHtml}
       related={[

@@ -8,12 +8,12 @@ import { useLangue } from "../i18n";
 import { gsap, useGSAP } from "../lib/gsap";
 import { lancerIntro } from "../lib/intro";
 
-const CIEL = "/images/loader-bg.webp";
+const CIEL = "/images/optimized/loader-bg.webp";
 const AVION = "/images/loader-avion.webp";
 const LOGO = "/images/logo-eiden-visa-blanc.webp";
-const A_PRECHARGER = [CIEL, AVION, LOGO, "/images/hero.webp"];
+const A_PRECHARGER = [CIEL, AVION, LOGO];
 /** Le temps de lire la marque, même quand tout est déjà en cache (ms). */
-const TEMPS_MIN = 1400;
+const TEMPS_MIN = 600;
 /** Réseau lent : on n'attend jamais plus longtemps (ms). */
 const TEMPS_MAX = 5000;
 /** Bord du rideau placé vers la queue de l'avion (fraction de sa largeur). */
@@ -83,7 +83,7 @@ export function Loader({ onReady, onDone }: Props) {
       const distance = vw + w * 1.25;
       const depart = vh * 0.6;
       const arrivee = depart - Math.min(vh * 0.42, distance * 0.2);
-      const duree = gsap.utils.clamp(1.9, 2.8, distance / 880);
+      const duree = gsap.utils.clamp(1.2, 1.8, distance / 1400);
       const rtl = document.documentElement.dir === "rtl";
 
       // En arabe le vol est miroir (droite → gauche) : la queue est à droite et le
@@ -138,14 +138,14 @@ export function Loader({ onReady, onDone }: Props) {
     };
 
     void Promise.race([
-      Promise.all([...A_PRECHARGER.map(precharger), document.fonts.ready, delai(TEMPS_MIN)]),
+      Promise.all([...A_PRECHARGER.map(precharger), delai(TEMPS_MIN)]),
       delai(TEMPS_MAX),
     ])
       .then(() => {
         if (annule) return;
         rappels.current.onReady();
         // Laisse React monter la landing sous le rideau avant de lancer l'avion.
-        return delai(260);
+        return delai(120);
       })
       .then(() => {
         if (!annule) voler();

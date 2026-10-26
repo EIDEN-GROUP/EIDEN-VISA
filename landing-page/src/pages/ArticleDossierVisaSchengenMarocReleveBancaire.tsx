@@ -1,4 +1,4 @@
-﻿import { ArticleLayout } from "./ArticleLayout";
+import { ArticleLayout } from "./ArticleLayout";
 import bodyHtml from "./articles/dossier-visa-schengen-maroc-releve-bancaire.html?raw";
 
 export function ArticleDossierVisaSchengenMarocReleveBancaire() {
@@ -10,7 +10,7 @@ export function ArticleDossierVisaSchengenMarocReleveBancaire() {
       category="Dossier"
       readingTime="5 min"
       updated="26 octobre 2026"
-      banner="/images/blog-dossier-visa-schengen-maroc-releve-bancaire.webp"
+      banner="/images/optimized/blog-dossier-visa-schengen-maroc-releve-bancaire.webp"
       bannerAlt="Blog EIDEN Visa - dossier visa Schengen Maroc"
       bodyHtml={bodyHtml}
       related={[

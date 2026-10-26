@@ -134,7 +134,7 @@ export const AVANTAGES: {
     position: "50% 50%",
     tampon: true,
   },
-  { icon: Settings, image: "/images/serenite.webp", position: "50% 62%" },
+  { icon: Settings, image: "/images/optimized/serenite.webp", position: "50% 62%" },
 ];
 
 /** Packs Standard, Essentiel, Global (textes : `t.packs.offres`). Aucun prix affiché. */
@@ -146,7 +146,7 @@ export const PACKS: { id: PackId; image: string; position: string; vedette?: boo
   { id: "confort", image: "/images/06-valise-aeroport.webp", position: "50% 50%" },
   {
     id: "global",
-    image: "/images/hero-bg-2.webp",
+    image: "/images/optimized/hero-bg-2.webp",
     position: "50% 55%",
     vedette: true,
   },
