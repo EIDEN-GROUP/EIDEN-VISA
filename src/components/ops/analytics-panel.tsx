@@ -1,4 +1,4 @@
-import {
+﻿import {
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -168,7 +168,7 @@ export function AnalyticsPanel() {
         <div>
           <CardTitle className="text-base">Analytique</CardTitle>
           <p className="text-xs text-muted-foreground">
-            L'état complet de l'agence : où sont les dossiers, ce qui rentre, et qui produit quoi.
+            L'état complet du centre : où sont les dossiers, ce qui rentre, et qui produit quoi.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={onExport} disabled={exporting} data-pdf-hide>

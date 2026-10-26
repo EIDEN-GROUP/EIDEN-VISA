@@ -14,5 +14,5 @@
 
 /* NOTE */
   Les pages légales, le sitemap et le résumé IA vivent à :
-  /conditions.html, /confidentialite.html, /cookies.html, /securite.html,
+  /conditions, /confidentialite, /cookies, /securite,
   /sitemap.xml, /llms.txt, /llms-full.txt

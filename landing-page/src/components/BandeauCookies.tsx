@@ -1,7 +1,7 @@
 // Bandeau de consentement cookies : affiché tant que le visiteur ne s'est pas
 // prononcé (`eiden-consentement-v1` absent). « Tout accepter » charge les traceurs
 // configurés (GTM/GA4/Clarity/Bing, voir `src/lib/suivi.ts`), « Tout refuser »
-// n'en charge aucun. Détails : page publique `/cookies.html`.
+// n'en charge aucun. Détails : page publique `/cookies`.
 import { useEffect, useState } from "react";
 import { useLangue } from "../i18n";
 import {
@@ -43,7 +43,7 @@ export function BandeauCookies() {
         <p className="mt-1.5 text-[13px] leading-relaxed text-white/75">
           {B.texte}{" "}
           <a
-            href="/cookies.html"
+            href="/cookies"
             className="underline underline-offset-2 transition-colors hover:text-white"
           >
             {B.enSavoirPlus}

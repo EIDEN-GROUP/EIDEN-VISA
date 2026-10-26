@@ -100,7 +100,7 @@ function Confidentialite() {
         <Section title="6. Contact">
           <p>
             Pour toute question relative à ce document ou à l'utilisation de vos données dans le
-            cadre de votre dossier, adressez-vous directement à l'agence Eiden Visa qui a ouvert
+            cadre de votre dossier, adressez-vous directement au centre Eiden Visa qui a ouvert
             votre dossier, à Agadir.
           </p>
         </Section>

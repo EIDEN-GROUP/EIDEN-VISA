@@ -266,8 +266,8 @@ function valider(d: Donnees, champs: Champ[], e: Textes["erreurs"]): Erreurs {
   const jour = aujourdhui();
   for (const c of champs) {
     if (c === "email") {
-      // Facultatif : vérifié seulement s'il est rempli.
-      if (d.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim()))
+      if (!d.email.trim()) err.email = e.requis;
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim()))
         err.email = e.email;
     } else if (c === "telephone") {
       const chiffres = d.telephone.replace(/\D/g, "").length;
@@ -798,6 +798,8 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
     pack: pack ?? brouillonInitial?.donnees?.pack ?? "",
   }));
   const [erreurs, setErreurs] = useState<Erreurs>({});
+  const [envoi, setEnvoi] = useState(false);
+  const [erreurEnvoi, setErreurEnvoi] = useState(false);
   // Première saisie suivie une seule fois (la popup se démonte à la fermeture).
   const saisieSuivie = useRef(false);
   // Anti-robots : piège hors état (jamais dans le brouillon ni l'envoi),
@@ -948,9 +950,9 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
       if (estRobot(piege.current?.value ?? "", ouvertLe, desLeDebut)) {
         effacerBrouillon();
       } else {
-        // Sauvegarde Supabase en arrière-plan (silencieuse en cas d'échec),
-        // puis ouverture WhatsApp comme avant   les deux portent le même contenu.
-        await saveContact({
+        setEnvoi(true);
+        setErreurEnvoi(false);
+        const enregistre = await saveContact({
           nom: d.nom.trim(),
           prenom: d.prenom.trim(),
           email: d.email.trim(),
@@ -968,6 +970,11 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
           pageUrl: window.location.href,
           userAgent: window.navigator.userAgent,
         }).catch(() => false);
+        setEnvoi(false);
+        if (!enregistre) {
+          setErreurEnvoi(true);
+          return;
+        }
         // Envoi réussi : le brouillon est oublié, la prochaine ouverture repart de zéro.
         effacerBrouillon();
         marquerDemandeEnvoyee();
@@ -1141,7 +1148,7 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
                     <Bloc
                       id={id("email")}
                       label={D.champs.email}
-                      facultatif={D.facultatif}
+                      requis={D.requis}
                       erreur={erreurs.email}
                     >
                       <input
@@ -1469,6 +1476,14 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
             </AnimatePresence>
           </div>
 
+          {erreurEnvoi && (
+            <p role="alert" className="mx-5 mb-2 rounded-xl border border-brand/25 bg-white px-4 py-3 text-[13px] leading-relaxed text-brand sm:mx-8">
+              {langue === "ar"
+                ? "تعذر إرسال الطلب بالبريد الإلكتروني. يُرجى المحاولة مجدداً بعد قليل."
+                : "Votre demande n’a pas pu être envoyée par e-mail. Réessayez dans un instant."}
+            </p>
+          )}
+
           {etape < ETAPES.length && (
             <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-line/80 bg-cream/85 px-5 py-4 backdrop-blur-sm sm:px-8">
               {etape > 0 ? (
@@ -1487,9 +1502,10 @@ function FormulaireDemande({ fermer, pack }: { fermer: () => void; pack?: PackId
               )}
               <button
                 type="submit"
-                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-brand px-6 text-[14.5px] font-semibold text-white shadow-[0_10px_30px_-12px_rgb(174_10_26/0.6)] transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                disabled={envoi}
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-brand px-6 text-[14.5px] font-semibold text-white shadow-[0_10px_30px_-12px_rgb(174_10_26/0.6)] transition-colors hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-60"
               >
-                {etape === ETAPES.length - 1 ? D.envoyer : D.suivant}
+                {envoi ? (langue === "ar" ? "جارٍ الإرسال…" : "Envoi…") : etape === ETAPES.length - 1 ? D.envoyer : D.suivant}
                 <ArrowRight className="size-[18px] transition-transform duration-300 group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1" />
               </button>
             </footer>

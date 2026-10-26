@@ -3,299 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Page introuvable (404) | EIDEN Visa</title>
-    <meta
-      name="description"
-      content="Cette page n'existe pas ou plus. Retournez à l'accueil EIDEN Visa ou contactez l'agence sur WhatsApp."
-    />
-    <!-- Page d'erreur : jamais indexée, jamais dans le sitemap. Servie par Vercel
-         avec un vrai statut 404 dès que `404.html` est dans le build (aucune config). -->
-    <meta name="robots" content="noindex" />
-    <meta name="theme-color" content="#faf8f4" />
-    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
-    <!-- Base commune aux pages légales (legal.css) ; le bloc ci-dessous en fait un
-         hero de la landing : texte à gauche, illustration du bandeau final à droite. -->
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Page introuvable | EIDEN Visa</title>
+    <meta name="description" content="Cette page EIDEN Visa est introuvable. Retournez à l’accueil ou découvrez nos services à Agadir." />
     <link rel="stylesheet" href="/legal.css" />
-    <link rel="preload" as="image" href="/images/world-1.webp" />
-    <style>
-      :root {
-        --illus: 120vw;
-      }
-      /* Illustration du bandeau final (Cta.tsx) à la place du tampon en filigrane :
-         fondue dans le crème à gauche et en bas, le header passe par-dessus. */
-      body::before {
-        top: 36px;
-        inset-inline-end: calc((100vw - var(--illus)) * 0.4);
-        width: var(--illus);
-        aspect-ratio: 1672 / 941;
-        rotate: none;
-        opacity: 1;
-        background: url("/images/world-1.webp") center / cover no-repeat;
-        -webkit-mask-image:
-          linear-gradient(90deg, transparent 2%, #000 34%),
-          linear-gradient(0deg, transparent 0, #000 24%);
-        -webkit-mask-composite: source-in;
-        mask-image:
-          linear-gradient(90deg, transparent 2%, #000 34%),
-          linear-gradient(0deg, transparent 0, #000 24%);
-        mask-composite: intersect;
-      }
-      /* Mobile et tablette : l'illustration en bandeau, le texte commence dessous. */
-      .hero-inner {
-        padding-top: calc(var(--illus) * 0.518 - 78px);
-      }
-      .code-404 {
-        margin: 0.1em 0 0.3rem;
-        color: var(--brand);
-        font-family: var(--serif);
-        font-size: clamp(5.5rem, 12vw, 10rem);
-        font-weight: 600;
-        line-height: 0.9;
-        letter-spacing: -0.03em;
-      }
-      h1 {
-        max-width: 20ch;
-        font-size: clamp(2rem, 3.6vw, 3.1rem);
-        line-height: 1.05;
-        letter-spacing: -0.01em;
-      }
-      .ar {
-        width: fit-content;
-      }
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px 16px;
-        margin-top: 1.75rem;
-      }
-      .actions a {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        width: 100%;
-        height: 48px;
-        padding: 0 28px;
-        border-radius: 999px;
-        font-size: 14.5px;
-        font-weight: 600;
-        white-space: nowrap;
-        text-decoration: none;
-        transition: background-color 0.3s ease-out;
-      }
-      .actions .primaire {
-        background: var(--brand);
-        color: #fff;
-        box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.35);
-      }
-      .actions .primaire::after {
-        content: "";
-        width: 18px;
-        height: 18px;
-        background: currentColor;
-        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E")
-          center / contain no-repeat;
-        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E")
-          center / contain no-repeat;
-        transition: translate 0.3s ease-out;
-      }
-      .actions .primaire:hover {
-        background: var(--brand-dark);
-      }
-      .actions .primaire:hover::after {
-        translate: 4px 0;
-      }
-      .actions .secondaire {
-        background: #fff;
-        color: var(--ink);
-        box-shadow: var(--shadow-soft);
-      }
-      .actions .secondaire:hover {
-        background: var(--sand);
-      }
-
-      /* « Où aller ? » : surtitre + liens, sous le filet du hero. */
-      main {
-        padding-block: clamp(1.5rem, 3vw, 2.25rem) clamp(2.5rem, 6vw, 4rem);
-      }
-      .card {
-        max-width: none;
-        padding: 0;
-      }
-      .card > h2 {
-        display: block;
-        margin: 0 0 1rem;
-        color: var(--muted);
-        font-family: var(--sans);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 1.5;
-        letter-spacing: 0.32em;
-        text-transform: uppercase;
-      }
-      .card > h2 .num {
-        display: none;
-      }
-      .card > :not(h2) {
-        margin-inline-start: 0;
-      }
-      .card ul {
-        max-width: var(--mesure);
-      }
-
-      @media (min-width: 640px) {
-        :root {
-          --illus: 100vw;
-        }
-        .actions a {
-          width: auto;
-          height: 58px;
-          padding: 0 36px;
-          font-size: 15.5px;
-        }
-      }
-      @media (min-width: 1024px) {
-        :root {
-          --illus: min(72vw, 1100px);
-        }
-        body::before {
-          inset-inline-end: 0;
-        }
-        .hero-inner {
-          padding-top: clamp(1.5rem, 3vw, 2.75rem);
-        }
-        .hero-inner > * {
-          max-width: min(48%, 40rem);
-        }
-        .card {
-          display: grid;
-          grid-template-columns: 15rem minmax(0, var(--mesure));
-          column-gap: clamp(3rem, 6.5vw, 7rem);
-          align-items: baseline;
-        }
-        .card > h2 {
-          margin: 0;
-        }
-      }
-
-      /* Entrée : le texte monte, l'illustration se pose (comme le hero et le bandeau final). */
-      @media (prefers-reduced-motion: no-preference) {
-        body::before {
-          transform-origin: 100% 0;
-          animation: film-404 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .hero-inner > * {
-          animation: monte-404 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .hero-inner > :nth-child(2) {
-          animation-delay: 0.08s;
-        }
-        .hero-inner > :nth-child(3) {
-          animation-delay: 0.16s;
-        }
-        .hero-inner > :nth-child(4) {
-          animation-delay: 0.24s;
-        }
-        .hero-inner > :nth-child(5) {
-          animation-delay: 0.32s;
-        }
-      }
-      @keyframes film-404 {
-        from {
-          opacity: 0;
-          transform: scale(1.08);
-        }
-      }
-      @keyframes monte-404 {
-        from {
-          opacity: 0;
-          transform: translateY(22px);
-        }
-      }
-      @media print {
-        .hero-inner {
-          padding-top: 1.5rem;
-        }
-      }
-    </style>
+    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
   </head>
-  <body>
-    <div class="topbar">
-      <div class="topbar-inner">
-        <div class="groupe">
-          <a href="tel:+212777777428" aria-label="Téléphone : +212 777 777 428">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
-              />
-            </svg>
-            <span dir="ltr">+212 777 777 428</span>
-          </a>
-          <span class="sep" aria-hidden="true"></span>
-          <a href="mailto:visa@eiden-group.com" aria-label="E-mail : visa@eiden-group.com">
-            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
-              <rect width="20" height="16" x="2" y="4" rx="2" />
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-            <span dir="ltr">visa@eiden-group.com</span>
-          </a>
+  <body class="notfound-page">
+    <main id="contenu" class="notfound-content">
+      <div class="notfound-illustration" aria-hidden="true"><span>404</span></div>
+      <section class="notfound-copy" lang="fr" aria-labelledby="notfound-title-fr">
+        <p class="notfound-kicker">EIDEN VISA · AGADIR</p>
+        <h1 id="notfound-title-fr">Désolé, cette page est introuvable.</h1>
+        <p>Le lien a peut-être changé ou l’adresse n’existe plus.</p>
+        <div class="notfound-actions">
+          <a class="notfound-primary" href="/">Retour à l’accueil</a>
+          <a class="notfound-secondary" href="/services/">Découvrir nos services</a>
         </div>
-      </div>
-    </div>
-
-    <div class="header">
-      <div class="header-inner">
-        <a class="logo" href="/" aria-label="EIDEN Visa   Accueil">
-          <img src="/images/logo-eiden-visa.webp" alt="EIDEN Visa" width="900" height="264" />
-        </a>
-        <a class="retour" href="/">← Retour au site</a>
-      </div>
-    </div>
-
-    <div class="hero">
-      <div class="hero-inner">
-        <p class="fil"><a href="/">Accueil</a> / Page introuvable</p>
-        <p class="code-404" aria-hidden="true">404</p>
-        <h1>Cette page n'existe pas (ou plus).</h1>
-        <p class="ar" dir="rtl" lang="ar">
-          هذه الصفحة غير موجودة. عُد إلى الصفحة الرئيسية أو راسلنا على واتساب.
-        </p>
-        <div class="actions">
-          <a class="primaire" href="/">Retour à l'accueil</a>
-          <a
-            class="secondaire"
-            href="https://wa.me/212777777428?text=Bonjour%20EIDEN%20Visa%2C%20je%20me%20suis%20perdu%20sur%20votre%20site%20!"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Nous écrire sur WhatsApp</a
-          >
+      </section>
+      <section class="notfound-copy notfound-ar" lang="ar" dir="rtl" aria-labelledby="notfound-title-ar">
+        <p class="notfound-kicker">EIDEN VISA · أكادير</p>
+        <h2 id="notfound-title-ar">عذراً، هذه الصفحة غير موجودة.</h2>
+        <p>ربما تغيّر الرابط أو أن العنوان لم يعد متاحاً.</p>
+        <div class="notfound-actions">
+          <a class="notfound-primary" href="/" lang="ar">العودة إلى الصفحة الرئيسية</a>
+          <a class="notfound-secondary" href="/services/" lang="ar">اكتشف خدماتنا</a>
         </div>
-      </div>
-    </div>
-
-    <main>
-      <section class="card">
-        <h2><span class="num">✦</span>Où aller ?</h2>
-        <ul>
-          <li><a href="/">Accueil</a> services, packs et demande rapide en 3 étapes.</li>
-          <li>
-            <a href="/conditions.html">Conditions d'utilisation</a>,
-            <a href="/confidentialite.html">confidentialité</a>,
-            <a href="/cookies.html">cookies</a>, <a href="/securite.html">sécurité</a>.
-          </li>
-        </ul>
       </section>
     </main>
-
-    <footer>
-      <nav>
-        <a href="/conditions.html">Conditions</a>
-        <a href="/confidentialite.html">Confidentialité</a>
-        <a href="/cookies.html">Cookies</a>
-        <a href="/securite.html">Sécurité</a>
-      </nav>
-      <p class="droits">© 2026 EIDEN Visa Agadir, Maroc.</p>
-    </footer>
   </body>
 </html>

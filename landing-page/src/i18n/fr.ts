@@ -3,9 +3,9 @@
 
 export const fr = {
   meta: {
-    title: "EIDEN Visa - Visa Schengen Maroc à Agadir | TLScontact",
+    title: "EIDEN Visa Agadir | Préparation de dossier visa France et Espagne",
     description:
-      "Agence de visa à Agadir : EIDEN Visa prépare votre dossier de visa Schengen (France, Espagne), rendez-vous TLScontact/BLS. Demande rapide en 3 étapes.",
+      "EIDEN Visa accompagne à Agadir la préparation des dossiers visa France et Espagne et oriente les demandeurs vers les démarches officielles. Les créneaux et décisions de visa relèvent des organismes compétents.",
   },
   loader: {
     slogan: "Le monde vous attend",
@@ -15,9 +15,11 @@ export const fr = {
   nav: {
     accueil: "Accueil",
     visa: "Méthodes",
-    services: "Nos services",
+    services: "Services",
     packs: "Nos packs",
     faq: "FAQ",
+    blog: "Blog",
+    contact: "Contact",
   },
   header: {
     accueil: "EIDEN Visa, accueil",
@@ -33,9 +35,9 @@ export const fr = {
     // La marque est dans le surtitre et dans le titre de page (moteurs, lecteurs d'écran).
     surtitre: "EIDEN Visa - simplifiez vos démarches",
     titre: ["Le monde", "vous attend."],
-    titreH1: "EIDEN Visa, agence de visa Schengen à Agadir",
+    titreH1: "EIDEN Visa - accompagnement indépendant pour votre dossier visa à Agadir",
     texte:
-      "EIDEN Visa, l'agence de visa Agadir, vous accompagne dans la préparation de votre dossier de visa Schengen : accompagnement professionnel et personnalisé, jusqu'à la prise de votre rendez-vous au centre.",
+      "EIDEN Visa est un prestataire indépendant à Agadir. Nous vous aidons à préparer un dossier complet et cohérent et à comprendre les démarches officielles pour votre demande de visa France ou Espagne. Une préparation rigoureuse aide à repérer les erreurs évitables, sans garantir un rendez-vous ni la délivrance d'un visa.",
     evaluer: "Évaluer mon dossier",
     commentCaMarche: "Voir comment ça marche",
     script: ["Vos projets", "sans frontières"],
@@ -59,23 +61,38 @@ export const fr = {
     surtitre: "Notre méthode",
     titre: "De votre projet à votre rendez-vous, étape par étape.",
     etapes: [
-      { titre: "Analyse", texte: "Nous comprenons votre situation et votre projet." },
-      { titre: "Documents", texte: "Nous identifions les documents nécessaires à votre dossier." },
-      { titre: "Préparation", texte: "Nous vous aidons à préparer et organiser les pièces." },
-      { titre: "Vérification", texte: "Nous vérifions la cohérence et la complétude du dossier." },
       {
-        titre: "Formulaire & démarches",
-        texte: "Nous vous accompagnons dans les démarches nécessaires.",
+        titre: "Réception et diagnostic",
+        texte:
+          "Premier rendez-vous au centre : on vérifie votre éligibilité et on vous remet la liste des pièces à rapporter. Gratuit.",
       },
       {
-        titre: "Rendez-vous",
+        titre: "Dossier France-Visas",
         texte:
-          "Nous vous accompagnons jusqu'à la prise de votre rendez-vous au centre TLScontact (France) ou BLS (Espagne) à Agadir.",
+          "Nous créons votre dossier sur France-Visas à partir de vos réponses et éditons le récépissé (RCPC).",
+      },
+      {
+        titre: "Préparer le rendez-vous",
+        texte:
+          "Nous vous guidons dans la préparation du rendez-vous et vous orientons vers la plateforme officielle adaptée à votre demande. Les créneaux sont attribués selon les disponibilités du centre.",
+      },
+      {
+        titre: "Rassemblement des pièces",
+        texte: "Vous rassemblez vos justificatifs pour la date du rendez-vous.",
+      },
+      {
+        titre: "Vérification du dossier",
+        texte:
+          "Nous vérifions chaque document un par un, puis nous vous remettons le dossier scellé.",
+      },
+      {
+        titre: "Décision du consulat",
+        texte: "Le consulat statue : nous enregistrons l'approbation ou le motif du refus.",
       },
     ],
   },
   pourquoi: {
-    surtitre: "Pourquoi EIDEN Visa, votre agence de visa à Agadir ?",
+    surtitre: "Pourquoi choisir EIDEN Visa, prestataire indépendant à Agadir ?",
     titre: "Un accompagnement complet pour votre visa Schengen.",
     texte:
       "Nous simplifions vos démarches et vous accompagnons à chaque étape, avec une expertise dédiée et un suivi personnalisé.",
@@ -112,39 +129,36 @@ export const fr = {
     choisir: "Choisir ce pack",
     offres: [
       {
-        nom: "Pack Standard",
+        nom: "Pack Essentiel",
         texte: ["Pour un dossier simple", "et bien préparé."],
         alt: "Passeport posé sur des documents",
         inclus: [
-          "Préparation du dossier",
-          "Formulaire de visa Schengen",
-          "Prise de rendez-vous",
-          "Vérification des documents",
+          "Vérification et rassemblement du dossier",
+          "Formulaire France-Visas",
+          "Accompagnement aux démarches de rendez-vous",
+        ],
+      },
+      {
+        nom: "Pack Confort",
+        texte: ["Une préparation complète", "et des services adaptés."],
+        alt: "Valise de voyage en cuir",
+        inclus: [
+          "Vérification et rassemblement du dossier",
+          "Formulaire France-Visas",
+          "Accompagnement aux démarches de rendez-vous",
+          "Pré-réservation hôtel + billet d'avion",
         ],
       },
       {
         nom: "Pack Global",
-        texte: ["Une prise en charge totale", "et une tranquillité absolue."],
-        alt: "Valise de voyage en cuir",
-        inclus: [
-          "Préparation du dossier",
-          "Formulaire de visa Schengen",
-          "Prise de rendez-vous",
-          "Pré-réservation hôtel + billet d'avion",
-          "Assurance voyage",
-          "Vérification du dossier",
-        ],
-      },
-      {
-        nom: "Pack Essentiel",
-        texte: ["Un accompagnement complet", "jusqu'au rendez-vous."],
+        texte: ["Une préparation complète", "avec un accompagnement structuré."],
         alt: "Ville côtière marocaine au coucher du soleil",
         inclus: [
-          "Préparation du dossier",
-          "Formulaire de visa Schengen",
-          "Prise de rendez-vous",
+          "Vérification et rassemblement du dossier",
+          "Formulaire France-Visas",
+          "Accompagnement aux démarches de rendez-vous",
           "Pré-réservation hôtel + billet d'avion",
-          "Vérification du dossier",
+          "Assurance voyage",
         ],
       },
     ],
@@ -190,17 +204,17 @@ export const fr = {
       {
         question: "Comment obtenir un visa France depuis le Maroc ?",
         reponse:
-          "La procédure passe par France-Visas puis par le centre : remplir votre demande en ligne sur france-visas.gouv.fr, choisir un pack EIDEN Visa, prendre le rendez-vous au centre TLScontact d'Agadir (frais de rendez-vous inclus dans le pack), déposer le dossier et les pièces en main propre, puis suivre le traitement. Que ce soit une première demande ou un renouvellement de visa expiré, la demande se refait sur France-Visas avec prise d'empreintes au centre. Le visa court séjour est valable 90 jours sur une période de 180 jours, et sa date de validité court trois mois à compter de la délivrance. EIDEN Visa prépare et vérifie chaque démarche avec vous, de la demande jusqu'au suivi du dossier.",
+          "La demande de visa France commence sur France-Visas. Après avoir rempli le formulaire et obtenu sa référence, suivez les instructions officielles pour demander un rendez-vous auprès du centre indiqué. EIDEN Visa vous accompagne dans la préparation et la vérification de votre dossier et vous aide à comprendre les étapes. Le demandeur utilise la plateforme officielle pour consulter les créneaux et effectuer sa demande ; leur disponibilité dépend du centre. EIDEN Visa ne peut garantir une date de rendez-vous ni la délivrance du visa, qui relève des autorités consulaires.",
       },
       {
         question: "Quels documents pour un visa France (tourisme) ?",
         reponse:
-          "Pour un court séjour de tourisme, on compte généralement : passeport valide (3 mois après la date de retour), 2 photos d'identité, formulaire France-Visas imprimé et signé, justificatif de ressources (attestation de travail, de scolarité, ou relevés bancaires), attestation d'hébergement (hôtel ou attestation d'accueil), assurance voyage, et selon le motif un extrait d'acte de naissance ou un casier judiciaire. La liste définitive dépend du motif : nous la vérifions avec vous avant le dépôt.",
+          "Pour un court séjour de tourisme, on compte généralement : passeport valide (3 mois après la date de retour), 2 photos d'identité, formulaire France-Visas imprimé et signé, justificatif de ressources (attestation de travail, de scolarité, ou relevés bancaires), attestation d'hébergement (hôtel ou attestation d'accueil), assurance voyage, et selon le motif un extrait d'acte de naissance ou un casier judiciaire. La liste définitive dépend du motif : le premier diagnostic est gratuit et nous la vérifions avec vous avant le dépôt. La vérification complète et le rassemblement des pièces sont ensuite un service à part, inclus dans chaque pack.",
       },
       {
         question: "Combien coûte un visa France au Maroc ?",
         reponse:
-          "Nos tarifs de services dépendent du pack choisi (Standard, Essentiel, Global) et des options ajoutées : pré-réservation d'hôtel, billet d'avion, assurance voyage. Nos packs n'affichent pas de prix : la demande rapide en ligne vous fournit un devis. Les frais de visa se règlent ensuite au centre, en dirhams, et dépendent de la durée du séjour.",
+          "Nos tarifs dépendent du pack choisi (Essentiel, Confort, Global) et des services retenus : vérification et rassemblement du dossier, aide au formulaire, accompagnement dans la compréhension de la procédure officielle de rendez-vous, pré-réservation d'hôtel ou de billet d'avion et assurance voyage. Le diagnostic initial est gratuit. Nos packs n'affichent pas de prix : la demande rapide en ligne vous fournit un devis. Les éventuels frais officiels sont distincts des prestations EIDEN et se règlent selon les consignes des organismes compétents.",
       },
       {
         question: "Quel délai pour un visa France depuis le Maroc ?",
@@ -208,9 +222,9 @@ export const fr = {
           "Le délai de traitement dépend du consulat, du centre et de la période : comptez plusieurs semaines après le dépôt. Il n'est jamais garanti et varie fortement selon la saison. Nous vous transmettons le statut de votre dossier dès que le centre nous le communique.",
       },
       {
-        question: "Comment prendre rendez-vous chez TLScontact ?",
+        question: "Comment demander un rendez-vous pour un visa France ?",
         reponse:
-          "La prise de rendez-vous se fait en ligne sur le portail TLScontact, après avoir rempli votre formulaire France-Visas : le centre exige la référence de la demande pour ouvrir un créneau. Vérifiez la disponibilité des rendez-vous avant de vous déplacer. EIDEN Visa vous accompagne dans cette démarche, gère la prise du RDV dans le cadre du pack choisi (frais de rendez-vous inclus) et assure le suivi de votre dossier au centre.",
+          "Après avoir rempli votre formulaire France-Visas, suivez le lien officiel vers la plateforme indiquée pour votre demande. EIDEN Visa vous aide à préparer les éléments du dossier et à comprendre les étapes de la procédure. Le demandeur consulte les créneaux et effectue sa demande sur la plateforme officielle ; les disponibilités dépendent du centre. EIDEN Visa ne garantit ni rendez-vous ni délivrance de visa.",
       },
       {
         question: "Où se trouve le centre TLScontact d'Agadir ?",
@@ -223,9 +237,9 @@ export const fr = {
           "Un refus vient le plus souvent d'un dossier incomplet, d'une discordance entre les justificatifs et le formulaire, ou d'un document manquant. Le motif du refus figure sur la décision : un recours est possible dans les délais indiqués, et un nouveau dossier peut être déposé ensuite. Nous analysons le motif du refus avec vous et préparons la suite.",
       },
       {
-        question: "EIDEN Visa est-elle une agence de visa à Agadir ?",
+        question: "Quel accompagnement visa EIDEN propose-t-elle à Agadir ?",
         reponse:
-          "Oui. EIDEN Visa est une agence de visa à Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre. Le centre TLScontact d'Agadir couvre Agadir et le sud du Maroc ; pour Casablanca, Rabat, Tanger, Fès ou Marrakech, un autre centre TLScontact existe au Maroc, nous vous indiquons celui qui correspond à votre ville. Tous les motifs sont pris en charge : visa tourisme, visa affaires, visa étudiant, visa travail, visa famille, visa long séjour et visa pour mineur.",
+          "EIDEN Visa est un prestataire privé indépendant situé à Agadir Bay, Technopole 1. Nous proposons un diagnostic initial gratuit, la vérification et la préparation administrative de pièces et une orientation vers les démarches officielles correspondant à votre demande. Pour la France, consultez France-Visas et le centre indiqué, notamment TLScontact selon votre lieu de résidence ; pour l'Espagne, suivez les consignes du consulat compétent et le portail BLS auquel il renvoie. Le demandeur effectue lui-même les démarches officielles. EIDEN Visa n'est affiliée ni aux autorités consulaires, ni à TLScontact, ni à BLS et ne garantit ni rendez-vous ni visa.",
       },
     ],
   },
@@ -417,9 +431,9 @@ export const fr = {
     precedent: "Retour",
     suivant: "Continuer",
     envoyer: "Envoyer ma demande",
-    succesTitre: "Demande prête !",
+    succesTitre: "Demande envoyée !",
     succesTexte:
-      "Votre message WhatsApp est prêt : envoyez-le et l'équipe EIDEN reçoit votre demande.",
+      "Votre demande a été envoyée. Un e-mail de confirmation vous a été adressé ; vous pouvez aussi poursuivre sur WhatsApp.",
     ouvrirWhatsapp: "Ouvrir WhatsApp",
     nouvelle: "Fermer",
     confidentialite: "Vos informations servent uniquement à traiter votre demande.",
@@ -436,7 +450,7 @@ export const fr = {
     contact: "Nous contacter",
     script: ["De nouveaux", "horizons vous", "attendent !"],
   },
-  // Coordonnées de l'agence : barre du haut et pied de page (numéro, e-mail, lien de la
+  // Coordonnées du centre : barre du haut et pied de page (numéro, e-mail, lien de la
   // carte : `CONTACT` dans content.ts).
   infos: {
     titre: "Informations pratiques",
@@ -462,8 +476,17 @@ export const fr = {
     cookies: "Cookies",
     securite: "Sécurité",
     gererCookies: "Gérer mes cookies",
+    pagesUtiles: "Pages utiles",
+    pages: [
+      { href: "/visa-france-maroc/", nom: "Visa France depuis le Maroc" },
+      { href: "/visa-agadir/", nom: "Visa France à Agadir" },
+      { href: "/documents-visa-france/", nom: "Documents pour un visa France" },
+      { href: "/rendez-vous-tlscontact-agadir/", nom: "Guide des rendez-vous pour un visa France" },
+      { href: "/prix-visa-france/", nom: "Prix d'un visa France" },
+      { href: "/delai-visa-france/", nom: "Délai de traitement d'un visa France" },
+    ],
   },
-  // Bandeau de consentement cookies (voir `src/lib/suivi.ts` + page `/cookies.html`).
+  // Bandeau de consentement cookies (voir `src/lib/suivi.ts` + page `/cookies`).
   bandeauCookies: {
     titre: "Nous respectons votre vie privée",
     texte:

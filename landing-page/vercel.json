@@ -1,5 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/rendez-vous-tlscontact-bls-agadir-2026/",
+      "destination": "/blog/rendez-vous-tlscontact-bls-agadir-2026/",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    { "source": "/blog", "destination": "/index.html" },
+    { "source": "/blog/:slug", "destination": "/index.html" },
+    { "source": "/contact", "destination": "/index.html" },
+    { "source": "/conditions", "destination": "/index.html" },
+    { "source": "/confidentialite", "destination": "/index.html" },
+    { "source": "/cookies", "destination": "/index.html" },
+    { "source": "/securite", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/images/(.*)",

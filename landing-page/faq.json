@@ -4,7 +4,7 @@
     "name": "Comment obtenir un visa France depuis le Maroc ?",
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": "La procédure passe par France-Visas puis par le centre : remplir votre demande en ligne sur france-visas.gouv.fr, choisir un pack EIDEN Visa, prendre le rendez-vous au centre TLScontact d'Agadir (frais de rendez-vous inclus dans le pack), déposer le dossier et les pièces en main propre, puis suivre le traitement. Que ce soit une première demande ou un renouvellement de visa expiré, la demande se refait sur France-Visas avec prise d'empreintes au centre. Le visa court séjour est valable 90 jours sur une période de 180 jours, et sa date de validité court trois mois à compter de la délivrance. EIDEN Visa prépare et vérifie chaque démarche avec vous, de la demande jusqu'au suivi du dossier."
+      "text": "La demande de visa France commence sur France-Visas. Après avoir rempli le formulaire et obtenu sa référence, suivez les instructions officielles pour demander un rendez-vous auprès du centre indiqué. EIDEN Visa vous accompagne dans la préparation et la vérification de votre dossier et vous aide à comprendre les étapes. Le demandeur utilise la plateforme officielle pour consulter les créneaux et effectuer sa demande ; leur disponibilité dépend du centre. EIDEN Visa ne peut garantir une date de rendez-vous ni la délivrance du visa, qui relève des autorités consulaires."
     }
   },
   {
@@ -12,7 +12,7 @@
     "name": "Quels documents pour un visa France (tourisme) ?",
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Pour un court séjour de tourisme, on compte généralement : passeport valide (3 mois après la date de retour), 2 photos d'identité, formulaire France-Visas imprimé et signé, justificatif de ressources (attestation de travail, de scolarité, ou relevés bancaires), attestation d'hébergement (hôtel ou attestation d'accueil), assurance voyage, et selon le motif un extrait d'acte de naissance ou un casier judiciaire. La liste définitive dépend du motif : nous la vérifions avec vous avant le dépôt."
+      "text": "Pour un court séjour de tourisme, on compte généralement : passeport valide (3 mois après la date de retour), 2 photos d'identité, formulaire France-Visas imprimé et signé, justificatif de ressources (attestation de travail, de scolarité, ou relevés bancaires), attestation d'hébergement (hôtel ou attestation d'accueil), assurance voyage, et selon le motif un extrait d'acte de naissance ou un casier judiciaire. La liste définitive dépend du motif : le premier diagnostic est gratuit et nous la vérifions avec vous avant le dépôt. La vérification complète et le rassemblement des pièces sont ensuite un service à part, inclus dans chaque pack."
     }
   },
   {
@@ -20,7 +20,7 @@
     "name": "Combien coûte un visa France au Maroc ?",
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Nos tarifs de services dépendent du pack choisi (Standard, Essentiel, Global) et des options ajoutées : pré-réservation d'hôtel, billet d'avion, assurance voyage. Nos packs n'affichent pas de prix : la demande rapide en ligne vous fournit un devis. Les frais de visa se règlent ensuite au centre, en dirhams, et dépendent de la durée du séjour."
+      "text": "Nos tarifs dépendent du pack choisi (Essentiel, Confort, Global) et des services retenus : vérification et rassemblement du dossier, aide au formulaire, accompagnement dans la compréhension de la procédure officielle de rendez-vous, pré-réservation d'hôtel ou de billet d'avion et assurance voyage. Le diagnostic initial est gratuit. Nos packs n'affichent pas de prix : la demande rapide en ligne vous fournit un devis. Les éventuels frais officiels sont distincts des prestations EIDEN et se règlent selon les consignes des organismes compétents."
     }
   },
   {
@@ -33,10 +33,10 @@
   },
   {
     "@type": "Question",
-    "name": "Comment prendre rendez-vous chez TLScontact ?",
+    "name": "Comment demander un rendez-vous pour un visa France ?",
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": "La prise de rendez-vous se fait en ligne sur le portail TLScontact, après avoir rempli votre formulaire France-Visas : le centre exige la référence de la demande pour ouvrir un créneau. Vérifiez la disponibilité des rendez-vous avant de vous déplacer. EIDEN Visa vous accompagne dans cette démarche, gère la prise du RDV dans le cadre du pack choisi (frais de rendez-vous inclus) et assure le suivi de votre dossier au centre."
+      "text": "Après avoir rempli votre formulaire France-Visas, suivez le lien officiel vers la plateforme indiquée pour votre demande. EIDEN Visa vous aide à préparer les éléments du dossier et à comprendre les étapes de la procédure. Le demandeur consulte les créneaux et effectue sa demande sur la plateforme officielle ; les disponibilités dépendent du centre. EIDEN Visa ne garantit ni rendez-vous ni délivrance de visa."
     }
   },
   {
@@ -57,10 +57,10 @@
   },
   {
     "@type": "Question",
-    "name": "EIDEN Visa est-elle une agence de visa à Agadir ?",
+    "name": "Quel accompagnement visa EIDEN propose-t-elle à Agadir ?",
     "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Oui. EIDEN Visa est une agence de visa à Agadir (Agadir Bay, Technopole 1) qui accompagne les voyageurs du Maroc dans leur dossier de visa Schengen : étude du dossier, pièces justificatives, formulaire France-Visas et prise du rendez-vous au centre. Le centre TLScontact d'Agadir couvre Agadir et le sud du Maroc ; pour Casablanca, Rabat, Tanger, Fès ou Marrakech, un autre centre TLScontact existe au Maroc, nous vous indiquons celui qui correspond à votre ville. Tous les motifs sont pris en charge : visa tourisme, visa affaires, visa étudiant, visa travail, visa famille, visa long séjour et visa pour mineur."
+      "text": "EIDEN Visa est un prestataire privé indépendant situé à Agadir Bay, Technopole 1. Nous proposons un diagnostic initial gratuit, la vérification et la préparation administrative de pièces et une orientation vers les démarches officielles correspondant à votre demande. Pour la France, consultez France-Visas et le centre indiqué, notamment TLScontact selon votre lieu de résidence ; pour l'Espagne, suivez les consignes du consulat compétent et le portail BLS auquel il renvoie. Le demandeur effectue lui-même les démarches officielles. EIDEN Visa n'est affiliée ni aux autorités consulaires, ni à TLScontact, ni à BLS et ne garantit ni rendez-vous ni visa."
     }
   }
 ]

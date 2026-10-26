@@ -1,5 +1,6 @@
+﻿import { Suspense, lazy, useEffect, useState } from "react";
 import { MotionConfig } from "framer-motion";
-import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { BandeauCookies } from "./components/BandeauCookies";
 import { DemandeRapide } from "./components/DemandeRapide";
 import { Loader } from "./components/Loader";
@@ -20,32 +21,48 @@ import { Methode } from "./sections/Methode";
 import { Packs } from "./sections/Packs";
 import { Pourquoi } from "./sections/Pourquoi";
 import { Temoignages } from "./sections/Temoignages";
+
+const BlogPage = lazy(() => import("./pages/BlogPage").then((m) => ({ default: m.BlogPage })));
+const ContactPage = lazy(() => import("./pages/ContactPage").then((m) => ({ default: m.ContactPage })));
+const ConditionsPage = lazy(() => import("./pages/ConditionsPage").then((m) => ({ default: m.ConditionsPage })));
+const ConfidentialitePage = lazy(() => import("./pages/ConfidentialitePage").then((m) => ({ default: m.ConfidentialitePage })));
+const CookiesPage = lazy(() => import("./pages/CookiesPage").then((m) => ({ default: m.CookiesPage })));
+const SecuritePage = lazy(() => import("./pages/SecuritePage").then((m) => ({ default: m.SecuritePage })));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
+const ServerErrorPage = lazy(() => import("./pages/ServerErrorPage").then((m) => ({ default: m.ServerErrorPage })));
+const ArticleDossierVisaSchengenMarocReleveBancaire = lazy(() => import("./pages/ArticleDossierVisaSchengenMarocReleveBancaire").then((m) => ({ default: m.ArticleDossierVisaSchengenMarocReleveBancaire })));
+const ArticleRefusVisaSchengenMarocMotifsRecours = lazy(() => import("./pages/ArticleRefusVisaSchengenMarocMotifsRecours").then((m) => ({ default: m.ArticleRefusVisaSchengenMarocMotifsRecours })));
+const ArticleRecruterSalarieMarocainAutorisationTravail = lazy(() => import("./pages/ArticleRecruterSalarieMarocainAutorisationTravail").then((m) => ({ default: m.ArticleRecruterSalarieMarocainAutorisationTravail })));
+const ArticleRendezVousTlscontactBlsAgadir2026 = lazy(() => import("./pages/ArticleRendezVousTlscontactBlsAgadir2026").then((m) => ({ default: m.ArticleRendezVousTlscontactBlsAgadir2026 })));
+
 export function App() {
   const { langue, t } = useLangue();
-  // attente : loader seul · vol : landing montée sous le rideau, l'avion passe · fini.
   const [intro, setIntro] = useState<"attente" | "vol" | "fini">(() => {
     if (!prefersReducedMotion()) return "attente";
     lancerIntro();
     return "fini";
   });
 
-  // Suivi consenti (GTM/GA4/Clarity/Bing) : dormant sans acceptation cookies.
+  useEffect(() => {
+    if (intro === "fini") document.getElementById("eiden-seo")?.remove();
+  }, [intro]);
+
+  useEffect(() => {
+    const classe = "intro-en-cours";
+    if (intro === "fini") document.documentElement.classList.remove(classe);
+    else document.documentElement.classList.add(classe);
+    return () => document.documentElement.classList.remove(classe);
+  }, [intro]);
+
   useEffect(() => {
     initialiserSuivi();
   }, []);
 
-  // Nouvelle langue (ou fin du loader) = nouvelles hauteurs : on recale les déclencheurs GSAP.
+  const [montrerScrollTop, setMontrerScrollTop] = useState(false);
   useEffect(() => {
-    const raf = requestAnimationFrame(() => ScrollTrigger.refresh());
-    return () => cancelAnimationFrame(raf);
-  }, [langue, intro]);
-
-  // Barre de défilement de la page : masquée (styles.css) jusqu'au premier défilement
-  // après le loader.
-  useEffect(() => {
-    if (intro !== "fini") return;
-    const montrer = () => document.documentElement.classList.add("scroll-vu");
-    window.addEventListener("scroll", montrer, { once: true, passive: true });
+    const montrer = () => setMontrerScrollTop(window.scrollY > 600);
+    window.addEventListener("scroll", montrer);
+    montrer();
     return () => window.removeEventListener("scroll", montrer);
   }, [intro]);
 
@@ -55,35 +72,53 @@ export function App() {
         {intro !== "fini" && (
           <Loader onReady={() => setIntro("vol")} onDone={() => setIntro("fini")} />
         )}
-        {/* Demande rapide : badges + popup, ouverte par les CTA ; hors de <main>, son état
-            survit au changement de langue. */}
-        {intro !== "attente" && (
-          <DemandeRapide>
-            <a
-              href="#contenu"
-              className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[80] focus:rounded-xl focus:bg-ink focus:px-4 focus:py-2 focus:text-[14px] focus:font-bold focus:text-white"
-            >
-              {t.allerContenu}
-            </a>
-            <Header />
-            {/* Remonté à chaque changement de langue : SplitText redécoupe les nouveaux textes. */}
-            <main key={langue} id="contenu" className="filigrane-rond relative overflow-x-clip">
-              <SuiviSections />
-              <Hero />
-              <Destination />
-              <Methode />
-              <Pourquoi />
-              <Packs />
-              <Temoignages />
-              <Faq />
-              <Cta />
-            </main>
-            <Footer />
-          </DemandeRapide>
-        )}
-        {/* Bandeau cookies après le loader pour ne pas le recouvrir. */}
+        <DemandeRapide>
+          <a
+            href="#contenu"
+            className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[80] focus:rounded-xl focus:bg-ink focus:px-4 focus:text-[14px] focus:font-bold focus:text-white"
+          >
+            {t.allerContenu}
+          </a>
+          <Header />
+          <Suspense fallback={<div className="min-h-[60vh]" />}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <main key={langue} id="contenu" className="filigrane-rond relative overflow-x-clip">
+                    <SuiviSections />
+                    <Hero />
+                    <Destination />
+                    <Methode />
+                    <Pourquoi />
+                    <Packs />
+                    <Temoignages />
+                    <Faq />
+                    <Cta />
+                  </main>
+                }
+              />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/dossier-visa-schengen-maroc-releve-bancaire" element={<ArticleDossierVisaSchengenMarocReleveBancaire />} />
+              <Route path="/blog/dossier-visa-schengen-maroc-releve-bancaire/" element={<ArticleDossierVisaSchengenMarocReleveBancaire />} />
+              <Route path="/blog/refus-visa-schengen-maroc-motifs-recours" element={<ArticleRefusVisaSchengenMarocMotifsRecours />} />
+              <Route path="/blog/refus-visa-schengen-maroc-motifs-recours/" element={<ArticleRefusVisaSchengenMarocMotifsRecours />} />
+              <Route path="/blog/recruter-salarie-marocain-autorisation-travail" element={<ArticleRecruterSalarieMarocainAutorisationTravail />} />
+              <Route path="/blog/recruter-salarie-marocain-autorisation-travail/" element={<ArticleRecruterSalarieMarocainAutorisationTravail />} />
+              <Route path="/blog/rendez-vous-tlscontact-bls-agadir-2026" element={<ArticleRendezVousTlscontactBlsAgadir2026 />} />
+              <Route path="/blog/rendez-vous-tlscontact-bls-agadir-2026/" element={<ArticleRendezVousTlscontactBlsAgadir2026 />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/conditions" element={<ConditionsPage />} />
+              <Route path="/confidentialite" element={<ConfidentialitePage />} />
+              <Route path="/cookies" element={<CookiesPage />} />
+              <Route path="/securite" element={<SecuritePage />} />
+              <Route path="/500" element={<ServerErrorPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+          <Footer />
+        </DemandeRapide>
         {intro === "fini" && <BandeauCookies />}
-        {/* Modale de préférences : ouverte depuis le bandeau ou le pied de page. */}
         <PreferencesCookies />
       </SmoothScroll>
     </MotionConfig>

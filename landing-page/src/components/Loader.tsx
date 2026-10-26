@@ -44,6 +44,8 @@ export function Loader({ onReady, onDone }: Props) {
   // Pendant l'attente : le ciel se pose doucement et la marque apparaît.
   useGSAP(
     () => {
+      // Le ciel monte en fondu sur le contenu servi (premier paint) : pas de saut.
+      gsap.fromTo(root.current, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" });
       gsap.fromTo("[data-ciel]", { scale: 1.14 }, { scale: 1, duration: 3.4, ease: "power2.out" });
       gsap.from("[data-marque] > *", {
         y: 26,
@@ -149,9 +151,24 @@ export function Loader({ onReady, onDone }: Props) {
         if (!annule) voler();
       });
 
+    // Intro interruptible : un clic ou une touche libere la page tout de suite
+    // (le contenu est deja en place, l'animation n'est plus necessaire).
+    const terminer = () => {
+      if (annule) return;
+      annule = true;
+      vol?.kill();
+      lancerIntro();
+      rappels.current.lenis?.start();
+      rappels.current.onDone();
+    };
+    window.addEventListener("pointerdown", terminer, { once: true, passive: true });
+    window.addEventListener("keydown", terminer, { once: true });
+
     return () => {
       annule = true;
       vol?.kill();
+      window.removeEventListener("pointerdown", terminer);
+      window.removeEventListener("keydown", terminer);
     };
   }, []);
 

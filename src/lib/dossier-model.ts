@@ -19,7 +19,7 @@ export const ETAPES = [
     key: "reception",
     label: "Réception et diagnostic",
     detail:
-      "Le client est reçu en agence. La réception explique le service, vérifie l'éligibilité de base, fait signer la clause de non-garantie et remet le reçu listant les pièces à rapporter.",
+      "Le client est reçu au centre. La réception explique le service, vérifie l'éligibilité de base, fait signer la clause de non-garantie et remet le reçu listant les pièces à rapporter.",
     encaissement: "Gratuit",
     role: "Réception",
   },
@@ -390,7 +390,7 @@ export interface Dossier {
      * indécises côté client). */
     voyageDebut: string | null;
     voyageFin: string | null;
-    /** Passeport - `null` tant que la pièce n'est pas passée entre les mains de l'agence. */
+    /** Passeport - `null` tant que la pièce n'est pas passée entre les mains du centre. */
     passeportNumero: string | null;
     passeportDelivrance: string | null;
     passeportExpiration: string | null;

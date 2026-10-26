@@ -4,7 +4,7 @@
 // catégorie). Sans identifiants (`VITE_*` vides), tout est dormant : les événements
 // partent dans `window.dataLayer` (file d'attente que GTM lira le jour où il est branché).
 //
-// Catégories (voir `PreferencesCookies` + page `/cookies.html`) :
+// Catégories (voir `PreferencesCookies` + page `/cookies`) :
 //   statistiques → analytics_storage → GA4 (via GTM si configuré, sinon direct)
 //   experience   → functionality_storage → Microsoft Clarity (heatmaps + replays)
 //   marketing    → ad_storage + ad_user_data + ad_personalization → Bing UET
@@ -592,7 +592,7 @@ function installerEcouteClics(): void {
 
 function enregistrerPreferences(prefs: Preferences): void {
   try {
-    // Durée de vie documentée dans `cookies.html` : 12 mois.
+    // Durée de vie documentée dans la page `/cookies` : 12 mois.
     localStorage.setItem(
       CLE_CONSENTEMENT,
       JSON.stringify({ version: 2, ...prefs, date: new Date().toISOString() }),

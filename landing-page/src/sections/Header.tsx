@@ -8,7 +8,7 @@ import { useDemande } from "../components/DemandeRapide";
 import { Logo } from "../components/decor";
 import { EASE_OUT } from "../components/motion";
 import { useIntroPrete } from "../lib/intro";
-import { LIENS, NAV } from "../content";
+import { LIENS, NAV, NAV_LIENS } from "../content";
 import { LANGUES, useLangue } from "../i18n";
 import { Topbar } from "./Topbar";
 
@@ -168,6 +168,7 @@ function MenuMobile({
           {t.header.menu}
         </motion.p>
         <ul className="mt-3">
+          {" "}
           {NAV.map((id, i) => {
             const courant = active === id;
             return (
@@ -216,9 +217,23 @@ function MenuMobile({
                 </a>
               </li>
             );
-          })}
+          })}{" "}
         </ul>
-
+        <ul className="mt-2">
+          {NAV_LIENS.map((l) => (
+            <li key={l.id} className="border-b border-line/50">
+              <a
+                href={l.href}
+                onClick={fermer}
+                className="group flex items-center gap-4 py-3.5 outline-none focus-visible:bg-ink/[0.04] sm:py-4"
+              >
+                <span className="font-serif text-[25px] leading-[1.08] text-ink-soft/70 group-hover:text-ink">
+                  {t.nav[l.id] ?? (langue === "ar" ? l.nom_ar : l.nom_fr)}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -391,6 +406,7 @@ export function Header() {
 
         <nav aria-label={t.header.navigation} className="hidden justify-center xl:flex">
           <ul className="flex items-center gap-9 xl:gap-11">
+            {" "}
             {NAV.map((id) => {
               const courant = active === id;
               return (
@@ -414,6 +430,16 @@ export function Header() {
                 </li>
               );
             })}
+            {NAV_LIENS.map((l) => (
+              <li key={l.id}>
+                <a
+                  href={l.href}
+                  className="relative block py-2 text-[14px] transition-colors font-semibold text-ink-soft/80 hover:text-ink"
+                >
+                  {t.nav[l.id] ?? (langue === "ar" ? l.nom_ar : l.nom_fr)}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
 

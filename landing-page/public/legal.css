@@ -246,7 +246,7 @@ button:focus-visible {
   height: 44px;
   padding-inline: 1.25rem;
   border-radius: 999px;
-  background: #fff;
+  background: var(--cream);
   color: var(--ink);
   font-size: 14px;
   font-weight: 600;
@@ -440,6 +440,16 @@ strong {
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
+/* Titre sans numéro (chapô, questions, autres pages) : pas de colonne de
+   numéro, le titre occupe toute la largeur. */
+.card > h2.sans-num {
+  display: block;
+}
+/* Blog sections have editorial headings, not numbered legal clauses. The
+   generated empty first grid column made plain heading text wrap one word per line. */
+main.blog-article > .card > h2 {
+  display: block;
+}
 .card > h2 .num {
   color: var(--brand);
   font-size: 15px;
@@ -621,21 +631,53 @@ td:first-child {
   }
 }
 
-/* ---------- Pied de page : ligne juridique du Footer de la landing ---------- */
+/* ---------- Pied de page : informations et liens comme le Footer ---------- */
 footer {
-  padding: 16px var(--gouttiere) 14px;
+  width: 100%;
+  max-width: none;
+  margin-top: auto;
+  padding: 20px max(var(--gouttiere), calc((100vw - 1380px) / 2 + var(--gouttiere))) 16px;
   background: var(--ink);
-  color: rgb(255 255 255 / 0.55);
-  font-size: 11.5px;
+  color: rgb(255 255 255 / 0.85);
+  font-size: 12.5px;
   font-weight: 500;
   line-height: 18px;
-  text-align: center;
+}
+.footer-infos {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.footer-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.75rem;
+}
+.footer-info-link,
+.footer-social-link {
+  color: inherit;
+  text-decoration: none;
+}
+.footer-info-link:hover,
+.footer-social-link:hover {
+  color: #fff;
+}
+.footer-divider {
+  height: 1px;
+  margin-top: 0.9rem;
+  background: rgb(255 255 255 / 0.1);
 }
 footer nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 4px 16px;
+  margin-top: 0.65rem;
 }
 footer nav a {
   color: rgb(255 255 255 / 0.65);
@@ -650,9 +692,35 @@ footer nav a:focus-visible {
 }
 footer .droits {
   margin: 8px 0 0;
-  color: inherit;
+  color: rgb(255 255 255 / 0.55);
   font-size: 11px;
   line-height: 16px;
+  text-align: center;
+}
+footer .footer-groupe {
+  margin: 4px 0 0;
+  color: rgb(255 255 255 / 0.45);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+}
+footer .footer-groupe a {
+  color: inherit;
+}
+@media (min-width: 640px) {
+  .footer-infos {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .footer-contact-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+@media (min-width: 1280px) {
+  .footer-right {
+    align-items: flex-end;
+  }
 }
 
 /* Barre de défilement de la page aux couleurs de la landing. */
@@ -751,5 +819,151 @@ footer .droits {
     inset-inline-end: -70px;
     width: 180px;
     opacity: 0.35;
+  }
+}
+
+/* Blog article details and Arabic summaries */
+.faq details { padding: 0.85rem 1rem; border-top: 1px solid var(--line); }
+.faq summary { color: var(--ink); cursor: pointer; font-family: var(--serif); font-size: 1.05rem; }
+.arabic-summary { direction: rtl; text-align: right; font-family: "Amiri", "Noto Naskh Arabic", serif; line-height: 1.95; }
+.arabic-summary h2 { text-align: right; }
+
+/* Bilingual, lightweight 404 page. */
+.notfound-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  justify-content: center;
+  overflow-x: hidden;
+  background: var(--cream);
+}
+.notfound-page::before {
+  display: none;
+}
+.notfound-content {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  max-width: 920px;
+  padding-block: clamp(1.5rem, 6vh, 4rem);
+  text-align: center;
+}
+.notfound-illustration {
+  position: relative;
+  display: grid;
+  width: min(100%, 720px);
+  min-height: clamp(170px, 36vh, 330px);
+  place-items: center;
+  isolation: isolate;
+}
+.notfound-illustration::before {
+  position: absolute;
+  z-index: -1;
+  inset: 24% -8% 2%;
+  content: "";
+  background:
+    radial-gradient(ellipse at 15% 60%, rgb(249 231 228 / 0.9) 0 10%, transparent 30%),
+    radial-gradient(ellipse at 32% 72%, rgb(244 236 229 / 0.95) 0 15%, transparent 34%),
+    radial-gradient(ellipse at 52% 60%, rgb(249 231 228 / 0.95) 0 16%, transparent 36%),
+    radial-gradient(ellipse at 76% 68%, rgb(244 236 229 / 0.9) 0 17%, transparent 38%),
+    radial-gradient(ellipse at 92% 54%, rgb(249 231 228 / 0.9) 0 12%, transparent 32%);
+  filter: blur(9px);
+}
+.notfound-illustration span {
+  background: linear-gradient(180deg, var(--brand) 8%, var(--brand-dark) 65%, #e8bfc2 100%);
+  background-clip: text;
+  color: transparent;
+  font-family: var(--sans);
+  font-size: clamp(8rem, 28vw, 16rem);
+  font-weight: 700;
+  letter-spacing: -0.075em;
+  line-height: 0.9;
+}
+.notfound-copy {
+  max-width: 42rem;
+  padding-inline: 1rem;
+}
+.notfound-kicker {
+  margin: 0 0 0.6rem;
+  color: var(--brand);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+.notfound-copy h1,
+.notfound-copy h2 {
+  max-width: none;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.notfound-copy > p:not(.notfound-kicker) {
+  margin: 0.65rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.notfound-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+.notfound-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.notfound-primary {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+.notfound-primary:hover {
+  border-color: var(--brand-dark);
+  background: var(--brand-dark);
+  color: #fff;
+}
+.notfound-secondary {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}
+.notfound-secondary:hover {
+  border-color: var(--brand);
+  background: var(--blush);
+  color: var(--ink);
+}
+.notfound-ar {
+  margin-top: 2.5rem;
+  font-family: "Amiri", "Noto Naskh Arabic", var(--sans), sans-serif;
+}
+.notfound-ar .notfound-kicker {
+  letter-spacing: 0.04em;
+}
+.notfound-ar h2 {
+  font-family: inherit;
+}
+@media (max-width: 560px) {
+  .notfound-illustration {
+    min-height: 185px;
+  }
+  .notfound-ar {
+    margin-top: 2rem;
+  }
+  .notfound-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

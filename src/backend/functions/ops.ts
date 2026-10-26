@@ -1,4 +1,4 @@
-import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
+﻿import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { eq, desc, sql, count as sqlCount } from "drizzle-orm";
@@ -122,7 +122,7 @@ export const listActivity = createServerFn({ method: "GET" }).handler(async () =
 });
 
 /**
- * Tableau analytique complet pour /ops (CEO uniquement) : tout l'état de l'agence
+ * Tableau analytique complet pour /ops (CEO uniquement) : tout l'état du centre
  * en une lecture - répartitions, tendances, et production par rôle et par agent.
  *
  * TOUT tient en UNE seule requête (CTEs + json_agg) : la base passe par le pooler

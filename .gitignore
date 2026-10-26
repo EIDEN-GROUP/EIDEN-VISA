@@ -35,3 +35,6 @@ dist-ssr
 *.sln
 *.sw?
 .env*.local
+
+# Artifacts Playwright (captures d'ecran, journaux de navigateur)
+.playwright-mcp/

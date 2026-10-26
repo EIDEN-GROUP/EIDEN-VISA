@@ -37,7 +37,7 @@ function Dashboard() {
         <div>
           <h1 className="page-title">Tableau de bord</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Vue d'ensemble des dossiers Eiden Visa, agence Agadir.
+            Vue d'ensemble des dossiers Eiden Visa, centre Agadir.
           </p>
         </div>
         <DateRangeFilter value={range} onChange={setRange} />

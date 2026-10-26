@@ -1,4 +1,4 @@
-import { pgTable, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
+﻿import { pgTable, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
 import type {
   Piece,
   Paiement,
@@ -65,7 +65,7 @@ export const dossiers = pgTable("dossiers", {
   // le client ne les connaît pas toujours au moment de l'ouverture du dossier.
   clientVoyageDebut: text("client_voyage_debut"),
   clientVoyageFin: text("client_voyage_fin"),
-  // Passeport - saisi quand la pièce passe entre les mains de l'agence, d'où le nullable.
+  // Passeport - saisi quand la pièce passe entre les mains du centre, d'où le nullable.
   clientPasseportNumero: text("client_passeport_numero"),
   clientPasseportDelivrance: text("client_passeport_delivrance"),
   clientPasseportExpiration: text("client_passeport_expiration"),
@@ -91,9 +91,10 @@ export const dossiers = pgTable("dossiers", {
   pack: text("pack").$type<FormuleKey>().notNull().default("base"),
   services: jsonb("services").$type<ServiceKey[]>().notNull().default([]),
   modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
-  etape: integer("etape").notNull().default(1),
-  // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS). Eiden ne prend
-  // pas le rendez-vous : c'est juste l'orientation du dossier. Colonne DB : `rdv_centre` (historique).
+  etape: integer("etape").notNull().default(1), // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS) : c'est
+  // l'orientation du dossier. La prise du rendez-vous elle-même est faite par le
+  // back-office (étape 3 du parcours, service `formulaire_rdv`, frais inclus dans le pack).
+  // Colonne DB : `rdv_centre` (historique).
   centre: text("rdv_centre").$type<Centre>().notNull(),
   // Le service ne peut téléverser des documents qu'une fois le dossier autorisé (CEO/Réception).
   uploadAutorise: boolean("upload_autorise").notNull().default(false),
