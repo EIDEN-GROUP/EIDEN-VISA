@@ -160,8 +160,9 @@ then redeploy.
   (valider après chaque retouche : https://search.google.com/test/rich-results et
   https://validator.schema.org). **La FAQ du JSON-LD est générée au build** : `faq.json` est l'unique source, le plugin
   `eiden-faq-jsonld` (`vite.config.ts`) réécrit le bloc `#faq-jsonld` à chaque build ET
-  **fait échouer le build** si `faq.json` et les questions visibles (`src/i18n/fr.ts`) divergent
-  (sinon Google ignore le résultat enrichi). Le même bloc alimente le **texte servi** dans
+  **fait échouer le build** si `faq.json` et les questions visibles (`src/i18n/fr.ts`) divergent.
+  Le balisage décrit les questions affichées mais ne garantit pas de résultat enrichi ; Google
+  limite les résultats FAQ visibles aux sites gouvernementaux et de santé reconnus. Le même bloc alimente le **texte servi** dans
   `index.html` (`<!--FAQ-CONTENU-->`) : les crawlers sans JavaScript et les assistants IA
   trouvent donc les 8 questions/réponses retenues. `faq.json` se régénère depuis
   `src/i18n/fr.ts`.
@@ -174,18 +175,15 @@ then redeploy.
   correspondants ; ils ne sont pas répétés dans les métadonnées globales. Pas de balise
   `meta keywords` ni de liste de requêtes sur la page d'accueil. **JSON-LD** : `Organization`, `WebSite`, `ProfessionalService`, `Service`
   (+ `OfferCatalog` sans prix affiché), `BreadcrumbList`, `HowTo` (3 étapes de la
-  demande rapide), `FAQPage`, `WebPage`, `Brand`, `SocialMediaProfile` - pas
+  demande rapide), `FAQPage`, `WebPage`, `Brand` - pas
   d'`AggregateRating`, pas de prix en clair. **Signaux d'entité (requêtes de marque
-  « eiden visa »)** : `sameAs` (groupe EIDEN GROUP, Instagram, WhatsApp, fiche Google
-  Maps) + lien visible vers l'Instagram au pied de page (le profil Instagram alimente le
-  knowledge panel Google) ;
-  `identifier` (ICE / RC / forme juridique), `hasMap`, `brand`, `slogan`,
-  `parentOrganization` (EIDEN GROUP), `alternateName` élargi (Eiden Visa, EIDEN Visa Agadir,
-  visa eiden agadir...) et `knowsAbout` (13 sujets). **Le site vitrine est rattaché à
-  `https://www.eiden-group.com/`** (site du groupe, qui ne mentionne pas la landing) : sans
-  ce lien, une recherche « eiden visa » est attribuée au site du groupe plutôt qu'à la
-  landing. Côté visible, le pied de page affiche « Une marque du groupe EIDEN GROUP » avec le
-  lien.
+  « eiden visa »)** : `sameAs` ne référence que le profil Instagram officiel ; WhatsApp reste
+  un canal de contact et `hasMap` ouvre une recherche d’adresse, pas une fiche Google Business
+  Profile. `identifier` (ICE / RC / forme juridique), `brand`, `slogan` et `parentOrganization`
+  décrivent les relations déclarées. Les sujets `knowsAbout` sont formulés comme compétences
+  réelles, sans noms de marque transformés en mots-clés. Le pied de page indique le lien avec
+  EIDEN GROUP. Ces données aident à décrire l’entité ; elles ne garantissent ni knowledge panel
+  ni affichage particulier dans Google.
   **Nom de site affiché par Google** (le libellé au-dessus de l'URL dans le résultat) :
   il doit être **« EIDEN Visa »**, pas « eiden group ». Google le déduit de l'entité du
   sous-domaine : `WebSite.name` = **la marque seule** (un nom long est tronqué),
@@ -325,11 +323,19 @@ This is a lab audit; Search Console's Core Web Vitals report uses real visitor d
 
 ### Intentions SEO, GEO, AIO et AEO / Search intent and answer visibility
 
-**FR :** Les expressions visa France et France visa, y compris « visa France Maroc », renvoient au guide `/visa-france-maroc/`. Les recherches TLScontact, TLS France et rendez-vous visa France renvoient à `/rendez-vous-tlscontact-agadir/`. Les variantes Agadir renvoient à `/visa-agadir/`. Les recherches visa Espagne Maroc et visa Maroc Espagne ciblent `/visa-espagne-maroc/`. Les recherches « rendez-vous visa Espagne » et TLS Espagne ciblent le guide de rendez-vous BLS. Les liens de source doivent rester visibles dans l’article ; aucune disponibilité ni délivrance de visa n’est promise.
+**FR :** Les requêtes larges « france visa », « visa france » et « visa france maroc » ciblent le guide `/visa-france-maroc/`, optimisé comme page principale France-Visas pour les demandeurs au Maroc. Les requêtes TLScontact et rendez-vous visa France ciblent `/rendez-vous-tlscontact-agadir/` ; les variantes locales Agadir ciblent `/visa-agadir/`. « Visa Espagne Maroc » cible `/visa-espagne-maroc/`. La variante de casse « visa France Maroc » doit aussi rester associée au guide (éviter la cannibalisation avec l’accueil). Le guide France affiche des liens vers les sources officielles et distingue le délai de rendez-vous du délai d’instruction. Aucun lien profond TLScontact sans autorisation écrite préalable ; le portail est accessible depuis France-Visas. Les positions ne sont pas garanties ; suivre chaque couple requête/URL dans Search Console.
 
 Les titres, descriptions, H1, réponses visibles, données structurées, dates `lastmod` du sitemap et cibles de `mots-cles-map.csv` doivent rester cohérents. France : [France-Visas Maroc](https://www.france-visas.gouv.fr/en/maroc). Espagne à Agadir : [annonce officielle sur les rendez-vous BLS](https://www.exteriores.gob.es/Consulados/agadir/es/Comunicacion/Noticias/Paginas/Articulos/Informaci%C3%B3n-citas-y-entrega-Visados-Nacionales.aspx) et [FAQ officielle sur les rendez-vous](https://www.exteriores.gob.es/Embajadas/rabat/es/Embajada/Paginas/Preguntas-Frecuentes.aspx). Les positions ne sont pas garanties ; les suivre dans Search Console par requête et par URL avant d’élargir le contenu.
 
-**EN:** France visa phrases, including “visa France Maroc”, target `/visa-france-maroc/`; TLScontact and appointment phrases target `/rendez-vous-tlscontact-agadir/`; Agadir variants target `/visa-agadir/`. Spain visa searches target `/visa-espagne-maroc/`; appointment-specific Spain/BLS searches target the appointment guide. Keep titles, descriptions, H1s, visible answers, structured data, sitemap `lastmod`, and keyword-map targets aligned. Ranking positions are not guaranteed; monitor Search Console by query and page before expanding.
+**EN:** Broad “france visa”, “visa france”, and “visa france maroc” queries target `/visa-france-maroc/`, the primary France-Visas guide for applicants in Morocco. TLScontact and France appointment searches target `/rendez-vous-tlscontact-agadir/`; Agadir-local variants target `/visa-agadir/`. “Visa Espagne Maroc” targets `/visa-espagne-maroc/`. Keep capitalization variants mapped to the same relevant page to avoid cannibalization. The France guide cites official sources and distinguishes appointment waits from processing times. Do not deep-link to TLScontact without written permission; its portal is reachable from France-Visas. Rankings cannot be guaranteed; monitor each query/URL pair in Search Console.
+
+**FR :** Le sitemap contient 20 URL ; les notions de budget d’exploration et de profondeur doivent être suivies avec les journaux serveur et Search Console si le site grandit, mais ne justifient pas aujourd’hui de multiplier les pages. Les 284 formulations de recherche restent mappées vers des pages existantes : créer une URL uniquement si elle répond à une intention distincte avec des informations originales. `hreflang` n’est pas déclaré entre les mêmes URL bilingues ; il sera ajouté lorsque les versions française et arabe auront des URL et contenus localisés distincts, avec références réciproques. Les fiches G2, Product Hunt et annuaires SaaS/IA ne correspondent pas à ce prestataire local. Ne pas acheter, automatiser ou déposer en masse des liens dans des annuaires génériques, commentaires ou profils sans pertinence ; privilégier des citations locales réelles et des partenariats éditoriaux vérifiables. Les progrès de position, de citation dans les réponses IA et de requêtes « striking distance » nécessitent les exports Search Console et un suivi daté, ils ne se déduisent pas du code.
+
+**EN:** The sitemap contains 20 URLs. Crawl budget and depth can be reviewed using server logs and Search Console if the site grows, but they do not justify adding pages now. The 284 search phrases are mapped to existing pages; create a URL only for a distinct intent with original information. Do not declare `hreflang` between the same bilingual URLs; add it when French and Arabic have separate localized URLs and reciprocal references. G2, Product Hunt and SaaS/AI directories do not fit this local service provider. Do not buy, automate or bulk-submit links to generic directories, comments or profiles without relevance; prioritize genuine local citations and verifiable editorial partnerships. Ranking changes, AI answer citations and striking-distance queries require dated Search Console exports and tracking; they cannot be inferred from source code.
+
+**FR :** Le HTML initial de la page d’accueil doit refléter le service réellement fourni : le demandeur sollicite lui-même son rendez-vous sur le portail officiel ; EIDEN l’aide à comprendre la procédure et ne garantit aucun créneau. Pour les études, le site oriente vers Campus France et précise qu’aucun dossier d’études n’est construit. Quand ce bloc change, mettre à jour `lastmod` de l’accueil dans `public/sitemap.xml`.
+
+**EN:** The homepage’s initial HTML must describe the actual service: applicants request appointments themselves through the official portal; EIDEN explains the process and does not guarantee a slot. Study inquiries are directed to Campus France, and the site states that EIDEN does not prepare study files. Update the homepage `lastmod` in `public/sitemap.xml` whenever this block changes.
 
 ## Règles / Rules
 
