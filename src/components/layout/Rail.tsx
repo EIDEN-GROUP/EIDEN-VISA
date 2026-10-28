@@ -6,6 +6,7 @@ import { NotificationBell } from "@/components/layout/notification-bell";
 import {
   LayoutDashboard,
   FolderOpen,
+  GitBranch,
   ListTree,
   Wallet,
   BookOpen,
@@ -20,6 +21,7 @@ import sealEiden from "@/assets/decorations/logo-eiden.png";
 const NAV = [
   { to: "/", label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/dossiers", label: "Dossiers", icon: FolderOpen },
+  { to: "/pipeline", label: "Pipeline", icon: GitBranch },
   { to: "/qualification", label: "Qualification", icon: ListTree },
   { to: "/paiements", label: "Paiements", icon: Wallet },
   { to: "/referentiel", label: "Référentiel", icon: BookOpen },

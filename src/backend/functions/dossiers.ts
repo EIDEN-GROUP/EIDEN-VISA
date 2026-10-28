@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { eq, desc, and, or, ilike, gte, lte, sql, count as sqlCount, type SQL } from "drizzle-orm";
 import { db } from "@/backend/db/client";
-import { dossiers as dossiersTable, users } from "@/backend/db/schema";
+import { dossiers as dossiersTable, users, activityLog } from "@/backend/db/schema";
 import {
   requireUserId,
   requireCeo,
@@ -22,6 +22,9 @@ import {
   type FormuleKey,
   type ServiceKey,
   type Modalite,
+  CRM_STAGE_KEYS,
+  CRM_STAGE_META,
+  type CrmStage,
 } from "@/lib/dossier-model";
 import { rejouerQualification } from "@/lib/qualification-replay";
 import { TREE_FIELDS, type Profile } from "@/lib/visa-rules";
@@ -76,6 +79,7 @@ export function rowToDossier(row: DossierRow): Dossier {
     caseKey: row.caseKey,
     profile: row.profile,
     qualification: row.qualification,
+    crmStage: row.crmStage,
     titre: row.titre,
     categorie: row.categorie,
     niveau: row.niveau,
@@ -166,6 +170,199 @@ export const listDossiersPage = createServerFn({ method: "GET" })
       db.select({ n: sqlCount() }).from(dossiersTable).where(where),
     ]);
     return { rows: rows.map(rowToDossier), total: Number(totalRows[0]?.n ?? 0) };
+  });
+
+/**
+ * CRM board: a bounded SQL window query returns recent cards per stage and exact counts.
+ * Search and ownership filters stay in SQL; passport and payment fields are never selected.
+ */
+export const listCrmPipeline = createServerFn({ method: "GET" })
+  .validator(
+    z.object({
+      search: z.string().max(120).optional(),
+      mine: z.boolean().default(false),
+      limitPerStage: z.number().int().min(1).max(50).default(12),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const conditions: SQL[] = [];
+    if (data.mine) {
+      const mineCondition = or(
+        eq(dossiersTable.agentUserId, userId),
+        eq(dossiersTable.assigneeUserId, userId),
+      );
+      if (mineCondition) conditions.push(mineCondition);
+    }
+    const term = data.search?.trim();
+    if (term) {
+      const like = `%${term}%`;
+      const digits = term.replace(/\D/g, "");
+      const searchCondition = or(
+        ilike(dossiersTable.clientNom, like),
+        ilike(dossiersTable.clientVille, like),
+        ilike(dossiersTable.id, like),
+        digits
+          ? sql`regexp_replace(${dossiersTable.clientTelephone}, '\\D', '', 'g') ilike ${`%${digits}%`}`
+          : ilike(dossiersTable.clientTelephone, like),
+      );
+      if (searchCondition) conditions.push(searchCondition);
+    }
+    const where = conditions.length ? and(...conditions) : undefined;
+    const whereSql = where ? sql`where ${where}` : sql``;
+    const rawRows = await db.execute(sql`
+      with filtered as (
+        select
+          ${dossiersTable.id} as id,
+          ${dossiersTable.clientNom} as "clientNom",
+          ${dossiersTable.clientTelephone} as "clientTelephone",
+          ${dossiersTable.clientVille} as "clientVille",
+          ${dossiersTable.titre} as titre,
+          ${dossiersTable.centre} as centre,
+          ${dossiersTable.agent} as agent,
+          ${dossiersTable.crmStage} as "crmStage",
+          ${dossiersTable.createdAt} as "createdAt",
+          row_number() over (
+            partition by ${dossiersTable.crmStage}
+            order by ${dossiersTable.createdAt} desc
+          ) as position,
+          count(*) over (partition by ${dossiersTable.crmStage}) as "stageCount"
+        from ${dossiersTable}
+        ${whereSql}
+      )
+      select id, "clientNom", "clientTelephone", "clientVille", titre, centre, agent,
+             "crmStage", "createdAt", position, "stageCount"
+      from filtered
+      where position <= ${data.limitPerStage}
+      order by "crmStage", "createdAt" desc
+    `);
+    type PipelineRow = {
+      id: string;
+      clientNom: string;
+      clientTelephone: string;
+      clientVille: string;
+      titre: string;
+      centre: string;
+      agent: string;
+      crmStage: CrmStage;
+      createdAt: Date;
+      position: number;
+      stageCount: number | string;
+    };
+    const rows = rawRows as unknown as PipelineRow[];
+    const groups = Object.fromEntries(
+      CRM_STAGE_KEYS.map((stage) => [stage, [] as PipelineRow[]]),
+    ) as Record<CrmStage, PipelineRow[]>;
+    const counts = Object.fromEntries(CRM_STAGE_KEYS.map((stage) => [stage, 0])) as Record<
+      CrmStage,
+      number
+    >;
+    for (const row of rows) {
+      groups[row.crmStage].push(row);
+      counts[row.crmStage] = Number(row.stageCount);
+    }
+    return {
+      columns: CRM_STAGE_KEYS.map((stage) => ({
+        stage,
+        label: CRM_STAGE_META[stage].label,
+        helper: CRM_STAGE_META[stage].helper,
+        count: counts[stage],
+        cards: groups[stage].map(
+          ({ position: _position, stageCount: _stageCount, ...card }) => card,
+        ),
+      })),
+      total: Object.values(counts).reduce((sum, count) => sum + count, 0),
+      limitPerStage: data.limitPerStage,
+    };
+  });
+
+/** Create a light, unqualified prospect directly in the dossier CRM. */
+export const createCrmLead = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      nom: z.string().trim().min(2).max(160),
+      telephone: z.string().trim().min(5).max(30),
+      ville: z.string().trim().min(2).max(120),
+      centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    const id = `EV-${new Date().getFullYear()}-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
+    await db.transaction(async (tx) => {
+      const actor = await tx.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: { nom: true, role: true },
+      });
+      if (!actor) throw new Error("Compte utilisateur introuvable.");
+      await tx.insert(dossiersTable).values({
+        id,
+        clientNom: data.nom,
+        clientTelephone: data.telephone,
+        clientVille: data.ville,
+        clientNaissance: "",
+        agent: `${actor.role} · ${actor.nom}`,
+        agentUserId: userId,
+        ouvertLe: new Date().toLocaleDateString("fr-FR"),
+        caseKey: "PENDING",
+        profile: { origine: "direct" },
+        qualification: [],
+        crmStage: "lead",
+        titre: "Dossier à qualifier",
+        categorie: "Nouveau lead",
+        niveau: "attention",
+        pack: "base",
+        services: [],
+        modalitePaiement: "comptant",
+        etape: 1,
+        centre: data.centre,
+        pieces: [],
+        paiements: [],
+        notes: [],
+      });
+      await tx.insert(activityLog).values({
+        id: crypto.randomUUID(),
+        userId,
+        action: "crm.lead.created",
+        detail: `Lead ajouté manuellement au Pipeline : ${data.nom}`,
+        dossierId: id,
+      });
+    });
+    return { id };
+  });
+
+/** Change a CRM stage with compare-and-set protection and an atomic audit-log entry. */
+export const setCrmStage = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.string().min(1).max(32),
+      expectedStage: z.enum(CRM_STAGE_KEYS),
+      stage: z.enum(CRM_STAGE_KEYS),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const userId = await requireUserId();
+    if (data.expectedStage === data.stage) return { previousStage: data.stage };
+    return db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(dossiersTable)
+        .set({ crmStage: data.stage })
+        .where(and(eq(dossiersTable.id, data.id), eq(dossiersTable.crmStage, data.expectedStage)))
+        .returning({ id: dossiersTable.id });
+      if (!updated) {
+        const exists = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
+        if (!exists) throw new Error("Dossier introuvable.");
+        throw new Error("Ce dossier vient d'être modifié par un autre membre. Actualisez la page.");
+      }
+      await tx.insert(activityLog).values({
+        id: crypto.randomUUID(),
+        userId,
+        action: "crm.stage",
+        detail: `Pipeline : ${CRM_STAGE_META[data.expectedStage].label} → ${CRM_STAGE_META[data.stage].label}`,
+        dossierId: data.id,
+      });
+      return { previousStage: data.expectedStage };
+    });
   });
 
 /** Bornée à un lot récent, jamais la table entière : les alertes se lisent sur les dossiers actifs. */
@@ -558,6 +755,7 @@ export const createDossier = createServerFn({ method: "POST" })
       caseKey: data.caseKey,
       profile: data.profile as Profile,
       qualification: data.qualification,
+      crmStage: "lead",
       titre: data.titre,
       categorie: data.categorie,
       niveau: data.niveau,

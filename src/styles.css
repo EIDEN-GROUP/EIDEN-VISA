@@ -2,6 +2,15 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Keep inner board lists scrollable without persistent scrollbar chrome. */
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 /*
    * Eiden Visa - système visuel back-office, thème "registre de dossier".
  * Minimaliste : la structure vient de l'espace et des filets fins, pas des

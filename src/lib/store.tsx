@@ -7,10 +7,14 @@ import type {
   Decision,
   Modalite,
   RecuDonnees,
+  CrmStage,
 } from "./dossier-model";
 import {
   listDossiers,
   listDossiersPage,
+  listCrmPipeline,
+  createCrmLead as createCrmLeadFn,
+  setCrmStage as setCrmStageFn,
   listAlertesDossiers,
   listDossiersRecents,
   listDossiersAvecImpaye,
@@ -134,6 +138,7 @@ function useDossierMutations() {
   // on invalide tout ce qui vit sous le préfixe "dossiers" plutôt que de traquer chaque cas.
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["dossiers"] });
+    queryClient.invalidateQueries({ queryKey: ["crm"] });
     // Le suivi des paiements /ops et le journal d'activité dérivent des mêmes mutations.
     queryClient.invalidateQueries({ queryKey: ["ops"] });
   };
@@ -269,6 +274,16 @@ function useDossierMutations() {
     },
     onSettled: invalidateAll,
   });
+  const setCrmStageMutation = useMutation({
+    mutationFn: (vars: { id: string; expectedStage: CrmStage; stage: CrmStage }) =>
+      setCrmStageFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
+  const createCrmLeadMutation = useMutation({
+    mutationFn: (vars: { nom: string; telephone: string; ville: string; centre: Centre }) =>
+      createCrmLeadFn({ data: vars }),
+    onSuccess: invalidateAll,
+  });
 
   return {
     togglePiece: (id: string, index: number) => togglePieceMutation.mutateAsync({ id, index }),
@@ -307,6 +322,30 @@ function useDossierMutations() {
       updateQualificationMutation.mutateAsync({ id, qualification }),
     supprimer: (id: string) => deleteMutation.mutateAsync(id),
     setEtape: (id: string, etape: number) => setEtapeMutation.mutateAsync({ id, etape }),
+    setCrmStage: (id: string, expectedStage: CrmStage, stage: CrmStage) =>
+      setCrmStageMutation.mutateAsync({ id, expectedStage, stage }),
+    createCrmLead: (vars: { nom: string; telephone: string; ville: string; centre: Centre }) =>
+      createCrmLeadMutation.mutateAsync(vars),
+  };
+}
+
+/** Searchable, bounded CRM board data. Mutations share the dossier invalidation path. */
+export function useCrmPipeline(params: { search: string; mine: boolean; limitPerStage: number }) {
+  const query = useQuery({
+    queryKey: ["crm", "pipeline", params],
+    queryFn: () => listCrmPipeline({ data: params }),
+    refetchInterval: 60_000,
+  });
+  const mutations = useDossierMutations();
+  return {
+    data: query.data ?? null,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+    setCrmStage: mutations.setCrmStage,
+    createCrmLead: mutations.createCrmLead,
   };
 }
 

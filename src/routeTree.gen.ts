@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as OpsRouteImport } from './routes/ops'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
+import { Route as AppPipelineRouteImport } from './routes/_app/pipeline'
 import { Route as AppProfilRouteImport } from './routes/_app/profil'
 import { Route as AppQualificationRouteImport } from './routes/_app/qualification'
 import { Route as AppRdvWatchRouteImport } from './routes/_app/rdv-watch'
@@ -50,6 +51,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppPaiementsRoute = AppPaiementsRouteImport.update({
   id: '/paiements',
   path: '/paiements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPipelineRoute = AppPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfilRoute = AppProfilRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/ops': typeof OpsRoute
   '/paiements': typeof AppPaiementsRoute
+  '/pipeline': typeof AppPipelineRoute
   '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
   '/rdv-watch': typeof AppRdvWatchRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/ops': typeof OpsRoute
   '/paiements': typeof AppPaiementsRoute
+  '/pipeline': typeof AppPipelineRoute
   '/profil': typeof AppProfilRoute
   '/qualification': typeof AppQualificationRoute
   '/rdv-watch': typeof AppRdvWatchRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/ops': typeof OpsRoute
   '/_app/paiements': typeof AppPaiementsRoute
+  '/_app/pipeline': typeof AppPipelineRoute
   '/_app/profil': typeof AppProfilRoute
   '/_app/qualification': typeof AppQualificationRoute
   '/_app/rdv-watch': typeof AppRdvWatchRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/ops'
     | '/paiements'
+    | '/pipeline'
     | '/profil'
     | '/qualification'
     | '/rdv-watch'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/ops'
     | '/paiements'
+    | '/pipeline'
     | '/profil'
     | '/qualification'
     | '/rdv-watch'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/ops'
     | '/_app/paiements'
+    | '/_app/pipeline'
     | '/_app/profil'
     | '/_app/qualification'
     | '/_app/rdv-watch'
@@ -230,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaiementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/pipeline': {
+      id: '/_app/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof AppPipelineRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/profil': {
       id: '/_app/profil'
       path: '/profil'
@@ -284,6 +303,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppPaiementsRoute: typeof AppPaiementsRoute
+  AppPipelineRoute: typeof AppPipelineRoute
   AppProfilRoute: typeof AppProfilRoute
   AppQualificationRoute: typeof AppQualificationRoute
   AppRdvWatchRoute: typeof AppRdvWatchRoute
@@ -295,6 +315,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppPaiementsRoute: AppPaiementsRoute,
+  AppPipelineRoute: AppPipelineRoute,
   AppProfilRoute: AppProfilRoute,
   AppQualificationRoute: AppQualificationRoute,
   AppRdvWatchRoute: AppRdvWatchRoute,

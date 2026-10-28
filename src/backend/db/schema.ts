@@ -9,7 +9,10 @@ import type {
   QualificationReponse,
   NoteAgent,
   RecuDonnees,
+  CrmStage,
 } from "@/lib/dossier-model";
+import { check, index } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { Level, Profile } from "@/lib/visa-rules";
 
 export type Role = "ceo" | "reception" | "preparation" | "back_office";
@@ -55,75 +58,87 @@ export const activityLog = pgTable("activity_log", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const dossiers = pgTable("dossiers", {
-  id: text("id").primaryKey(),
-  clientNom: text("client_nom").notNull(),
-  clientTelephone: text("client_telephone").notNull(),
-  clientVille: text("client_ville").notNull(),
-  clientNaissance: text("client_naissance").notNull(),
-  // Dates de séjour envisagées, saisies à la qualification (ISO AAAA-MM-JJ). Nullables :
-  // le client ne les connaît pas toujours au moment de l'ouverture du dossier.
-  clientVoyageDebut: text("client_voyage_debut"),
-  clientVoyageFin: text("client_voyage_fin"),
-  // Passeport - saisi quand la pièce passe entre les mains du centre, d'où le nullable.
-  clientPasseportNumero: text("client_passeport_numero"),
-  clientPasseportDelivrance: text("client_passeport_delivrance"),
-  clientPasseportExpiration: text("client_passeport_expiration"),
-  clientPasseportLieu: text("client_passeport_lieu"),
-  agent: text("agent").notNull(),
-  // Le compte réel qui a ouvert le dossier - permet un filtre "Mes dossiers" fiable,
-  // contrairement à `agent` qui n'est qu'un texte d'affichage (nom + rôle au moment de la création).
-  agentUserId: text("agent_user_id").references(() => users.id, { onDelete: "set null" }),
-  // À qui le dossier est actuellement confié (peut différer de celui qui l'a ouvert).
-  // Nul = non assigné. Toute (ré)assignation notifie la personne concernée.
-  assigneeUserId: text("assignee_user_id").references(() => users.id, { onDelete: "set null" }),
-  ouvertLe: text("ouvert_le").notNull(),
-  caseKey: text("case_key").notNull(),
-  profile: jsonb("profile").$type<Profile>().notNull().default({}),
-  // Le fil questions/réponses de la Boussole, figé au moment de l'ouverture du dossier :
-  // c'est la trace de ce qui a été demandé À CE client, indépendante de l'arbre actuel
-  // (qui, lui, évolue). Vide pour les dossiers antérieurs.
-  qualification: jsonb("qualification").$type<QualificationReponse[]>().notNull().default([]),
-  titre: text("titre").notNull(),
-  categorie: text("categorie").notNull(),
-  niveau: text("niveau").$type<Level>().notNull(),
-  // Pack choisi, ou `carte` = services à l'unité (liste dans `services`).
-  pack: text("pack").$type<FormuleKey>().notNull().default("base"),
-  services: jsonb("services").$type<ServiceKey[]>().notNull().default([]),
-  modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
-  etape: integer("etape").notNull().default(1), // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS) : c'est
-  // l'orientation du dossier. La prise du rendez-vous elle-même est faite par le
-  // back-office (étape 3 du parcours, service `formulaire_rdv`, frais inclus dans le pack).
-  // Colonne DB : `rdv_centre` (historique).
-  centre: text("rdv_centre").$type<Centre>().notNull(),
-  // Le service ne peut téléverser des documents qu'une fois le dossier autorisé (CEO/Réception).
-  uploadAutorise: boolean("upload_autorise").notNull().default(false),
-  pieces: jsonb("pieces").$type<Piece[]>().notNull().default([]),
-  paiements: jsonb("paiements").$type<Paiement[]>().notNull().default([]),
-  notes: jsonb("notes").$type<string[]>().notNull().default([]),
-  // Ce que l'équipe écrit elle-même sur le dossier, avec auteur et horodatage.
-  notesAgent: jsonb("notes_agent").$type<NoteAgent[]>().notNull().default([]),
-  // Étape 6 du parcours : la décision du consulat, hors du contrôle
-  // d'Eiden mais à suivre - c'est le vrai "après" du cycle, pas juste un dossier gelé.
-  decision: text("decision")
-    .$type<"en_attente" | "approuve" | "refuse">()
-    .notNull()
-    .default("en_attente"),
-  decisionDate: text("decision_date"),
-  // Jalons faits hors de l'app (portail France-Visas, centre de dépôt) : l'agent les déclare,
-  // la référence saisie tient lieu de preuve.
-  recuRemis: boolean("recu_remis").notNull().default(false),
-  recuLe: text("recu_le"),
-  franceVisasFait: boolean("france_visas_fait").notNull().default(false),
-  franceVisasRef: text("france_visas_ref"),
-  franceVisasLe: text("france_visas_le"),
-  rdvPris: boolean("rdv_pris").notNull().default(false),
-  rdvDate: text("rdv_date"),
-  rdvLe: text("rdv_le"),
-  /** Motif du refus communiqué par le consulat - null si approuvé ou en attente. */
-  decisionMotif: text("decision_motif"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const dossiers = pgTable(
+  "dossiers",
+  {
+    id: text("id").primaryKey(),
+    clientNom: text("client_nom").notNull(),
+    clientTelephone: text("client_telephone").notNull(),
+    clientVille: text("client_ville").notNull(),
+    clientNaissance: text("client_naissance").notNull(),
+    // Dates de séjour envisagées, saisies à la qualification (ISO AAAA-MM-JJ). Nullables :
+    // le client ne les connaît pas toujours au moment de l'ouverture du dossier.
+    clientVoyageDebut: text("client_voyage_debut"),
+    clientVoyageFin: text("client_voyage_fin"),
+    // Passeport - saisi quand la pièce passe entre les mains du centre, d'où le nullable.
+    clientPasseportNumero: text("client_passeport_numero"),
+    clientPasseportDelivrance: text("client_passeport_delivrance"),
+    clientPasseportExpiration: text("client_passeport_expiration"),
+    clientPasseportLieu: text("client_passeport_lieu"),
+    agent: text("agent").notNull(),
+    // Le compte réel qui a ouvert le dossier - permet un filtre "Mes dossiers" fiable,
+    // contrairement à `agent` qui n'est qu'un texte d'affichage (nom + rôle au moment de la création).
+    agentUserId: text("agent_user_id").references(() => users.id, { onDelete: "set null" }),
+    // À qui le dossier est actuellement confié (peut différer de celui qui l'a ouvert).
+    // Nul = non assigné. Toute (ré)assignation notifie la personne concernée.
+    assigneeUserId: text("assignee_user_id").references(() => users.id, { onDelete: "set null" }),
+    ouvertLe: text("ouvert_le").notNull(),
+    caseKey: text("case_key").notNull(),
+    profile: jsonb("profile").$type<Profile>().notNull().default({}),
+    // Le fil questions/réponses de la Boussole, figé au moment de l'ouverture du dossier :
+    // c'est la trace de ce qui a été demandé À CE client, indépendante de l'arbre actuel
+    // (qui, lui, évolue). Vide pour les dossiers antérieurs.
+    qualification: jsonb("qualification").$type<QualificationReponse[]>().notNull().default([]),
+    /** Commercial pipeline stage, distinct from the visa workflow `etape`. */
+    crmStage: text("crm_stage").$type<CrmStage>().notNull().default("lead"),
+    titre: text("titre").notNull(),
+    categorie: text("categorie").notNull(),
+    niveau: text("niveau").$type<Level>().notNull(),
+    // Pack choisi, ou `carte` = services à l'unité (liste dans `services`).
+    pack: text("pack").$type<FormuleKey>().notNull().default("base"),
+    services: jsonb("services").$type<ServiceKey[]>().notNull().default([]),
+    modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
+    etape: integer("etape").notNull().default(1), // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS) : c'est
+    // l'orientation du dossier. La prise du rendez-vous elle-même est faite par le
+    // back-office (étape 3 du parcours, service `formulaire_rdv`, frais inclus dans le pack).
+    // Colonne DB : `rdv_centre` (historique).
+    centre: text("rdv_centre").$type<Centre>().notNull(),
+    // Le service ne peut téléverser des documents qu'une fois le dossier autorisé (CEO/Réception).
+    uploadAutorise: boolean("upload_autorise").notNull().default(false),
+    pieces: jsonb("pieces").$type<Piece[]>().notNull().default([]),
+    paiements: jsonb("paiements").$type<Paiement[]>().notNull().default([]),
+    notes: jsonb("notes").$type<string[]>().notNull().default([]),
+    // Ce que l'équipe écrit elle-même sur le dossier, avec auteur et horodatage.
+    notesAgent: jsonb("notes_agent").$type<NoteAgent[]>().notNull().default([]),
+    // Étape 6 du parcours : la décision du consulat, hors du contrôle
+    // d'Eiden mais à suivre - c'est le vrai "après" du cycle, pas juste un dossier gelé.
+    decision: text("decision")
+      .$type<"en_attente" | "approuve" | "refuse">()
+      .notNull()
+      .default("en_attente"),
+    decisionDate: text("decision_date"),
+    // Jalons faits hors de l'app (portail France-Visas, centre de dépôt) : l'agent les déclare,
+    // la référence saisie tient lieu de preuve.
+    recuRemis: boolean("recu_remis").notNull().default(false),
+    recuLe: text("recu_le"),
+    franceVisasFait: boolean("france_visas_fait").notNull().default(false),
+    franceVisasRef: text("france_visas_ref"),
+    franceVisasLe: text("france_visas_le"),
+    rdvPris: boolean("rdv_pris").notNull().default(false),
+    rdvDate: text("rdv_date"),
+    rdvLe: text("rdv_le"),
+    /** Motif du refus communiqué par le consulat - null si approuvé ou en attente. */
+    decisionMotif: text("decision_motif"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("dossiers_crm_stage_created_at_idx").on(table.crmStage, table.createdAt),
+    check(
+      "dossiers_crm_stage_check",
+      sql`${table.crmStage} in ('lead', 'call_back', 'proposal', 'appointment', 'follow_up', 'negotiation', 'won', 'lost')`,
+    ),
+  ],
+);
 
 /**
  * Surveillance de disponibilité RDV (TLScontact/BLS ou tout autre site public) -

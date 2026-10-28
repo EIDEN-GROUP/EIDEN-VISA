@@ -61,6 +61,29 @@ export const ETAPES = [
   },
 ] as const;
 
+/** Commercial lifecycle, independent from the operational visa-file steps above. */
+export const CRM_STAGE_KEYS = [
+  "lead",
+  "call_back",
+  "proposal",
+  "appointment",
+  "follow_up",
+  "negotiation",
+  "won",
+  "lost",
+] as const;
+export type CrmStage = (typeof CRM_STAGE_KEYS)[number];
+export const CRM_STAGE_META: Record<CrmStage, { label: string; helper: string }> = {
+  lead: { label: "Lead", helper: "Nouveau contact" },
+  call_back: { label: "Call-back", helper: "À rappeler" },
+  proposal: { label: "Proposal", helper: "Proposition présentée" },
+  appointment: { label: "Appointment", helper: "Rendez-vous planifié" },
+  follow_up: { label: "Follow-up", helper: "Relance à effectuer" },
+  negotiation: { label: "Negotiation", helper: "Échange en cours" },
+  won: { label: "Won", helper: "Client confirmé" },
+  lost: { label: "Lost", helper: "Dossier non conclu" },
+};
+
 export type PackKey = "base" | "voyage" | "global";
 
 /**
@@ -399,6 +422,8 @@ export interface Dossier {
   /** Le fil des questions/réponses de la Boussole pour ce client. Vide pour les dossiers
    * créés avant que ce fil ne soit conservé. */
   qualification: QualificationReponse[];
+  /** CRM stage; separate from the visa-processing `etape`. */
+  crmStage?: CrmStage;
   agent: string;
   /** Le VRAI compte qui a ouvert ce dossier - sert à filtrer "Mes dossiers" par utilisateur.
    * `null` pour les dossiers créés avant l'ajout de ce champ. */
