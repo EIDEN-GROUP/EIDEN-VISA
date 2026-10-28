@@ -1,9 +1,9 @@
-﻿// Landing page Eiden Visa   projet Vite autonome, séparé de l'app (TanStack Start à la racine).
+// Landing page Eiden Visa   projet Vite autonome, séparé de l'app (TanStack Start à la racine).
 // Aucun import depuis ../src : ce dossier doit pouvoir être déplacé ou déployé seul.
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import dotenv from "dotenv";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { defineConfig, type Plugin } from "vite";
@@ -257,6 +257,149 @@ function servirPageServices(): Plugin {
   };
 }
 
+/** Écrit un HTML initial propre aux routes SPA afin que les robots sans JS
+ * reçoivent titre, description, canonique et contenu utiles dès la réponse. */
+function prerendreRoutesSeo(): Plugin {
+  const routes = [
+    {
+      path: "conditions",
+      title: "Conditions d’utilisation | EIDEN Visa",
+      description:
+        "Consultez les conditions des services d’accompagnement visa proposés par EIDEN Visa à Agadir, prestataire privé indépendant.",
+      source: "conditions-content.ts",
+      lead: "Accompagnement visa Schengen depuis le Maroc",
+    },
+    {
+      path: "confidentialite",
+      title: "Confidentialité | EIDEN Visa",
+      description:
+        "Comment EIDEN Visa collecte, utilise, conserve et protège vos données personnelles conformément à la loi marocaine 09-08.",
+      source: "confidentialite-content.ts",
+      lead: "Protection de vos données personnelles",
+    },
+    {
+      path: "cookies",
+      title: "Politique cookies | EIDEN Visa",
+      description:
+        "Découvrez les cookies utilisés sur le site EIDEN Visa et gérez vos préférences de consentement à tout moment.",
+      source: "cookies-content.ts",
+      lead: "Vos choix concernant les cookies",
+    },
+    {
+      path: "securite",
+      title: "Sécurité du site | EIDEN Visa",
+      description:
+        "Mesures de sécurité du site EIDEN Visa et moyens de signaler une vulnérabilité ou une tentative d’usurpation.",
+      source: "securite-content.ts",
+      lead: "Sécurité et signalement",
+    },
+  ];
+  const pages = [
+    ...routes.map((route) => {
+      const source = readFileSync(join(racine, "src/pages", route.source), "utf8");
+      const contenu = source.match(/export const html = `([\s\S]*?)`;?\s*$/)?.[1];
+      if (!contenu) throw new Error(`[eiden-prerender] contenu introuvable: ${route.source}`);
+      return {
+        ...route,
+        content: `<header><p><a href="/">Accueil</a> / ${route.title.replace(" | EIDEN Visa", "")}</p><h1>${route.title.replace(" | EIDEN Visa", "")}</h1><p>${route.lead}</p><p>Dernière mise à jour : 26 octobre 2026</p></header><article>${contenu}</article>`,
+      };
+    }),
+    {
+      path: "contact",
+      title: "Contact EIDEN Visa à Agadir",
+      description:
+        "Contactez EIDEN Visa à Agadir pour un diagnostic gratuit et des informations sur la préparation administrative de votre dossier visa.",
+      content: `<header><p><a href="/">Accueil</a> / Contact</p><h1>Contactez EIDEN Visa à Agadir</h1><p>Pour toute question sur nos services de préparation administrative de dossier visa, contactez notre équipe à Agadir.</p></header><main><h2>Coordonnées</h2><address>EIDEN SARL AU, Agadir Bay, Technopole 1, Bloc B, 1er étage, Bureau 101 B, Agadir, Maroc<br><a href="tel:+212777777428">+212 777 777 428</a><br><a href="mailto:visa@eiden-group.com">visa@eiden-group.com</a></address><h2>Envoyer une demande</h2><p>Utilisez le formulaire de contact pour nous indiquer votre demande. Le diagnostic initial est gratuit et sans engagement.</p><p>EIDEN Visa est un prestataire privé indépendant. Nous ne délivrons pas de visas et ne garantissons ni rendez-vous ni décision consulaire.</p></main>`,
+    },
+    {
+      path: "blog",
+      title: "Guides visa France et Schengen depuis le Maroc | EIDEN Visa",
+      description:
+        "Guides pratiques pour préparer un dossier visa depuis le Maroc, comprendre un refus et vérifier les démarches officielles.",
+      content: `<header><p><a href="/">Accueil</a> / Blog</p><h1>Guides visa France et Schengen depuis le Maroc</h1><p>Des réponses pratiques sur les documents, les ressources, les refus et les démarches officielles. Les autorités compétentes restent seules décisionnaires des visas.</p></header><main><ul>${[
+        [
+          "dossier-visa-schengen-maroc-releve-bancaire",
+          "Visa Schengen au Maroc : ressources et justificatifs",
+          "Présenter ses ressources et construire un dossier cohérent.",
+        ],
+        [
+          "refus-visa-schengen-maroc-motifs-recours",
+          "Refus de visa Schengen : motifs et recours",
+          "Lire la décision et vérifier les voies de recours applicables.",
+        ],
+        [
+          "recruter-salarie-marocain-autorisation-travail",
+          "Recruter un salarié marocain en France",
+          "Repères sur l’autorisation de travail et les démarches employeur.",
+        ],
+        [
+          "rendez-vous-tlscontact-bls-agadir-2026",
+          "Visa Espagne à Agadir : consignes BLS",
+          "Vérifier les consignes officielles et préparer sa demande.",
+        ],
+      ]
+        .map(
+          ([slug, title, summary]) =>
+            `<li><h2><a href="/blog/${slug}/">${title}</a></h2><p>${summary}</p></li>`,
+        )
+        .join("")}</ul></main>`,
+    },
+  ];
+
+  return {
+    name: "eiden-prerender-seo-routes",
+    closeBundle() {
+      const dist = join(racine, "dist");
+      const base = readFileSync(join(dist, "index.html"), "utf8");
+      for (const page of pages) {
+        const canonical = `https://visa.eiden-group.com/${page.path}`;
+        const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+        let html = base
+          .replace(/<title>[\s\S]*?<\/title>/, `<title>${escape(page.title)}</title>`)
+          .replace(
+            /<meta\s+name="description"[^>]*>/,
+            `<meta name="description" content="${escape(page.description)}" />`,
+          )
+          .replace(/<link\s+rel="canonical"[^>]*>/, `<link rel="canonical" href="${canonical}" />`)
+          .replace(
+            /<meta\s+property="og:url"[^>]*>/,
+            `<meta property="og:url" content="${canonical}" />`,
+          )
+          .replace(
+            /<meta\s+property="og:title"[^>]*>/,
+            `<meta property="og:title" content="${escape(page.title)}" />`,
+          )
+          .replace(
+            /<meta\s+property="og:description"[^>]*>/,
+            `<meta property="og:description" content="${escape(page.description)}" />`,
+          )
+          .replace(
+            /<meta\s+name="twitter:title"[^>]*>/,
+            `<meta name="twitter:title" content="${escape(page.title)}" />`,
+          )
+          .replace(
+            /<meta\s+name="twitter:description"[^>]*>/,
+            `<meta name="twitter:description" content="${escape(page.description)}" />`,
+          );
+        html = html.replace(
+          /<script type="application\/ld\+json" id="faq-jsonld">[\s\S]*?<\/script>/,
+          "",
+        );
+        html = html.replace(
+          /<!--EIDEN-SEO-START-->[\s\S]*?<!--EIDEN-SEO-END-->/,
+          '<!--EIDEN-SEO-START--><div id="eiden-seo" lang="fr"><div class="eiden-seo-page">' +
+            page.content +
+            "</div></div><!--EIDEN-SEO-END-->",
+        );
+        html = html.replace("<head>", '<head>\n    <link rel="stylesheet" href="/legal.css" />');
+        const destination = join(dist, page.path, "index.html");
+        mkdirSync(join(dist, page.path), { recursive: true });
+        writeFileSync(destination, html, "utf8");
+      }
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -266,6 +409,7 @@ export default defineConfig({
     planMotsCles(),
     servirPageServices(),
     servirArticlesBlog(),
+    prerendreRoutesSeo(),
   ],
   // Port distinct de l'app (3000) pour lancer les deux en parallèle.
   server: { port: 5180 },
@@ -275,9 +419,21 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
-            { name: "react-vendor", test: /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/, priority: 30 },
-            { name: "motion-vendor", test: /node_modules[\\/](?:framer-motion|motion|motion-dom|motion-utils)[\\/]/, priority: 20 },
-            { name: "animation-vendor", test: /node_modules[\\/](?:gsap|@gsap)[\\/]/, priority: 20 },
+            {
+              name: "react-vendor",
+              test: /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/,
+              priority: 30,
+            },
+            {
+              name: "motion-vendor",
+              test: /node_modules[\\/](?:framer-motion|motion|motion-dom|motion-utils)[\\/]/,
+              priority: 20,
+            },
+            {
+              name: "animation-vendor",
+              test: /node_modules[\\/](?:gsap|@gsap)[\\/]/,
+              priority: 20,
+            },
             { name: "vendor", test: /node_modules[\\/]/, priority: 0 },
           ],
         },

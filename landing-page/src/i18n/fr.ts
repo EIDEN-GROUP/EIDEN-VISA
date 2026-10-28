@@ -5,7 +5,7 @@ export const fr = {
   meta: {
     title: "EIDEN Visa Agadir | Préparation de dossier visa France et Espagne",
     description:
-      "EIDEN Visa accompagne à Agadir la préparation des dossiers visa France et Espagne et oriente les demandeurs vers les démarches officielles. Les créneaux et décisions de visa relèvent des organismes compétents.",
+      "EIDEN Visa à Agadir prépare vos dossiers visa France et Espagne et vous oriente vers les démarches officielles. Aucun rendez-vous ni visa n’est garanti.",
   },
   loader: {
     slogan: "Le monde vous attend",

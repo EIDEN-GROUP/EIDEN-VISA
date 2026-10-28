@@ -14,7 +14,7 @@ const introHtml = `
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Visa Schengen Maroc - Blog",
-    "url": "https://visa.eiden-group.com/blog/",
+    "url": "https://visa.eiden-group.com/blog",
     "description": "Guides pratiques sur les demandes de visa depuis le Maroc : justificatifs financiers, motifs de refus et recours, recrutement et autorisation de travail, consignes officielles pour les rendez-vous visa à Agadir.",
     "inLanguage": "fr-FR",
     "potentialAction": {

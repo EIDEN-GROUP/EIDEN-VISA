@@ -1,10 +1,12 @@
 ﻿import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { definirSeo } from "../lib/seo";
 
 interface ArticleLayoutProps {
   slug: string;
   title: string;
+  description: string;
   lead: string;
   category: string;
   readingTime: string;
@@ -16,12 +18,23 @@ interface ArticleLayoutProps {
 }
 
 export function ArticleLayout(props: ArticleLayoutProps) {
-  const { title, lead, category, readingTime, updated, banner, bannerAlt, bodyHtml, related } =
-    props;
+  const {
+    slug,
+    title,
+    description,
+    lead,
+    category,
+    readingTime,
+    updated,
+    banner,
+    bannerAlt,
+    bodyHtml,
+    related,
+  } = props;
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    document.title = title + " | EIDEN Visa";
+    definirSeo({ titre: title + " | EIDEN Visa", description, url: slug });
     const url = "https://visa.eiden-group.com" + banner;
     const og = document.querySelector('meta[property="og:image"]');
     if (og) og.setAttribute("content", url);
@@ -37,7 +50,7 @@ export function ArticleLayout(props: ArticleLayoutProps) {
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, [title, banner]);
+  }, [title, description, slug, banner]);
 
   return (
     <div className="bg-cream font-sans text-ink">

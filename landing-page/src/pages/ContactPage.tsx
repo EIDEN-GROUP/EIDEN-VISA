@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLangue } from "../i18n";
 import { CONTACT } from "../content";
 import { saveContact } from "../lib/save-contact";
+import { definirSeo } from "../lib/seo";
 
 type Champs = { nom: string; prenom: string; email: string; telephone: string; message: string };
 
@@ -62,18 +63,11 @@ export function ContactPage() {
   useEffect(() => {
     const url = "https://visa.eiden-group.com/images/optimized/contact-agadir-banniere.webp";
     const titre = langue === "ar" ? "تواصل معنا | EIDEN Visa" : "Contactez-nous | EIDEN Visa";
-    document.title = titre;
     const description =
       langue === "ar"
         ? "تواصل مع EIDEN Visa في أكادير للاستفسار عن خدمات إعداد ومراجعة ملفات التأشيرة."
         : "Contactez EIDEN Visa à Agadir pour découvrir nos services de préparation et de vérification de dossier de visa.";
-    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
-    document.querySelector('meta[property="og:title"]')?.setAttribute("content", titre);
-    document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
-    document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", titre);
-    document
-      .querySelector('meta[name="twitter:description"]')
-      ?.setAttribute("content", description);
+    definirSeo({ titre, description, url: "/contact" });
     const og = document.querySelector('meta[property="og:image"]');
     if (og) og.setAttribute("content", url);
     const tw = document.querySelector('meta[name="twitter:image"]');

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLangue } from "../i18n";
+import { definirSeo } from "../lib/seo";
 
 interface BlogCardData {
   slug: string;
@@ -13,7 +14,7 @@ interface BlogCardData {
 const cards: BlogCardData[] = [
   {
     slug: "/blog/dossier-visa-schengen-maroc-releve-bancaire",
-    title: "Visa Schengen depuis le Maroc : dossier, ressources et justificatifs",
+    title: "Visa Schengen au Maroc : ressources et justificatifs",
     excerpt:
       "Un relevé bancaire ne suffit pas à lui seul. Comprenez comment présenter vos ressources, votre situation au Maroc et le motif du voyage dans un dossier cohérent.",
     category: "Dossier",
@@ -22,7 +23,7 @@ const cards: BlogCardData[] = [
   },
   {
     slug: "/blog/refus-visa-schengen-maroc-motifs-recours",
-    title: "Refus de visa Schengen au Maroc : motifs, recours et nouvelle demande",
+    title: "Refus visa Schengen : motifs et recours",
     excerpt:
       "Lisez la décision, vérifiez le délai de recours applicable et choisissez entre contester et déposer un dossier corrigé.",
     category: "Refus",
@@ -31,7 +32,7 @@ const cards: BlogCardData[] = [
   },
   {
     slug: "/blog/recruter-salarie-marocain-autorisation-travail",
-    title: "Recruter un salarié marocain en France : autorisation de travail et étapes",
+    title: "Embaucher un salarié marocain en France",
     excerpt:
       "Repères pour l’employeur : vérifier le titre requis, déposer une demande si nécessaire et préparer un dossier de recrutement cohérent.",
     category: "Recrutement",
@@ -40,7 +41,7 @@ const cards: BlogCardData[] = [
   },
   {
     slug: "/blog/rendez-vous-tlscontact-bls-agadir-2026",
-    title: "Visa Espagne à Agadir : consignes officielles et préparation",
+    title: "Visa Espagne à Agadir : démarches BLS",
     excerpt:
       "Où vérifier les consignes officielles, comment préparer votre demande et quoi faire si aucun créneau n’est proposé. Les disponibilités et procédures peuvent évoluer.",
     category: "Rendez-vous",
@@ -55,7 +56,12 @@ export function BlogPage() {
 
   useEffect(() => {
     const url = "https://visa.eiden-group.com/images/optimized/blog-banniere-eiden-visa.webp";
-    document.title = "Blog EIDEN Visa | Visa Schengen Maroc";
+    definirSeo({
+      titre: "Guides visa France et Schengen depuis le Maroc | EIDEN Visa",
+      description:
+        "Guides pratiques pour préparer un dossier visa depuis le Maroc, comprendre un refus et vérifier les démarches officielles.",
+      url: "/blog",
+    });
     const og = document.querySelector('meta[property="og:image"]');
     if (og) og.setAttribute("content", url);
     const tw = document.querySelector('meta[name="twitter:image"]');
