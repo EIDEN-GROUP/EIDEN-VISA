@@ -16,6 +16,7 @@ import {
   piecesFromCase,
   planPaiement,
   erreurServices,
+  erreurPrixManuel,
   MODALITE_LABEL,
   modaliteDetail,
   CENTRES,
@@ -199,6 +200,7 @@ function QualificationForm({ dossierRepris }: { dossierRepris?: Dossier | undefi
   const [formule, setFormule] = useState<Formule>({
     pack: dossierRepris?.pack ?? "base",
     services: dossierRepris?.services ?? [],
+    prixManuel: dossierRepris?.prixManuel ?? null,
   });
 
   // Nombre de jours du séjour envisagé - jour de fin exclu (méthode calculconversion.com
@@ -364,7 +366,7 @@ function QualificationForm({ dossierRepris }: { dossierRepris?: Dossier | undefi
     setOrigine(null);
     setCentre(CENTRES[0]);
     setModalite("comptant");
-    setFormule({ pack: "base", services: [] });
+    setFormule({ pack: "base", services: [], prixManuel: null });
     setHistoOuverte(true);
     // Recommencer : on revient à la création du dossier (le dossier déjà créé
     // n'est pas supprimé - il reste en attente de qualification).
@@ -387,7 +389,9 @@ function QualificationForm({ dossierRepris }: { dossierRepris?: Dossier | undefi
     setPhase("questions");
   }
 
-  const formuleIncomplete = formule.pack === "carte" && erreurServices(formule.services) !== null;
+  const formuleIncomplete =
+    (formule.pack === "carte" && erreurServices(formule.services) !== null) ||
+    erreurPrixManuel(formule.prixManuel) !== null;
 
   /**
    * Phase 1 - le dossier est créé TOUT DE SUITE, sans la qualification : le client
@@ -432,6 +436,7 @@ function QualificationForm({ dossierRepris }: { dossierRepris?: Dossier | undefi
       niveau: "attention",
       pack: formule.pack,
       services: formule.services,
+      prixManuel: formule.prixManuel,
       modalitePaiement: modalite,
       etape: 1,
       centre,
@@ -439,7 +444,7 @@ function QualificationForm({ dossierRepris }: { dossierRepris?: Dossier | undefi
       pieces: [],
       // Échéancier dérivé du pack et de la modalité choisis à l'accueil :
       // comptant = une ligne de solde, acompte = 50 % (ou 15 %) + solde.
-      paiements: planPaiement(formule.pack, modalite, formule.services),
+      paiements: planPaiement(formule.pack, modalite, formule.services, formule.prixManuel),
       // Les réponses libres ne sont plus aplaties ici : elles vivent dans `profile.details`,
       // et la fiche dossier les affiche groupées par sujet.
       notes: [],

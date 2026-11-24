@@ -255,6 +255,7 @@ export function buildSeed(): Dossier[] {
       niveau: c.level,
       pack: s.pack,
       services: [],
+      prixManuel: null,
       modalitePaiement: s.modalite ?? "comptant",
       etape: s.etape,
       centre: s.centre,

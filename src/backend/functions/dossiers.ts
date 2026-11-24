@@ -15,6 +15,7 @@ import {
   erreurServices,
   formuleLabel,
   prixFormule,
+  PRIX_MANUEL_MAX,
   MODALITE_LABEL,
   piecesFromCase,
   resolveCase,
@@ -85,6 +86,7 @@ export function rowToDossier(row: DossierRow): Dossier {
     niveau: row.niveau,
     pack: row.pack,
     services: row.services,
+    prixManuel: row.prixManuel,
     modalitePaiement: row.modalitePaiement,
     etape: row.etape,
     centre: row.centre,
@@ -680,6 +682,8 @@ const profileInput = z.object({
     .optional(),
 });
 
+const prixManuelInput = z.number().int().min(1).max(PRIX_MANUEL_MAX).nullable().default(null);
+
 const dossierInput = z.object({
   id: z.string().min(1).max(32),
   client: clientInput,
@@ -693,6 +697,7 @@ const dossierInput = z.object({
   niveau: z.enum(["standard", "attention", "complexe"]),
   pack: z.enum(["base", "voyage", "global", "carte"]),
   services: z.array(serviceKey).max(10).default([]),
+  prixManuel: prixManuelInput,
   modalitePaiement: z.enum(["comptant", "acompte", "acompte15"]).default("comptant"),
   etape: z.number().int().min(1).max(5),
   centre: z.enum(["TLScontact Agadir", "BLS Espagne Agadir"]),
@@ -761,6 +766,7 @@ export const createDossier = createServerFn({ method: "POST" })
       niveau: data.niveau,
       pack: data.pack,
       services,
+      prixManuel: data.prixManuel,
       modalitePaiement: data.modalitePaiement as Modalite,
       etape: data.etape,
       centre: data.centre as Dossier["centre"],
@@ -1019,6 +1025,7 @@ export const changerPack = createServerFn({ method: "POST" })
       id: z.string().min(1).max(32),
       pack: z.enum(["base", "voyage", "global", "carte"]),
       services: z.array(serviceKey).max(10).default([]),
+      prixManuel: prixManuelInput,
     }),
   )
   .handler(async ({ data }) => {
@@ -1030,15 +1037,21 @@ export const changerPack = createServerFn({ method: "POST" })
       // On régénère l'échéancier (acompte + solde, ou solde comptant) selon la nouvelle
       // formule et la modalité en cours : les lignes déjà encaissées et les options à la
       // carte sont conservées telles quelles, seules les lignes dues sont recalculées.
-      const paiements = reglerEcheancier(row.paiements, data.pack, row.modalitePaiement, services);
+      const paiements = reglerEcheancier(
+        row.paiements,
+        data.pack,
+        row.modalitePaiement,
+        services,
+        data.prixManuel,
+      );
       await tx
         .update(dossiersTable)
-        .set({ pack: data.pack, services, paiements })
+        .set({ pack: data.pack, services, prixManuel: data.prixManuel, paiements })
         .where(eq(dossiersTable.id, data.id));
     });
     await logActivity(
       "paiement.pack",
-      `Formule changée -> ${formuleLabel(data.pack)} (${prixFormule(data.pack, services)} MAD)`,
+      `Formule changée -> ${formuleLabel(data.pack)} (${prixFormule(data.pack, services, data.prixManuel)} MAD${data.prixManuel === null ? "" : ", prix manuel"})`,
       data.id,
     );
   });
@@ -1056,7 +1069,13 @@ export const setModalitePaiement = createServerFn({ method: "POST" })
     await db.transaction(async (tx) => {
       const row = await tx.query.dossiers.findFirst({ where: eq(dossiersTable.id, data.id) });
       if (!row) throw new Error("Dossier introuvable.");
-      const paiements = reglerEcheancier(row.paiements, row.pack, data.modalite, row.services);
+      const paiements = reglerEcheancier(
+        row.paiements,
+        row.pack,
+        data.modalite,
+        row.services,
+        row.prixManuel,
+      );
       await tx
         .update(dossiersTable)
         .set({ modalitePaiement: data.modalite, paiements })

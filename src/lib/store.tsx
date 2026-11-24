@@ -160,8 +160,12 @@ function useDossierMutations() {
     onSuccess: invalidateAll,
   });
   const changerPackMutation = useMutation({
-    mutationFn: (vars: { id: string; pack: FormuleKey; services: ServiceKey[] }) =>
-      changerPackFn({ data: vars }),
+    mutationFn: (vars: {
+      id: string;
+      pack: FormuleKey;
+      services: ServiceKey[];
+      prixManuel: number | null;
+    }) => changerPackFn({ data: vars }),
     onSuccess: invalidateAll,
   });
   const changerModaliteMutation = useMutation({
@@ -290,8 +294,12 @@ function useDossierMutations() {
     avancer: (id: string) => avancerMutation.mutateAsync(id),
     reculer: (id: string) => reculerMutation.mutateAsync(id),
     encaisser: (id: string, index: number) => encaisserMutation.mutateAsync({ id, index }),
-    changerPack: (id: string, pack: FormuleKey, services: ServiceKey[] = []) =>
-      changerPackMutation.mutateAsync({ id, pack, services }),
+    changerPack: (
+      id: string,
+      pack: FormuleKey,
+      services: ServiceKey[] = [],
+      prixManuel: number | null = null,
+    ) => changerPackMutation.mutateAsync({ id, pack, services, prixManuel }),
     changerModalite: (id: string, modalite: Modalite) =>
       changerModaliteMutation.mutateAsync({ id, modalite }),
     changerCentre: (id: string, centre: Centre) =>

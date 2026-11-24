@@ -233,9 +233,37 @@ export function formuleLabel(formule: FormuleKey): string {
   return formule === "carte" ? "Services à la carte" : PACKS[formule].label;
 }
 
-/** Prix de la formule : tarif du pack, ou somme des services choisis. */
-export function prixFormule(formule: FormuleKey, services: ServiceKey[]): number {
+/** Plafond du prix manuel (MAD) - garde-fou contre une faute de frappe. */
+export const PRIX_MANUEL_MAX = 100_000;
+
+/**
+ * Message d'erreur si le prix manuel saisi est invalide, sinon null
+ * (`null` = pas de prix manuel, `NaN` = champ vide).
+ */
+export function erreurPrixManuel(prixManuel: number | null): string | null {
+  if (prixManuel === null) return null;
+  if (Number.isNaN(prixManuel)) return "Saisir le prix manuel.";
+  if (!Number.isInteger(prixManuel) || prixManuel <= 0)
+    return "Saisir un prix manuel entier supérieur à 0.";
+  if (prixManuel > PRIX_MANUEL_MAX) return `Prix manuel plafonné à ${mad(PRIX_MANUEL_MAX)}.`;
+  return null;
+}
+
+/** Prix catalogue de la formule : tarif du pack, ou somme des services choisis. */
+export function prixCatalogue(formule: FormuleKey, services: ServiceKey[]): number {
   return formule === "carte" ? totalServices(services) : PACKS[formule].prix;
+}
+
+/**
+ * Prix de la formule : le prix manuel s'il a été saisi (remise, geste commercial, tarif
+ * négocié), sinon le prix catalogue.
+ */
+export function prixFormule(
+  formule: FormuleKey,
+  services: ServiceKey[],
+  prixManuel: number | null = null,
+): number {
+  return prixManuel ?? prixCatalogue(formule, services);
 }
 
 /** « 1 000 MAD » */
@@ -304,13 +332,16 @@ export function planPaiement(
   formule: FormuleKey,
   modalite: Modalite,
   services: ServiceKey[] = [],
+  prixManuel: number | null = null,
 ): Paiement[] {
   if (formule === "carte") {
     const erreur = erreurServices(services);
     if (erreur) throw new Error(erreur);
   }
+  const erreurPrix = erreurPrixManuel(prixManuel);
+  if (erreurPrix) throw new Error(erreurPrix);
   const label = formuleLabel(formule);
-  const prix = prixFormule(formule, services);
+  const prix = prixFormule(formule, services, prixManuel);
   const pct = ACOMPTE_PCT[modalite];
   if (pct > 0) {
     const acompte = Math.round(prix * pct);
@@ -353,12 +384,13 @@ export function reglerEcheancier(
   formule: FormuleKey,
   modalite: Modalite,
   services: ServiceKey[] = [],
+  prixManuel: number | null = null,
 ): Paiement[] {
   const gardees = paiements.filter((p) => p.encaisse || p.echeance === "option");
   const echeancesReglees = new Set(
     gardees.filter((p) => p.encaisse).map((p) => p.echeance ?? "solde"),
   );
-  const fraiches = planPaiement(formule, modalite, services).filter(
+  const fraiches = planPaiement(formule, modalite, services, prixManuel).filter(
     (l) => !echeancesReglees.has(l.echeance!),
   );
   const ordre: Record<Echeance, number> = { acompte: 0, solde: 1, option: 2 };
@@ -440,6 +472,8 @@ export interface Dossier {
   pack: FormuleKey;
   /** Services à l'unité retenus - vide sauf si `pack === "carte"`. */
   services: ServiceKey[];
+  /** Total saisi à la main (remplace le prix catalogue), `null` = prix catalogue. */
+  prixManuel: number | null;
   /** `comptant` par défaut pour les dossiers créés avant l'ajout de la modalité. */
   modalitePaiement: Modalite;
   etape: number;

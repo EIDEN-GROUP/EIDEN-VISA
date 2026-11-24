@@ -97,6 +97,8 @@ export const dossiers = pgTable(
     // Pack choisi, ou `carte` = services à l'unité (liste dans `services`).
     pack: text("pack").$type<FormuleKey>().notNull().default("base"),
     services: jsonb("services").$type<ServiceKey[]>().notNull().default([]),
+    // Total saisi à la main par l'équipe (remise, tarif négocié). Nul = prix catalogue.
+    prixManuel: integer("prix_manuel"),
     modalitePaiement: text("modalite_paiement").$type<Modalite>().notNull().default("comptant"),
     etape: integer("etape").notNull().default(1), // Centre de dépôt visé par le client (France/TLScontact ou Espagne/BLS) : c'est
     // l'orientation du dossier. La prise du rendez-vous elle-même est faite par le

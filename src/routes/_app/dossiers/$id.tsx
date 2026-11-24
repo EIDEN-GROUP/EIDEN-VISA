@@ -13,6 +13,7 @@ import {
   ETAPES,
   formuleLabel,
   erreurServices,
+  erreurPrixManuel,
   CENTRES,
   MODALITE_LABEL,
   modaliteDetail,
@@ -1116,7 +1117,13 @@ function DossierDetail() {
                       {formuleLabel(d.pack)}
                     </div>
                     <ChoixFormule
-                      value={formuleBrouillon ?? { pack: d.pack, services: d.services }}
+                      value={
+                        formuleBrouillon ?? {
+                          pack: d.pack,
+                          services: d.services,
+                          prixManuel: d.prixManuel,
+                        }
+                      }
                       disabled={cloture}
                       onChange={(f) => {
                         setFormuleErreur(null);
@@ -1132,8 +1139,9 @@ function DossierDetail() {
                           <Button
                             size="sm"
                             disabled={
-                              formuleBrouillon.pack === "carte" &&
-                              erreurServices(formuleBrouillon.services) !== null
+                              (formuleBrouillon.pack === "carte" &&
+                                erreurServices(formuleBrouillon.services) !== null) ||
+                              erreurPrixManuel(formuleBrouillon.prixManuel) !== null
                             }
                             onClick={async () => {
                               try {
@@ -1141,6 +1149,7 @@ function DossierDetail() {
                                   d.id,
                                   formuleBrouillon.pack,
                                   formuleBrouillon.services,
+                                  formuleBrouillon.prixManuel,
                                 );
                                 setFormuleBrouillon(null);
                               } catch (err) {

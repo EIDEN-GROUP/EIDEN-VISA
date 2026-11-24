@@ -48,6 +48,7 @@ async function main() {
         niveau: d.niveau,
         pack: d.pack,
         services: d.services,
+        prixManuel: d.prixManuel,
         modalitePaiement: d.modalitePaiement,
         etape: d.etape,
         centre: d.centre,
